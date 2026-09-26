@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f5f3ed">
+  <title>第二间房 · 73㎡ 的三种生活</title>
+  <meta name="description" content="在同一套 73㎡ 两室一厅里，探索第二间房的三种可能。交互式 Three.js 家装体验。">
+  <link rel="stylesheet" href="./style.css">
+  <script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/addons/"}}</script>
+</head>
+<body>
+  <canvas id="home-canvas" aria-label="73 平方米两室一厅三维户型，可拖动观察并点击房间"></canvas>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="../" aria-label="返回作品列表"><span class="brand-mark">間</span><span><strong>第二间房</strong><small>THE SECOND ROOM</small></span></a>
+      <div class="top-center"><span class="tiny-line"></span> 一个家的三种可能 <span class="tiny-line"></span></div>
+      <div class="time-control"><span class="time-caption">一日光景</span><span class="time-icon" aria-hidden="true">☼</span><input id="time-slider" type="range" min="7" max="22" step="0.25" value="14.5" aria-label="调整一天中的时间"><output id="time-output" for="time-slider">14:30 下午</output></div>
+    </header>
+
+    <main>
+      <div class="hero-copy"><p class="eyebrow">LIVING, REIMAGINED <span>—</span> 73 M²</p><h1>同一间房，<br><em>三种生活答案。</em></h1><p class="hero-description">让空间跟随生活生长。选一种当下，再想象下一种可能。</p></div>
+      <div class="area-stamp" aria-hidden="true"><span>73</span><small>㎡<br>两室一厅</small></div>
+
+      <div class="view-rail" role="group" aria-label="切换视角"><span class="rail-label">观察视角 / VIEW</span><button type="button" class="view-btn active" data-view="dollhouse" aria-pressed="true"><span>01</span> 立体剖视</button><button type="button" class="view-btn" data-view="top" aria-pressed="false"><span>02</span> 正交俯视</button><button type="button" class="view-btn" data-view="section" aria-pressed="false"><span>03</span> 1.35m 剖切</button><button type="button" class="view-btn" data-view="walk" aria-pressed="false"><span>04</span> 第一人称</button><div class="rail-rule"></div><button type="button" class="rail-action" id="reset-view">↺ <span>重置镜头</span></button></div>
+
+      <div class="scene-hint" id="scene-hint">拖动旋转 · 滚轮缩放 · 点击房间查看详情</div>
+      <div class="walk-hint" id="walk-hint" hidden>W A S D 行走 <i></i> 鼠标拖动转向 <i></i> 点击门扇开合 <button id="exit-walk">退出漫游</button></div>
+
+      <aside class="room-card" id="room-card" hidden aria-label="房间详情"><button type="button" id="close-room" aria-label="关闭房间详情">×</button><p class="eyebrow" id="room-en"></p><h2 id="room-name"></h2><div class="room-measure"><strong id="room-area"></strong><span id="room-size"></span></div><p class="list-caption">家具清单 / FURNITURE</p><ul id="room-items"></ul></aside>
+
+      <section class="scenario-panel" aria-label="第二间房的生活方案"><div class="scenario-intro"><span class="section-num">SPACE 02 / 02</span><h2>第二间房<span>，可以是——</span></h2><p>三种生活提案，一键换一座家。</p></div><div class="scenario-list" role="group" aria-label="选择生活方案"><button type="button" class="scenario active" data-scenario="work" aria-pressed="true"><span class="scenario-index">01 / FOCUS</span><strong>在家工作</strong><span class="scenario-sub">一方专注的天地</span><span class="scenario-arrow" aria-hidden="true">↗</span></button><button type="button" class="scenario" data-scenario="guest" aria-pressed="false"><span class="scenario-index">02 / GATHER</span><strong>朋友留宿</strong><span class="scenario-sub">随时为相聚留席</span><span class="scenario-arrow" aria-hidden="true">↗</span></button><button type="button" class="scenario" data-scenario="future" aria-pressed="false"><span class="scenario-index">03 / GROW</span><strong>留给未来</strong><span class="scenario-sub">把想象慢慢养大</span><span class="scenario-arrow" aria-hidden="true">↗</span></button></div></section>
+    </main>
+    <footer><span>空间概念展示 · 尺寸为示意值</span><span>日式简约 / 浅橡木 · 暖白 · 灰绿</span><span id="asset-status">载入空间中…</span></footer>
+  </div>
+  <div id="loading" class="loading" role="status" aria-live="polite"><div class="loading-plan"><span class="plan-line a"></span><span class="plan-line b"></span><span class="plan-line c"></span><span class="plan-line d"></span><span class="plan-line e"></span><span class="plan-line f"></span></div><span class="loading-kicker">A HOME, IN THE MAKING</span><strong>家的形状，正在生长。</strong><span id="loading-progress">准备光线与家具…</span><div class="loading-track"><span id="loading-bar"></span></div></div>
+  <div id="error" hidden>当前浏览器无法加载 3D 场景。请使用支持 WebGL 的浏览器，并通过本地 HTTP 服务打开。</div>
+  <script type="module" src="./app.mjs"></script>
+</body>
+</html>
