@@ -10,6 +10,7 @@
 | [太阳系交互网站](solar-system/README.md) | 可切换观察目标的 3D 太阳系静态网站。 | 查看目录中的 README，使用本地 HTTP 服务运行。 |
 | [江南园林小景](jiangnan-garden/index.html) | 可旋转、平移和缩放视角的体素风格园林。 | 使用支持 WebGL 的浏览器打开入口页面。 |
 | [第二间房](second-room/README.md) | 73㎡ 两室一厅的三种布置方案、四种视角和日照变化。 | 查看目录中的 README，使用本地 HTTP 服务运行。 |
+| [山水有归处](ink-scroll-book/README.md) | 六段滚动叙事组成的水墨长卷电子书。 | 查看目录中的 README，使用本地 HTTP 服务阅读。 |
 | [模拟时光](simulated-days/README.md) | 在紫蓝巷陪 Miri 做饭、画画、布置小屋并认识邻居的生活模拟。 | 查看目录中的 README，使用本地 HTTP 服务运行。 |
 
 这些作品仅用于个人学习和测试。具体运行方法及素材说明以各作品目录中的文档为准。

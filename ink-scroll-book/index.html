@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ede8dc">
+  <meta name="description" content="《山水有归处》：一卷从入卷到跋的水墨滚动电子书。">
+  <title>山水有归处 · 水墨长卷</title>
+  <link rel="preload" href="./assets/mountains.jpg" as="image">
+  <link rel="stylesheet" href="./style.css">
+  <script type="module" src="./reader.mjs"></script>
+  <script type="module" src="./music.mjs"></script>
+</head>
+<body>
+  <a class="skip-link" href="#opening">跳到正文</a>
+  <div class="scroll-frame" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <a class="brand" href="#opening" aria-label="山水有归处，回到卷首">
+      <span class="brand__seal" aria-hidden="true">山<br>水</span>
+      <span class="brand__name">山水有归处<small>一卷江南行记</small></span>
+    </a>
+    <div class="header-meta"><span>水墨长卷</span><span class="header-meta__divider" aria-hidden="true"></span><span>六幕 · 一程</span></div>
+  </header>
+
+  <div class="reading-progress" aria-hidden="true"><span class="reading-progress__fill" role="progressbar" aria-label="阅读进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></span></div>
+
+  <nav class="chapter-nav" aria-label="卷目导航">
+    <ol>
+      <li><a href="#opening" aria-current="location"><span class="chapter-nav__number">一</span><span class="chapter-nav__name">入卷</span></a></li>
+      <li><a href="#rain"><span class="chapter-nav__number">二</span><span class="chapter-nav__name">听雨</span></a></li>
+      <li><a href="#bridge"><span class="chapter-nav__number">三</span><span class="chapter-nav__name">过桥</span></a></li>
+      <li><a href="#mountain"><span class="chapter-nav__number">四</span><span class="chapter-nav__name">寻山</span></a></li>
+      <li><a href="#return"><span class="chapter-nav__number">五</span><span class="chapter-nav__name">归舟</span></a></li>
+      <li><a href="#colophon"><span class="chapter-nav__number">六</span><span class="chapter-nav__name">跋</span></a></li>
+    </ol>
+  </nav>
+
+  <main id="book">
+    <section class="chapter chapter--opening" id="opening" aria-labelledby="opening-title">
+      <div class="chapter__art chapter__art--mountains" aria-hidden="true"></div>
+      <div class="chapter__inner opening-layout">
+        <div class="opening-copy">
+          <p class="eyebrow"><span class="eyebrow__line"></span> 江南山水记 · 卷之一</p>
+          <p class="opening-kicker">一纸山河，且随风行</p>
+          <h1 id="opening-title" class="opening-title">山水<span>有归处</span></h1>
+          <p class="opening-intro">从城中出发，沿一条无名水路，去听雨、过桥、寻山。走到卷尾才明白，所寻之处并不遥远。</p>
+          <a class="ink-button" href="#rain"><span>展卷入境</span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v17m0 0-6-6m6 6 6-6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        </div>
+        <div class="title-slip" aria-hidden="true"><span>山水有归处</span><i>江南行记</i></div>
+        <p class="opening-side-note">卷首 · 墨起于一念</p>
+      </div>
+      <div class="chapter__footer"><span>SCROLL TO UNFOLD</span><span class="chapter__footer-line"></span><span>零一 / 零六</span></div>
+    </section>
+
+    <section class="chapter chapter--rain" id="rain" aria-labelledby="rain-title">
+      <div class="chapter__art chapter__art--rain" aria-hidden="true"></div>
+      <div class="chapter__inner chapter__inner--left">
+        <div class="chapter-heading"><span class="chapter-heading__number">贰</span><span class="chapter-heading__line"></span><span class="chapter-heading__label">听雨 · LISTEN TO THE RAIN</span></div>
+        <div class="story-block">
+          <span class="story-block__tag">江南雨</span>
+          <h2 id="rain-title">雨落时，<br>万物有了回声。</h2>
+          <p class="story-block__lead">出城不远，天色便慢了下来。</p>
+          <p>雨先落在竹叶上，随后落在青瓦和水面。岸边的人收起摊子，我却在檐下多站了一会儿。平日里说不清的心事，被细雨一层层洗得透亮。</p>
+          <p>原来安静不是没有声音，而是终于听见了那些细小的声音。</p>
+          <div class="story-block__aside"><span>「</span>一蓑烟雨，正好入江南。<span>」</span></div>
+        </div>
+        <a class="next-chapter" href="#bridge"><span>下一幕 · 过桥</span><span aria-hidden="true">↓</span></a>
+      </div>
+      <span class="chapter-stamp" aria-hidden="true">雨<br>声</span>
+    </section>
+
+    <section class="chapter chapter--bridge" id="bridge" aria-labelledby="bridge-title">
+      <div class="chapter__inner bridge-layout">
+        <div class="bridge-image" role="img" aria-label="细雨中的江南石拱桥，竹柳垂岸，远处村舍隐在雾中"><span class="bridge-image__caption">雨后 · 石桥西畔</span></div>
+        <div class="bridge-copy">
+          <div class="chapter-heading"><span class="chapter-heading__number">叁</span><span class="chapter-heading__line"></span><span class="chapter-heading__label">过桥 · CROSSING</span></div>
+          <div class="story-block">
+            <span class="story-block__tag">桥上风</span>
+            <h2 id="bridge-title">桥这一边是来路，<br>那一边也是。</h2>
+            <p class="story-block__lead">石阶微湿，脚步便放轻了。</p>
+            <p>桥下的水把天空分成两半。一只乌篷船从桥洞里缓缓驶过，船夫没有抬头，仿佛早已知道每一程该往哪里去。</p>
+            <p>我回望身后的街巷，又看向远处的山。桥没有替人选择方向，只是让两岸终于相连。</p>
+          </div>
+          <a class="next-chapter" href="#mountain"><span>下一幕 · 寻山</span><span aria-hidden="true">↓</span></a>
+        </div>
+      </div>
+      <span class="chapter-stamp chapter-stamp--quiet" aria-hidden="true">行<br>路</span>
+    </section>
+
+    <section class="chapter chapter--mountain" id="mountain" aria-labelledby="mountain-title">
+      <div class="chapter__art chapter__art--mountains" aria-hidden="true"></div>
+      <div class="chapter__inner chapter__inner--left">
+        <div class="chapter-heading"><span class="chapter-heading__number">肆</span><span class="chapter-heading__line"></span><span class="chapter-heading__label">寻山 · INTO THE MOUNTAINS</span></div>
+        <div class="story-block">
+          <span class="story-block__tag">山中云</span>
+          <h2 id="mountain-title">山在云里，<br>云也在心里。</h2>
+          <p class="story-block__lead">山路愈高，人声愈远。</p>
+          <p>松针上还挂着昨夜的雨。雾从山谷升起，遮住了峰顶，却露出一小段通往深处的石径。我忽然不急着看见山的全貌了。</p>
+          <p>有些答案本就不在峰顶。走到此处，已经足够。</p>
+        </div>
+        <a class="next-chapter" href="#return"><span>下一幕 · 归舟</span><span aria-hidden="true">↓</span></a>
+      </div>
+      <div class="vertical-poem" aria-hidden="true">山色无言，人自归来。</div>
+    </section>
+
+    <section class="chapter chapter--return" id="return" aria-labelledby="return-title">
+      <div class="chapter__art chapter__art--boat" aria-hidden="true"></div>
+      <div class="chapter__inner chapter__inner--right">
+        <div class="chapter-heading"><span class="chapter-heading__number">伍</span><span class="chapter-heading__line"></span><span class="chapter-heading__label">归舟 · HOMEWARD</span></div>
+        <div class="story-block">
+          <span class="story-block__tag">暮江行</span>
+          <h2 id="return-title">一叶舟，<br>载得动满山暮色。</h2>
+          <p class="story-block__lead">日影渐低，江面像摊开的纸。</p>
+          <p>船行得很慢，水纹却一圈圈向远处散去。来时总想着抵达，回程才看清芦苇、浅滩，以及天边最后一点暖色。</p>
+          <p>我把手伸进水里，摸到一江微凉。心却安稳下来，像船终于找到了自己的岸。</p>
+        </div>
+        <a class="next-chapter" href="#colophon"><span>下一幕 · 跋</span><span aria-hidden="true">↓</span></a>
+      </div>
+      <span class="chapter-stamp" aria-hidden="true">归<br>心</span>
+    </section>
+
+    <section class="chapter chapter--colophon" id="colophon" aria-labelledby="colophon-title">
+      <div class="colophon-wash" aria-hidden="true"></div>
+      <div class="chapter__inner colophon-layout">
+        <div class="chapter-heading chapter-heading--center"><span class="chapter-heading__number">陆</span><span class="chapter-heading__line"></span><span class="chapter-heading__label">卷末 · COLOPHON</span></div>
+        <span class="colophon-mark" aria-hidden="true">终</span>
+        <h2 id="colophon-title">跋</h2>
+        <p class="colophon-quote">山水从未说过归处，<br>却把一路风雨，<br>都还给了行路的人。</p>
+        <p class="colophon-text">卷至此处，故事并未结束。合卷以后，窗外的一树、一云、一阵风，仍是可以重读的山水。</p>
+        <span class="colophon-seal" aria-hidden="true">山水<br>有归</span>
+        <a class="back-to-top" href="#opening"><span aria-hidden="true">↑</span> 收卷重读</a>
+        <p class="music-credit">古琴演奏：Charlie Huang · <a href="https://commons.wikimedia.org/wiki/File:Guqin-Yangguan_Sandie.ogg" target="_blank" rel="noopener noreferrer">《阳关三叠》</a>、<a href="https://commons.wikimedia.org/wiki/File:Guqin-Zuiyu_Changwan.ogg" target="_blank" rel="noopener noreferrer">《醉渔唱晚》</a><br>录音转码为 MP3，按 <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 3.0</a> 使用</p>
+        <p class="colophon-credit">原创短篇 · 水墨长卷电子书</p>
+      </div>
+    </section>
+  </main>
+
+  <div class="page-indicator" aria-hidden="true"><span data-page-count>01</span><span class="page-indicator__slash">/</span><span>06</span></div>
+  <audio data-music-audio preload="none"></audio>
+  <div class="music-player" role="group" aria-label="背景音乐">
+    <button class="music-toggle" data-music-toggle type="button" aria-pressed="false">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 18.5V5.8L19 3v12.6M9 18.5c0 1.4-1.4 2.5-3.1 2.5S3 19.9 3 18.5 4.4 16 6.1 16 9 17.1 9 18.5Zm10-2.9c0 1.4-1.4 2.5-3.1 2.5S13 18 13 16.6s1.4-2.5 3.1-2.5 2.9 1.1 2.9 2.5Z" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span data-music-label>开启音乐</span>
+      <span class="music-toggle__bars" aria-hidden="true"><i></i><i></i><i></i></span>
+    </button>
+    <span class="music-player__title" data-music-title>古琴 · 阳关三叠</span>
+    <button class="music-next" data-music-next type="button" aria-label="切换下一首古琴曲" title="切换下一首古琴曲">换曲</button>
+  </div>
+  <span class="sr-only" data-music-status role="status" aria-live="polite"></span>
+</body>
+</html>
