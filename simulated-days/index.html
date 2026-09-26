@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f7f3ec">
+  <meta name="description" content="在紫蓝巷陪 Miri 慢慢过日子：做饭、画画、布置小屋、结识邻居。">
+  <title>模拟时光 · 紫蓝巷的慢日子</title>
+  <link rel="stylesheet" href="./style.css">
+  <script type="importmap">{"imports":{"three":"../second-room/vendor/three.module.js","three/addons/":"../second-room/vendor/addons/"}}</script>
+</head>
+<body>
+  <svg class="icon-defs" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1zM9 21v-7h6v7"/></symbol>
+    <symbol id="i-bag" viewBox="0 0 24 24"><path d="M4 8h16l-1 13H5L4 8ZM9 8V6a3 3 0 0 1 6 0v2"/></symbol>
+    <symbol id="i-map" viewBox="0 0 24 24"><path d="m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2V5ZM9 3v16M15 5v16"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></symbol>
+    <symbol id="i-coin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m12 6-1.5 4.5L6 12l4.5 1.5L12 18l1.5-4.5L18 12l-4.5-1.5L12 6Z"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m4 12 5 5L20 6"/></symbol>
+    <symbol id="i-rotate" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7M3 3v6h6"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><path d="M4 12h16"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M20.8 8.5c0 4.1-8.8 10.5-8.8 10.5S3.2 12.6 3.2 8.5a4.4 4.4 0 0 1 8.8-.4 4.4 4.4 0 0 1 8.8.4Z"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="m12 2 1.8 7.2L21 11l-7.2 1.8L12 20l-1.8-7.2L3 11l7.2-1.8L12 2ZM19 18l.5 1.5L21 20l-1.5.5L19 22l-.5-1.5L17 20l1.5-.5L19 18Z"/></symbol>
+    <symbol id="i-save" viewBox="0 0 24 24"><path d="M4 3h13l3 3v15H4V3ZM7 3v7h10V3M7 21v-8h10v8"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+  </svg>
+
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="../" aria-label="返回作品列表"><span class="brand-symbol"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M5 23 24 8l19 15v20H5V23Z" fill="#fffaf2" stroke="currentColor" stroke-width="2"/><path d="M14 20h9v12h-9zM28 25h9v18h-9z" fill="#d9d0ee"/><path d="M24 8 5 23h38L24 8Z" fill="#987eb4" stroke="currentColor" stroke-width="2"/><circle cx="33" cy="17" r="2" fill="#f7d991"/></svg></span><span><strong>模拟时光</strong><small>SOFT LITTLE DAYS</small></span></a>
+      <nav class="mode-tabs" aria-label="游戏模式">
+        <button class="mode-tab active" data-mode="life" aria-pressed="true"><svg><use href="#i-home"/></svg><span>生活模式</span></button>
+        <button class="mode-tab" data-mode="build" aria-pressed="false"><svg><use href="#i-bag"/></svg><span>建造 / 购买</span></button>
+        <button class="mode-tab" data-mode="community" aria-pressed="false"><svg><use href="#i-map"/></svg><span>社区浏览</span></button>
+      </nav>
+      <div class="header-stats"><div class="clock-stat"><svg><use href="#i-sun"/></svg><span><strong id="day-label">第 1 天 · 晴</strong><small id="time-label">09:00 上午</small></span></div><div class="coin-stat"><svg><use href="#i-coin"/></svg><strong id="money-label">320</strong><small>暖光币</small></div></div>
+    </header>
+
+    <main class="main-grid">
+      <aside class="left-rail">
+        <div class="eyebrow"><span class="tiny-dot"></span> 紫蓝巷 · 07 号</div>
+        <h1>今天也<br><em>慢慢来。</em></h1>
+        <p class="intro">陪 Miri 把平凡的小事，过成值得记住的一天。</p>
+        <section class="paper-card goals-card" aria-labelledby="goals-title"><div class="card-heading"><span class="section-icon warm"><svg><use href="#i-spark"/></svg></span><span><small>SMALL MOMENTS</small><h2 id="goals-title">今日微小日常</h2></span></div><div id="goals-list" class="goals-list"></div><div class="goal-footer"><span id="goals-progress">0 / 3 已完成</span><span>每天重新开始</span></div></section>
+        <section class="note-card"><span class="note-sun" aria-hidden="true">✳</span><p>“好日子不必很大，<br>窗台有光就很好。”</p><small>—— Miri 的随手记</small></section>
+        <section class="journal"><div class="journal-title"><span>最近发生</span><span class="journal-rule"></span></div><ul id="journal-list"></ul></section>
+      </aside>
+
+      <section class="main-stage" aria-label="游戏场景">
+        <div id="room-view" class="room-view">
+          <div class="scene-topline"><span class="location-pill"><span class="live-dot"></span> 紫蓝巷小屋 <small>HOME, SWEET HOME</small></span><span class="weather-pill"><svg><use href="#i-sun"/></svg> 晴日窗光</span></div>
+          <canvas id="room-canvas" aria-label="可旋转、缩放并点击家具的三维房间"></canvas>
+          <div id="hotspots" class="hotspots" aria-label="房间互动点"></div>
+          <div id="room-message" class="room-message">拖动旋转房间，滚轮缩放。点击家具，与 Miri 一起生活。</div>
+          <div class="scene-controls" aria-label="房间视角控制"><button id="rotate-left" aria-label="向左旋转房间" title="向左旋转"><svg><use href="#i-rotate"/></svg></button><button id="reset-view" aria-label="重置房间视角" title="重置视角">◎</button><button id="rotate-right" aria-label="向右旋转房间" title="向右旋转"><svg class="flip"><use href="#i-rotate"/></svg></button><span class="control-separator"></span><button id="zoom-in" aria-label="放大房间" title="放大"><svg><use href="#i-plus"/></svg></button><button id="zoom-out" aria-label="缩小房间" title="缩小"><svg><use href="#i-minus"/></svg></button></div>
+          <div class="scene-index">07 / VIOLET LANE</div>
+          <div id="interaction-card" class="interaction-card" hidden></div>
+          <div id="placement-card" class="placement-card" hidden></div>
+        </div>
+        <div id="community-view" class="community-view" hidden>
+          <div class="community-head"><div><p class="eyebrow">AROUND THE CORNER</p><h2>巷子里，总有人等你打招呼。</h2><p>在熟悉的街角走走，慢慢认识这里的人。</p></div><span class="map-stamp">紫蓝巷<br><small>WALKABLE DAYS</small></span></div>
+          <div class="map-frame"><svg class="neighborhood-map" viewBox="0 0 900 540" role="img" aria-label="紫蓝巷街区插画"><defs><pattern id="ground-dots" width="18" height="18" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="1" fill="#d9d9d0"/></pattern><linearGradient id="path-gradient" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f8eee0"/><stop offset="1" stop-color="#eee0cd"/></linearGradient></defs><rect width="900" height="540" fill="#e5e6dd"/><rect width="900" height="540" fill="url(#ground-dots)"/><path d="M-20 316 C180 284 286 332 425 282 S717 230 930 280" stroke="url(#path-gradient)" stroke-width="112" fill="none"/><path d="M407 -20 C386 146 473 267 491 560" stroke="#f3e7d6" stroke-width="72" fill="none"/><g class="map-building"><path d="M83 90h228v145H83z" fill="#f8e7dc"/><path d="M67 90 117 44h204l-10 46Z" fill="#9a84b6"/><path d="M103 115h54v53h-54zm73 0h54v53h-54zm70 0h46v53h-46z" fill="#b7d6d4"/><path d="M171 235v-53h53v53" fill="#be957f"/><path d="M83 235h228" stroke="#8c789f" stroke-width="6"/></g><g class="map-building"><path d="M586 73h197v156H586z" fill="#fae9cb"/><path d="m571 75 50-42h150l27 42Z" fill="#ce9a8f"/><path d="M616 104h52v55h-52zm84 0h52v55h-52z" fill="#a8c9c1"/><path d="M675 229v-53h54v53" fill="#a67e67"/></g><g class="map-building"><path d="M84 397h222v114H84z" fill="#e8d9e9"/><path d="m69 397 42-42h187l25 42Z" fill="#8f88ae"/><path d="M114 426h57v57h-57zm94 0h57v57h-57z" fill="#b9d4cf"/></g><g class="map-building"><path d="M589 375h229v142H589z" fill="#f3dbcf"/><path d="m575 375 47-49h177l34 49Z" fill="#ab7f95"/><path d="M623 401h61v65h-61zm91 0h61v65h-61z" fill="#b4cfca"/></g><g fill="#8aab8c"><circle cx="338" cy="94" r="28"/><circle cx="359" cy="114" r="24"/><circle cx="551" cy="128" r="26"/><circle cx="550" cy="454" r="31"/><circle cx="350" cy="443" r="27"/><circle cx="35" cy="304" r="27"/><circle cx="839" cy="308" r="29"/></g><g fill="#769a7c"><circle cx="345" cy="103" r="21"/><circle cx="560" cy="138" r="19"/><circle cx="550" cy="463" r="23"/><circle cx="348" cy="449" r="19"/></g><g fill="#fff9e9" opacity=".7"><circle cx="342" cy="95" r="5"/><circle cx="548" cy="119" r="5"/><circle cx="540" cy="445" r="5"/></g><path d="M420 292q35-19 66-8M439 351q19-8 41-2" stroke="#d3bfa9" stroke-width="5" fill="none" stroke-linecap="round"/></svg><button class="map-pin pin-home" data-neighbor="home"><span>⌂</span> Miri 的家</button><button class="map-pin pin-nora" data-neighbor="nora"><span>✿</span> Nora 的花店</button><button class="map-pin pin-jun" data-neighbor="jun"><span>✦</span> Jun 的书屋</button><button class="map-pin pin-ellis" data-neighbor="ellis"><span>◌</span> Ellis 的咖啡馆</button></div>
+          <div class="community-footer"><span>✳ 沿着石板路，发现微小的相遇</span><span>选择街区地点，认识邻居 →</span></div>
+        </div>
+      </section>
+
+      <aside class="right-rail">
+        <section id="life-panel" class="mode-panel"><div class="miri-card"><div class="miri-portrait" aria-hidden="true"><span class="portrait-sun"></span><svg viewBox="0 0 220 156"><ellipse cx="110" cy="163" rx="78" ry="52" fill="#8c789f"/><path d="M70 142c4-31 18-44 40-44s36 13 40 44" fill="#e8b9a8"/><path d="M76 114c-13-18-11-55 2-71 12-15 48-21 67-2 19 19 13 52-1 76z" fill="#3d3542"/><ellipse cx="109" cy="79" rx="37" ry="44" fill="#eec3ae"/><path d="M73 74c-2-24 12-43 37-43 24 0 39 20 38 42-14-2-26-11-32-20-10 16-24 20-43 21z" fill="#3d3542"/><path d="M73 74c-8 18-6 38 8 52-22-5-31-42-8-62z" fill="#3d3542"/><circle cx="95" cy="81" r="2.3" fill="#433b43"/><circle cx="123" cy="81" r="2.3" fill="#433b43"/><path d="M103 97q7 5 14 0" stroke="#ac6a6c" stroke-width="2" fill="none" stroke-linecap="round"/><ellipse cx="85" cy="92" rx="6" ry="3" fill="#df9b98" opacity=".6"/><ellipse cx="134" cy="92" rx="6" ry="3" fill="#df9b98" opacity=".6"/><path d="M93 113c10 12 26 14 35 0l6 22H87z" fill="#f9f0e5"/><path d="M83 126q27 22 54 0l23 30H60z" fill="#f0d3a3"/></svg><span class="portrait-flower">✳</span></div><div class="miri-info"><div><small>OUR LITTLE CREATOR</small><h2>Miri <span>米莉</span></h2></div><span class="mood-pill" id="mood-label">心情不错</span></div><p>喜欢画街景、收集旧书，也在学习如何好好照顾自己。</p></div>
+          <div class="panel-section-heading"><h3>今日状态</h3><span>NEEDS</span></div><div id="needs-list" class="needs-list"></div>
+          <div class="panel-section-heading skill-title"><h3>慢慢学会</h3><span>SKILLS</span></div><div id="skills-list" class="skills-list"></div>
+          <div class="save-indicator" id="save-indicator"><svg><use href="#i-save"/></svg><span>已自动保存到此设备</span></div>
+        </section>
+        <section id="build-panel" class="mode-panel" hidden><div class="panel-eyebrow">MAKE IT YOURS / 01</div><h2 class="panel-title">把家布置成<br><em>喜欢的样子。</em></h2><p class="panel-copy">买一件手作家具，再点选它，点击地板摆到想要的位置。</p><div class="panel-section-heading"><h3>小屋集市</h3><span>4 件好物</span></div><div id="shop-list" class="shop-list"></div><div class="placement-help"><svg><use href="#i-spark"/></svg><p>拖动旋转 · 滚轮缩放<br>点家具，再点地板调整位置。</p></div></section>
+        <section id="community-panel" class="mode-panel" hidden><div class="panel-eyebrow">THE NEIGHBORHOOD / 01</div><h2 class="panel-title">熟悉的面孔，<br><em>新的故事。</em></h2><p class="panel-copy">选一处街角，和邻居聊聊。每次相遇，关系都会更亲近一点。</p><div class="panel-section-heading"><h3>巷子里的朋友</h3><span>RELATIONS</span></div><div id="neighbor-list" class="neighbor-list"></div><div class="placement-help"><svg><use href="#i-heart"/></svg><p>关系会随着每次聊天增长。<br>今天的问候，也很值得记录。</p></div></section>
+      </aside>
+    </main>
+    <footer class="footer"><span>✳ 一个人，也可以拥有丰盛的日常。</span><span id="global-save">已自动保存到此设备 · 原创紫蓝巷</span><span>拖动旋转 / 滚轮缩放 / 点击互动</span></footer>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <div id="error" class="error" hidden>房间画面无法加载。请使用支持 WebGL 的浏览器，并通过本地 HTTP 服务打开。</div>
+  <script type="module" src="./app.mjs"></script>
+</body>
+</html>
