@@ -33,9 +33,9 @@ test('时长格式不会把无效值写进界面', () => {
   assert.equal(formatTime(NaN), '0:00');
 });
 
-test('播放特效按四种模式和关闭状态循环', () => {
-  assert.deepEqual(effectModes, ['流体粒子', '螺旋星系', '几何脉冲', '波动网格']);
-  assert.deepEqual([0, 1, 2, 3, -1].map(nextEffectIndex), [1, 2, 3, -1, 0]);
+test('播放特效包含实时频谱和波形，并在关闭后循环', () => {
+  assert.deepEqual(effectModes, ['流体粒子', '螺旋星系', '几何脉冲', '波动网格', '实时频谱', '实时波形']);
+  assert.deepEqual([0, 1, 2, 3, 4, 5, -1].map(nextEffectIndex), [1, 2, 3, 4, 5, -1, 0]);
 });
 
 test('播放列表区分当前歌曲的播放、暂停和其他歌曲', () => {

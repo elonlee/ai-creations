@@ -1,4 +1,5 @@
-import { albums, songs, albumFor, songsForAlbum, filterAlbums, filterSongs, artistSummaries, nextPlayableId, playbackState, effectModes, nextEffectIndex, formatTime } from './model.mjs';
+import { albums, songs, albumFor, songsForAlbum, filterAlbums, filterSongs, artistSummaries, nextPlayableId, playbackState, effectModes, nextEffectIndex, formatTime } from './model.mjs?v=audio-v1';
+import { spectrumLevels, waveformPoints } from './visualizer.mjs?v=audio-v1';
 
 const $ = selector => document.querySelector(selector);
 const audio = $('#audio');
@@ -38,6 +39,14 @@ const safe = value => String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;',
 const albumArt = (album, className = 'album-art') => `<span class="art ${className} ${album.art}" aria-hidden="true"></span>`;
 const playingIndicator = status => `<span class="playing-indicator ${status === 'playing' ? 'is-playing' : ''}" role="img" aria-label="${status === 'playing' ? '播放中' : '已暂停'}"><span></span><span></span><span></span></span>`;
 let toastTimer;
+let audioContext;
+let analyser;
+let frequencyData;
+let timeData;
+let visualFrame = 0;
+let visualLastFrame = 0;
+let visualizerUnavailable = false;
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 function showToast(message) {
   const toast = $('#toast');
@@ -159,10 +168,119 @@ function closeDrawer() {
 
 function effectMarkup(index) {
   if (index === -1) return '<span class="effect-off">动画已关闭</span>';
+  if (index >= 4) return '<canvas class="audio-visualizer" aria-hidden="true"></canvas>';
   if (index === 0) return Array.from({ length: 24 }, (_, i) => `<span class="effect-particle" style="--x:${(i * 37 + 11) % 100}%;--y:${(i * 29 + 17) % 84 + 8}%;--delay:${(i % 7) * -.24}s;--size:${i % 3 + 3}px"></span>`).join('');
   if (index === 1) return '<span class="effect-galaxy-core"></span>' + Array.from({ length: 4 }, (_, i) => `<span class="effect-orbit" style="--width:${42 + i * 42}px;--height:${19 + i * 11}px;--angle:${i * 34}deg;--speed:${4 + i}s"></span>`).join('');
   if (index === 2) return Array.from({ length: 5 }, (_, i) => `<span class="effect-pulse" style="--size:${23 + i * 25}px;--opacity:${1 - i * .16};--speed:${1.9 + i * .3}s"></span>`).join('');
   return Array.from({ length: 35 }, (_, i) => `<span class="effect-bar" style="--h:${20 + ((i * 41 + i * i * 7) % 70)}%;--delay:${(i % 9) * -.12}s"></span>`).join('');
+}
+
+function ensureAnalyser() {
+  if (analyser) return true;
+  if (visualizerUnavailable) return false;
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) { visualizerUnavailable = true; return false; }
+  try {
+    audioContext = new AudioContextClass();
+    const source = audioContext.createMediaElementSource(audio);
+    analyser = audioContext.createAnalyser();
+    analyser.fftSize = 1024;
+    analyser.smoothingTimeConstant = .72;
+    source.connect(analyser);
+    analyser.connect(audioContext.destination);
+    frequencyData = new Uint8Array(analyser.frequencyBinCount);
+    timeData = new Uint8Array(analyser.fftSize);
+    return true;
+  } catch {
+    visualizerUnavailable = true;
+    return false;
+  }
+}
+
+function visualizerShouldRun() {
+  return Boolean(state.coverAlbumId && state.effectIndex >= 4 && !audio.paused && !document.hidden && !reducedMotion.matches && coverRoot.querySelector('.audio-visualizer'));
+}
+
+function drawVisualizer() {
+  const canvas = coverRoot.querySelector('.audio-visualizer');
+  if (!canvas) return;
+  const width = canvas.clientWidth;
+  const height = canvas.clientHeight;
+  if (!width || !height) return;
+  const ratio = Math.min(window.devicePixelRatio || 1, 2);
+  const pixelWidth = Math.round(width * ratio);
+  const pixelHeight = Math.round(height * ratio);
+  if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
+    canvas.width = pixelWidth;
+    canvas.height = pixelHeight;
+  }
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+  ctx.clearRect(0, 0, width, height);
+
+  if (state.effectIndex === 4) {
+    if (analyser && !audio.paused) analyser.getByteFrequencyData(frequencyData);
+    const levels = spectrumLevels(analyser && !audio.paused ? frequencyData : new Uint8Array(44), 44);
+    const gap = 3;
+    const barWidth = (width - gap * (levels.length - 1)) / levels.length;
+    const gradient = ctx.createLinearGradient(0, height, 0, 0);
+    gradient.addColorStop(0, '#a395f0');
+    gradient.addColorStop(.55, '#ed91c5');
+    gradient.addColorStop(1, '#ffe0d7');
+    ctx.fillStyle = gradient;
+    ctx.shadowColor = '#ef96c9';
+    ctx.shadowBlur = 7;
+    levels.forEach((level, index) => {
+      const barHeight = 2 + Math.pow(level, .72) * (height - 11);
+      ctx.fillRect(index * (barWidth + gap), height - barHeight - 2, barWidth, barHeight);
+    });
+    return;
+  }
+
+  if (analyser && !audio.paused) analyser.getByteTimeDomainData(timeData);
+  const samples = analyser && !audio.paused ? timeData : new Uint8Array(128).fill(128);
+  const points = waveformPoints(samples, width, height - 12);
+  const middle = height / 2;
+  ctx.strokeStyle = '#ffffff2a';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, middle);
+  ctx.lineTo(width, middle);
+  ctx.stroke();
+  const gradient = ctx.createLinearGradient(0, 0, width, 0);
+  gradient.addColorStop(0, '#a99df4');
+  gradient.addColorStop(.5, '#ffc0d4');
+  gradient.addColorStop(1, '#f49eb8');
+  ctx.strokeStyle = gradient;
+  ctx.lineWidth = 2.5;
+  ctx.lineJoin = 'round';
+  ctx.shadowColor = '#ef91be';
+  ctx.shadowBlur = 9;
+  ctx.beginPath();
+  points.forEach(([x, y], index) => index ? ctx.lineTo(x, y + 6) : ctx.moveTo(x, y + 6));
+  ctx.stroke();
+}
+
+function renderVisualizerFrame(time) {
+  visualFrame = 0;
+  if (!visualizerShouldRun()) return;
+  if (time - visualLastFrame >= 1000 / 30) {
+    drawVisualizer();
+    visualLastFrame = time;
+  }
+  visualFrame = requestAnimationFrame(renderVisualizerFrame);
+}
+
+function syncVisualizer() {
+  if (!visualizerShouldRun()) {
+    cancelAnimationFrame(visualFrame);
+    visualFrame = 0;
+    return;
+  }
+  if (!ensureAnalyser()) return;
+  void audioContext.resume().then(() => {
+    if (visualizerShouldRun() && !visualFrame) visualFrame = requestAnimationFrame(renderVisualizerFrame);
+  }).catch(() => showToast('浏览器未能启用实时音频特效。'));
 }
 
 function updateEffect() {
@@ -170,11 +288,20 @@ function updateEffect() {
   if (!stage) return;
   stage.className = `cover-effect effect-mode-${state.effectIndex}`;
   stage.innerHTML = effectMarkup(state.effectIndex);
+  if (state.effectIndex >= 4 && !coverRoot.querySelector('#cover-playback').hidden) {
+    if (ensureAnalyser()) {
+      void audioContext.resume().catch(() => showToast('浏览器未能启用实时音频特效。'));
+      drawVisualizer();
+    } else {
+      stage.innerHTML = '<span class="effect-off">当前浏览器不支持实时音频特效</span>';
+    }
+  }
   const button = coverRoot.querySelector('#effect-toggle');
   const label = state.effectIndex === -1 ? '开启动画' : `切换动画：${effectModes[state.effectIndex]}`;
   button.setAttribute('aria-label', label);
   button.title = label;
   coverRoot.querySelector('#effect-name').textContent = state.effectIndex === -1 ? '动画已关闭' : effectModes[state.effectIndex];
+  syncVisualizer();
 }
 
 function updateCover() {
@@ -196,6 +323,7 @@ function updateCover() {
   button.setAttribute('aria-label', playing ? '暂停' : '播放');
   coverRoot.querySelector('#cover-volume').value = String(Math.round(audio.volume * 100));
   updateProgress();
+  syncVisualizer();
 }
 
 function openCover(albumId, opener) {
@@ -209,8 +337,8 @@ function openCover(albumId, opener) {
   appShell.inert = true;
   drawerRoot.inert = true;
   document.body.classList.add('cover-open');
-  updateEffect();
   updateCover();
+  updateEffect();
   coverRoot.querySelector('.cover-close').focus();
 }
 
@@ -220,6 +348,8 @@ function closeCover() {
   state.coverAlbumId = null;
   state.coverOpener = null;
   state.coverFollowPlayer = false;
+  cancelAnimationFrame(visualFrame);
+  visualFrame = 0;
   coverRoot.replaceChildren();
   drawerRoot.inert = false;
   appShell.inert = Boolean(state.drawerId);
@@ -404,6 +534,8 @@ audio.addEventListener('play', updatePlayer);
 audio.addEventListener('pause', updatePlayer);
 audio.addEventListener('ended', () => { void playSong(nextPlayableId(state.currentId, 1)); });
 audio.addEventListener('error', () => showToast('音频加载失败，请检查本地文件是否完整。'));
+document.addEventListener('visibilitychange', syncVisualizer);
+reducedMotion.addEventListener('change', syncVisualizer);
 
 audio.volume = .75;
 audio.src = playableSongs[0].audio;

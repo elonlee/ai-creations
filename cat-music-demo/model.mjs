@@ -66,7 +66,7 @@ export function playbackState(songId, currentId, paused) {
   return paused ? 'paused' : 'playing';
 }
 
-export const effectModes = ['流体粒子', '螺旋星系', '几何脉冲', '波动网格'];
+export const effectModes = ['流体粒子', '螺旋星系', '几何脉冲', '波动网格', '实时频谱', '实时波形'];
 
 export function nextEffectIndex(index) {
   return index >= -1 && index < effectModes.length - 1 ? index + 1 : -1;
