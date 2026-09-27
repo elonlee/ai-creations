@@ -14,5 +14,6 @@
 | [模拟时光](simulated-days/README.md) | 在紫蓝巷陪 Miri 做饭、画画、布置小屋并认识邻居的生活模拟。 | 查看目录中的 README，使用本地 HTTP 服务运行。 |
 | [雨窗手记](rain-window/README.md) | 在雨窗前记录日常，可调夜景、雨滴、文字和雨雷声。 | 查看目录中的 README，使用本地 HTTP 服务运行。 |
 | [小小丰收](little-harvest/README.md) | 36 张原创手绘果蔬闪卡，支持滑动切换与英文发音。 | 查看目录中的 README，使用本地 HTTP 服务运行。 |
+| [潮汐之间](tideline/README.md) | 全屏实时海景与四幕滚动叙事。 | 查看目录中的 README，使用本地 HTTP 服务运行。 |
 
 这些作品仅用于个人学习和测试。具体运行方法及素材说明以各作品目录中的文档为准。
