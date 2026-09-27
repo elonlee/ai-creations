@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f7f6">
+  <meta name="description" content="Cat Music 静态播放器演示：浏览示例专辑与歌曲，试听开放授权的音乐。">
+  <title>Cat Music · 静态播放器演示</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <svg class="icon-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="icon-music" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13M9 18a3 3 0 1 1-3-3c1.7 0 3 1.3 3 3Zm12-2a3 3 0 1 1-3-3c1.7 0 3 1.3 3 3Z"/></symbol>
+    <symbol id="icon-play" viewBox="0 0 24 24"><path d="m8 5 12 7-12 7V5Z"/></symbol>
+    <symbol id="icon-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol>
+    <symbol id="icon-prev" viewBox="0 0 24 24"><path d="M5 5v14m14-14L7 12l12 7V5Z"/></symbol>
+    <symbol id="icon-next" viewBox="0 0 24 24"><path d="M19 5v14M5 5l12 7-12 7V5Z"/></symbol>
+    <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></symbol>
+    <symbol id="icon-disc" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/><path d="M5 11a7 7 0 0 1 6-6"/></symbol>
+    <symbol id="icon-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2M17 6a3 3 0 0 1 0 6m1 3a5 5 0 0 1 3 5"/></symbol>
+    <symbol id="icon-heart" viewBox="0 0 24 24"><path d="M20.8 5.7a5.3 5.3 0 0 0-7.5 0L12 7l-1.3-1.3a5.3 5.3 0 0 0-7.5 7.5L12 22l8.8-8.8a5.3 5.3 0 0 0 0-7.5Z"/></symbol>
+    <symbol id="icon-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+    <symbol id="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+    <symbol id="icon-moon" viewBox="0 0 24 24"><path d="M20.7 14.2A8.6 8.6 0 0 1 9.8 3.3 8.7 8.7 0 1 0 20.7 14.2Z"/></symbol>
+    <symbol id="icon-x" viewBox="0 0 24 24"><path d="M5 5 19 19M19 5 5 19"/></symbol>
+    <symbol id="icon-arrow" viewBox="0 0 24 24"><path d="m5 12 14 0m-6-6 6 6-6 6"/></symbol>
+    <symbol id="icon-volume" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4Zm13-1a6 6 0 0 1 0 8m2-11a10 10 0 0 1 0 14"/></symbol>
+    <symbol id="icon-waves" viewBox="0 0 24 24"><path d="M2 8c2.5 0 2.5 8 5 8s2.5-8 5-8 2.5 8 5 8 2.5-8 5-8"/></symbol>
+    <symbol id="icon-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-8h.01"/></symbol>
+  </svg>
+
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="./" aria-label="Cat Music 首页">
+        <span class="brand-mark"><svg class="icon"><use href="#icon-music"/></svg></span>
+        <span class="brand-copy"><strong>Cat Music</strong><small>STATIC SHOWCASE</small></span>
+      </a>
+
+      <div class="player-controls" aria-label="音频播放器">
+        <div class="transport">
+          <button class="icon-button transport-skip" id="previous" type="button" aria-label="上一首可试听曲目"><svg class="icon"><use href="#icon-prev"/></svg></button>
+          <button class="play-button" id="play-toggle" type="button" aria-label="播放"><svg class="icon"><use href="#icon-play"/></svg></button>
+          <button class="icon-button transport-skip" id="next" type="button" aria-label="下一首可试听曲目"><svg class="icon"><use href="#icon-next"/></svg></button>
+        </div>
+        <div class="timeline"><span id="elapsed">0:00</span><input id="seek" type="range" min="0" max="1000" value="0" aria-label="播放进度"><span id="duration">0:00</span></div>
+      </div>
+
+      <div class="topbar-right">
+        <button class="now-art art art-amber" id="now-art" type="button" data-open-cover="current" aria-label="查看当前歌曲的专辑大图"></button>
+        <div class="now-copy"><strong id="now-title">降 E 大调圆舞曲 B.46</strong><span id="now-artist">Frédéric Chopin</span></div>
+        <label class="volume-control" aria-label="音量"><svg class="icon"><use href="#icon-volume"/></svg><input id="volume" type="range" min="0" max="100" value="75" aria-label="音量"></label>
+        <button class="icon-button utility-button" id="queue-toggle" type="button" aria-label="打开试听队列" aria-expanded="false"><svg class="icon"><use href="#icon-list"/></svg></button>
+        <button class="icon-button utility-button" id="theme-toggle" type="button" aria-label="切换深色模式"><svg class="icon"><use href="#icon-moon"/></svg></button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar" aria-label="资料库导航">
+        <div class="search-box"><svg class="icon"><use href="#icon-search"/></svg><input id="search" type="search" placeholder="搜索歌曲、专辑或艺人" aria-label="搜索歌曲、专辑或艺人"></div>
+        <div class="sidebar-heading">音乐资料库 <span>DEMO LIBRARY</span></div>
+        <nav class="nav-list" aria-label="浏览分类">
+          <button class="nav-item" type="button" data-view="songs"><svg class="icon"><use href="#icon-music"/></svg><span>歌曲</span><b id="song-count">12</b></button>
+          <button class="nav-item is-active" type="button" data-view="albums"><svg class="icon"><use href="#icon-disc"/></svg><span>专辑</span><b id="album-count">4</b></button>
+          <button class="nav-item" type="button" data-view="artists"><svg class="icon"><use href="#icon-users"/></svg><span>艺人</span></button>
+          <button class="nav-item" type="button" data-view="favorites"><svg class="icon"><use href="#icon-heart"/></svg><span>我喜欢的</span><b id="favorite-count">0</b></button>
+        </nav>
+        <div class="sidebar-spacer"></div>
+        <div class="sidebar-note"><span class="note-dot"></span><strong>静态演示版</strong><p>页面中的专辑与部分歌曲为示例信息。带播放标记的 2 首曲目可以真实试听。</p><a href="./README.md">了解素材与运行方式 <svg class="icon"><use href="#icon-arrow"/></svg></a></div>
+      </aside>
+
+      <main class="main-content" id="main-content">
+        <div class="page-topline"><span><span class="live-dot"></span> CAT MUSIC / COLLECTION</span><a href="../">返回作品集 <svg class="icon"><use href="#icon-arrow"/></svg></a></div>
+        <div class="page-heading"><div><p class="eyebrow" id="view-eyebrow">CURATED FOR LISTENING</p><h1 id="view-title">听见此刻<span>.</span></h1><p class="page-description" id="view-description">从一张唱片开始，慢慢找到今天的声音。这里有示例资料，也有两段开放授权的真实录音。</p></div><div class="heading-stamp"><span id="heading-count">04</span><small id="heading-label">ALBUMS<br>IN YOUR LIBRARY</small></div></div>
+        <div id="content" aria-live="polite"></div>
+        <footer class="content-footer"><span>CAT MUSIC · 静态作品演示</span><span>曲目信息仅供界面展示，真实录音来源见 <a href="./GENERATION.md">制作说明</a>。</span></footer>
+      </main>
+    </div>
+  </div>
+
+  <div id="drawer-root"></div>
+  <div id="cover-root"></div>
+  <div id="queue-root"></div>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <audio id="audio" preload="metadata"></audio>
+  <script type="module" src="./app.mjs"></script>
+</body>
+</html>

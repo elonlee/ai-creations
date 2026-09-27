@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 420" role="img" aria-label="Cat Music 静态播放器的专辑网格插画">
+  <defs>
+    <linearGradient id="warm" x2="1" y2="1"><stop stop-color="#52344b"/><stop offset=".53" stop-color="#ca846e"/><stop offset="1" stop-color="#f5ce9e"/></linearGradient>
+    <linearGradient id="sea" x2="1" y2="1"><stop stop-color="#27495b"/><stop offset=".55" stop-color="#69acbb"/><stop offset="1" stop-color="#d2d6bb"/></linearGradient>
+    <linearGradient id="city" x2="1" y2="1"><stop stop-color="#342b61"/><stop offset=".55" stop-color="#a0699d"/><stop offset="1" stop-color="#e1a09a"/></linearGradient>
+  </defs>
+  <rect width="600" height="420" fill="#f8f7f6"/>
+  <rect width="600" height="52" fill="#fff"/><path d="M0 52h600" stroke="#e9e9e9"/>
+  <rect x="18" y="12" width="28" height="28" rx="8" fill="#23242b"/><path d="M30 19v13a3 3 0 1 1-2-3V21l9-2v9a3 3 0 1 1-2-3v-8Z" fill="#fff"/>
+  <text x="56" y="31" fill="#25262d" font-family="Arial,sans-serif" font-size="16" font-weight="700">Cat Music</text>
+  <g fill="none" stroke="#2c2c34" stroke-width="2" stroke-linejoin="round"><path d="M269 20v16m15-16-14 8 14 8Z"/><path d="M341 20v16m-15-16 14 8-14 8Z"/></g><circle cx="305" cy="28" r="16" fill="#26262c"/><path d="m301 20 11 8-11 8Z" fill="#fff"/>
+  <rect x="0" y="52" width="151" height="368" fill="#fff"/><path d="M151 52v368" stroke="#e9e9e9"/>
+  <rect x="15" y="77" width="121" height="30" rx="8" fill="#f3f3f2"/><circle cx="30" cy="91" r="5" fill="none" stroke="#a4a4a9" stroke-width="2"/><path d="m34 95 4 4" stroke="#a4a4a9" stroke-width="2"/>
+  <rect x="15" y="157" width="121" height="33" rx="8" fill="#fff0f0"/><text x="29" y="178" fill="#cd565d" font-family="Arial,sans-serif" font-size="11" font-weight="700">◉  专辑</text>
+  <text x="29" y="143" fill="#80828a" font-family="Arial,sans-serif" font-size="10">音乐资料库</text><text x="29" y="219" fill="#7c7e86" font-family="Arial,sans-serif" font-size="11">♫  歌曲</text><text x="29" y="252" fill="#7c7e86" font-family="Arial,sans-serif" font-size="11">♡  我喜欢的</text>
+  <text x="179" y="98" fill="#d45d63" font-family="Arial,sans-serif" font-size="10" letter-spacing="3">CURATED FOR LISTENING</text>
+  <text x="179" y="137" fill="#292a31" font-family="Arial,sans-serif" font-size="32" font-weight="700">听见此刻.</text>
+  <rect x="178" y="161" width="393" height="121" rx="17" fill="#252630"/><circle cx="489" cy="218" r="69" fill="#c98277" opacity=".22"/><text x="199" y="190" fill="#e3aa9e" font-family="Arial,sans-serif" font-size="8" letter-spacing="2">FEATURED / OPEN AUDIO</text><text x="199" y="225" fill="#fff" font-family="Arial,sans-serif" font-size="23" font-weight="700">开放录音选集</text><rect x="199" y="241" width="71" height="25" rx="12" fill="#fff"/><text x="216" y="258" fill="#282a30" font-family="Arial,sans-serif" font-size="9">▶ 试听</text>
+  <rect x="452" y="179" width="105" height="105" rx="13" fill="url(#warm)" transform="rotate(9 504 231)"/><circle cx="503" cy="231" r="34" fill="none" stroke="#ffffffa0" stroke-width="2"/><circle cx="503" cy="231" r="48" fill="none" stroke="#ffffff48" stroke-width="2"/>
+  <text x="179" y="318" fill="#30313a" font-family="Arial,sans-serif" font-size="14" font-weight="700">专辑一览</text>
+  <g transform="translate(179 333)"><rect width="115" height="115" rx="10" fill="url(#warm)"/><circle cx="57" cy="57" r="35" fill="none" stroke="#fff8" stroke-width="2"/></g>
+  <g transform="translate(314 333)"><rect width="115" height="115" rx="10" fill="url(#sea)"/><circle cx="57" cy="57" r="35" fill="none" stroke="#fff8" stroke-width="2"/></g>
+  <g transform="translate(449 333)"><rect width="115" height="115" rx="10" fill="url(#city)"/><circle cx="57" cy="57" r="35" fill="none" stroke="#fff8" stroke-width="2"/></g>
+</svg>

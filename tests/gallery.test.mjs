@@ -11,6 +11,7 @@ const links = [
   './simulated-days/', './rain-window/', './little-harvest/', './tideline/',
   './minigames/Solitaire.html', './minigames/Galaxian.html', './minigames/Snake.html',
   './minigames/Breakout.html', './minigames/Tetris.html', './minigames/Castlevania.html',
+  './cat-music-demo/',
 ];
 
 test('首页的每个原有作品链接都有可点击的缩略图卡片', () => {
@@ -24,6 +25,17 @@ test('首页的每个原有作品链接都有可点击的缩略图卡片', () =>
     assert.match(content, /<(?:img|svg)\b/, `${href} 缺少缩略图`);
     assert.match(content, /<h3\b/, `${href} 缺少可见标题`);
   }
+});
+
+test('首页作品总数和卡片编号与入口数量一致', () => {
+  assert.match(html, new RegExp(`${links.length} 个小实验`));
+  assert.match(html, new RegExp(`${links.length} <small>PROJECTS</small>`));
+  const numbers = [...html.matchAll(/class="thumb-number">(\d+) \/ (\d+)<\/span>/g)];
+  assert.equal(numbers.length, links.length);
+  numbers.forEach(([, number, total], index) => {
+    assert.equal(Number(number), index + 1);
+    assert.equal(Number(total), links.length);
+  });
 });
 
 test('SVG 缩略图引用的画面都在本地定义', () => {

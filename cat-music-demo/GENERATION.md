@@ -1,0 +1,37 @@
+# Cat Music 静态播放器制作说明
+
+这个作品把 `gamdl-player` 的音乐播放器前端改写为可以单独运行的静态页面。入口是 [index.html](index.html)，运行步骤见 [README.md](README.md)。页面中的样例资料不会访问真实音乐库。
+
+## 需求与制作方式
+
+用户的原始要求是：
+
+> 帮我把这个项目的前端页面, 做为 ai-creations项目中的的一个项目, 生成静态页面, mock一些歌曲和专辑信息, 最好也能从网上找一个开放免费的mp3文件
+
+页面布局参考了 `gamdl-player` 仓库在 `0422282` 提交时的播放器：顶部播放区、左侧资料库、专辑网格和右侧滑出的详情。静态版使用原生 HTML、CSS 和 JavaScript ES 模块重新编写，没有复制原项目的打包文件，也不调用其 FastAPI 接口。四张专辑中的作品名和十首没有音频的歌曲是界面示例，不对应真实发行作品。封面和首页缩略图使用本地 CSS、SVG 绘制。
+
+初版完成后，浏览器检查发现深色模式的主标题颜色不够亮。调整了深色主题下的文字继承，再检查手机布局和专辑详情。
+
+用户随后指出静态版缺少专辑大图和播放特效。现在可以从顶部的小封面或专辑详情打开大图。大图页提供四种视觉特效和关闭选项；动画随真实录音的播放、暂停切换。特效使用 CSS 绘制，不读取音频频谱。没有录音的示例专辑只展示大图。
+
+代码、示例资料、SVG 插画和本文档由 Codex（基于 GPT-6）辅助完成。当前会话没有可核验的模型变体 ID 或推理参数，因此不标注更具体的模型名称。设计检查参考了本地 `ui-ux-pro-max` 技能；音频检索使用公开网页资料。没有使用图像生成模型或音乐生成模型。
+
+## 音频来源
+
+| 本地文件 | 来源与授权 | 处理 |
+| --- | --- | --- |
+| `assets/chopin-waltz.mp3` | [WaltzB.46InEFlatMajor.mp3](https://commons.wikimedia.org/wiki/File:WaltzB.46InEFlatMajor.mp3)，Wikimedia Commons 页面标为 CC0 1.0；页面写明作品来自 Musopen，曲作者为 Frédéric Chopin，未明确标出演奏者。 | 从 Wikimedia Commons 下载原 MP3，未编辑；时长约 2 分 24 秒，SHA-256：`48d13922cda2c73c0272afe4bdc0ffe10fad6070219d0f3bd21bcb7fcabc5615`。 |
+| `assets/shumi-marista-piano.mp3` | [Shumi-Marista Piano Instrumental.ogg](https://commons.wikimedia.org/wiki/File:Shumi-Marista_Piano_Instrumental.ogg)，Parchokhalq 自行上传并标为 CC0 1.0。 | 下载原 Ogg 后用 `ffmpeg -codec:a libmp3lame -b:a 160k` 转成 MP3；时长约 48 秒，SHA-256：`ceda33991682059e037241e24d73ae7df7842b0162492c73a8b4c0096b4faaed`。 |
+
+CC0 是作者在来源页声明放弃相关权利的开放许可。这里仍保留来源链接，方便核对录音和授权。第二首的本地 MP3 是格式转换结果，不是新创作的录音。页面不会向 Wikimedia Commons 实时请求音频。
+
+## 文件与限制
+
+- [model.mjs](model.mjs) 保存专辑、歌曲、搜索、切歌与特效切换规则；[app.mjs](app.mjs) 负责界面和浏览器音频控制。
+- 收藏和主题只存在当前浏览器的 `localStorage`；不同设备之间不会同步。
+- 真实录音只有两首，其他歌曲不能播放。静态版没有 Apple Music 下载、文件扫描、歌词、播放列表同步或后端 API。
+- 浏览器可能限制未由用户主动触发的播放。需要点击播放按钮后才会发声。
+
+## 验证
+
+`node --test cat-music-demo/tests/*.test.mjs tests/gallery.test.mjs` 检查资料关联、音频文件、搜索、切歌、特效切换规则和首页入口。`node --check` 检查两个模块语法。以本地 HTTP 服务打开页面后，已在浏览器验证：两首本地 MP3 能播放并切换；打开、关闭专辑详情后列表滚动值保持不变；大图页随播放、暂停启停动画，四种模式可以切换或关闭；示例专辑的大图页不显示播放控制；375px 手机宽度没有横向溢出；浅色和深色模式均可读。浏览器控制台未见脚本错误。这些检查不覆盖不同浏览器和所有设备。
