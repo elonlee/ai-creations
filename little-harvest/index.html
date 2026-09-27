@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f8f6ef">
+  <meta name="description" content="36 张原创手绘果蔬闪卡，陪孩子看图认物、学英文、听发音。">
+  <title>小小丰收 · 果蔬英文闪卡</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="../" aria-label="返回 AI 小作品首页">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 44 44" fill="none"><path d="M22 36V20m0 6C12 26 7 19 8 11c9-1 15 4 14 15Zm0-6c0-9 5-14 14-14 1 8-4 14-14 14Z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <span>小小丰收<span class="brand-en">LITTLE HARVEST</span></span>
+      </a>
+      <div class="header-right"><span class="header-note">给每一次好奇，留一张卡片</span><span class="header-pill">亲子共读 · 英文启蒙</span></div>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="intro">
+          <div class="eyebrow"><span class="eyebrow-line"></span> THE LITTLE WORDS COLLECTION</div>
+          <h1 id="hero-title">把大自然，<br><em>读给孩子听。</em></h1>
+          <p class="intro-copy">从一颗苹果到一片菠菜，36 张手绘果蔬闪卡，陪孩子看图认物、开口说英文。</p>
+
+          <div class="category-label">今天想认识什么？</div>
+          <div class="filters" role="group" aria-label="筛选闪卡类别">
+            <button class="filter active" type="button" data-category="all" aria-pressed="true">全部 <span>36</span></button>
+            <button class="filter" type="button" data-category="fruit" aria-pressed="false">水果 <span>18</span></button>
+            <button class="filter" type="button" data-category="vegetable" aria-pressed="false">蔬菜 <span>18</span></button>
+          </div>
+
+          <div class="intro-tip"><span class="tip-icon" aria-hidden="true">✳</span><p>左右滑动卡片，或按键盘方向键切换。<br>点小喇叭，一起念出英文单词。</p></div>
+          <a class="browse-link" href="#card-library">浏览全部卡片 <span aria-hidden="true">↗</span></a>
+        </div>
+
+        <div class="flashcard-area" id="flashcard-area">
+          <div class="floating-star star-one" aria-hidden="true">✳</div>
+          <div class="floating-star star-two" aria-hidden="true">✳</div>
+          <article class="flashcard" id="flashcard" aria-label="当前闪卡">
+            <div class="card-topline"><span class="card-category" id="card-category">FRUIT · 水果</span><span class="card-number" id="card-number">01 / 36</span></div>
+            <div class="card-art" id="card-art" aria-hidden="true"></div>
+            <div class="card-bottom">
+              <div class="word-block"><div class="word-kicker">LET'S SAY IT TOGETHER</div><h2 id="card-word">Apple</h2><p id="card-zh">苹果</p></div>
+              <button class="speak-button" id="speak-button" type="button" aria-label="朗读英文单词 Apple" title="朗读英文单词">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Zm12-1c1.3.9 2 2.2 2 4s-.7 3.1-2 4m2-11c2.3 1.6 3.5 3.9 3.5 7S20.3 17.4 18 19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span>听发音</span>
+              </button>
+            </div>
+          </article>
+          <div class="card-controls"><button class="nav-button" id="prev-button" type="button" aria-label="上一张"><span aria-hidden="true">←</span></button><div class="progress-wrap"><div class="progress-track"><span id="progress-fill"></span></div><span class="progress-text" id="progress-text">1 / 36</span></div><button class="nav-button" id="next-button" type="button" aria-label="下一张"><span aria-hidden="true">→</span></button></div>
+          <p class="speech-status" id="speech-status" role="status" aria-live="polite"></p>
+        </div>
+      </section>
+
+      <section class="library" id="card-library" aria-labelledby="library-title">
+        <div class="section-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> EXPLORE THE GARDEN</div><h2 id="library-title">小小果蔬图鉴<span class="heading-dot">.</span></h2></div><p>选一张喜欢的卡片，开始今天的发现。</p></div>
+        <div class="card-grid" id="card-grid"></div>
+      </section>
+    </main>
+
+    <footer class="site-footer"><span>小小丰收 <span aria-hidden="true">✳</span> 为好奇心而画</span><span>每一张卡片，都是认识世界的开始。</span></footer>
+  </div>
+  <script type="module" src="./app.mjs"></script>
+</body>
+</html>
