@@ -1,3 +1,10 @@
+export function spectrumBarLayout(width) {
+  const safeWidth = Math.max(0, width);
+  const barCount = Math.min(44, Math.max(8, Math.floor(safeWidth / 4.5)));
+  const gap = Math.min(3, safeWidth / (barCount * 2));
+  return { barCount, gap, barWidth: (safeWidth - gap * (barCount - 1)) / barCount };
+}
+
 export function spectrumLevels(samples, barCount) {
   if (!samples.length || barCount < 1) return [];
   const usable = Math.min(samples.length, 256);

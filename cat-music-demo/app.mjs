@@ -1,5 +1,5 @@
 import { albums, songs, albumFor, songsForAlbum, filterAlbums, filterSongs, artistSummaries, nextPlayableId, playbackState, effectModes, nextEffectIndex, formatTime } from './model.mjs?v=audio-v1';
-import { spectrumLevels, waveformPoints } from './visualizer.mjs?v=audio-v1';
+import { spectrumBarLayout, spectrumLevels, waveformPoints } from './visualizer.mjs?v=layout-v2';
 
 const $ = selector => document.querySelector(selector);
 const audio = $('#audio');
@@ -198,12 +198,14 @@ function ensureAnalyser() {
 }
 
 function visualizerShouldRun() {
-  return Boolean(state.coverAlbumId && state.effectIndex >= 4 && !audio.paused && !document.hidden && !reducedMotion.matches && coverRoot.querySelector('.audio-visualizer'));
+  const coverActive = state.coverAlbumId && state.effectIndex >= 4 && coverRoot.querySelector('.audio-visualizer');
+  const miniActive = !state.coverAlbumId && !window.matchMedia('(hover: none)').matches && $('#mini-spectrum');
+  return Boolean((coverActive || miniActive) && !audio.paused && !document.hidden && !reducedMotion.matches);
 }
 
 function drawVisualizer() {
   const canvas = coverRoot.querySelector('.audio-visualizer');
-  if (!canvas) return;
+  if (!canvas) { drawMiniSpectrum(); return; }
   const width = canvas.clientWidth;
   const height = canvas.clientHeight;
   if (!width || !height) return;
@@ -261,6 +263,31 @@ function drawVisualizer() {
   ctx.stroke();
 }
 
+function drawMiniSpectrum() {
+  const canvas = $('#mini-spectrum');
+  if (!canvas || !canvas.clientWidth || !canvas.clientHeight || !analyser) return;
+  const width = canvas.clientWidth;
+  const height = canvas.clientHeight;
+  const ratio = Math.min(window.devicePixelRatio || 1, 2);
+  const pixelWidth = Math.round(width * ratio);
+  const pixelHeight = Math.round(height * ratio);
+  if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
+    canvas.width = pixelWidth;
+    canvas.height = pixelHeight;
+  }
+  analyser.getByteFrequencyData(frequencyData);
+  const { barCount, gap, barWidth } = spectrumBarLayout(width);
+  const levels = spectrumLevels(frequencyData, barCount);
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+  ctx.clearRect(0, 0, width, height);
+  ctx.fillStyle = getComputedStyle(canvas).color;
+  levels.forEach((level, index) => {
+    const barHeight = 2 + Math.pow(level, .72) * (height - 11);
+    ctx.fillRect(index * (barWidth + gap), height - barHeight - 2, barWidth, barHeight);
+  });
+}
+
 function renderVisualizerFrame(time) {
   visualFrame = 0;
   if (!visualizerShouldRun()) return;
@@ -273,11 +300,16 @@ function renderVisualizerFrame(time) {
 
 function syncVisualizer() {
   if (!visualizerShouldRun()) {
+    $('.now-playing').dataset.spectrumActive = 'false';
     cancelAnimationFrame(visualFrame);
     visualFrame = 0;
     return;
   }
-  if (!ensureAnalyser()) return;
+  if (!ensureAnalyser()) {
+    $('.now-playing').dataset.spectrumActive = 'false';
+    return;
+  }
+  $('.now-playing').dataset.spectrumActive = String(!state.coverAlbumId);
   void audioContext.resume().then(() => {
     if (visualizerShouldRun() && !visualFrame) visualFrame = requestAnimationFrame(renderVisualizerFrame);
   }).catch(() => showToast('浏览器未能启用实时音频特效。'));
@@ -355,6 +387,7 @@ function closeCover() {
   appShell.inert = Boolean(state.drawerId);
   document.body.classList.remove('cover-open');
   if (opener?.isConnected) opener.focus();
+  syncVisualizer();
 }
 
 function openQueue() {
@@ -400,7 +433,15 @@ function updatePlayer() {
   const album = albumFor(song);
   $('#now-title').textContent = song.title;
   $('#now-artist').textContent = song.artist;
+  $('#now-artist').dataset.artist = song.artist;
+  $('#now-album').textContent = album.title;
+  $('#now-album').dataset.openAlbum = album.id;
   $('#now-art').className = `now-art art ${album.art}`;
+  $('#now-art').setAttribute('aria-label', `查看 ${song.title} 的专辑大图`);
+  const favorite = $('#now-favorite');
+  favorite.dataset.favoriteId = song.id;
+  favorite.dataset.liked = String(state.favorites.has(song.id));
+  favorite.setAttribute('aria-label', `${state.favorites.has(song.id) ? '取消喜欢' : '喜欢'} ${song.title}`);
   const playing = !audio.paused;
   $('#play-toggle').dataset.playing = String(playing);
   $('#play-toggle').setAttribute('aria-label', playing ? '暂停' : '播放');
@@ -408,6 +449,7 @@ function updatePlayer() {
   updateProgress();
   updatePlaybackButtons();
   updateCover();
+  syncVisualizer();
 }
 
 function updateProgress() {
@@ -446,6 +488,7 @@ function toggleFavorite(songId) {
     button.dataset.liked = String(liked);
     button.setAttribute('aria-label', `${liked ? '取消喜欢' : '喜欢'} ${songs.find(song => song.id === songId).title}`);
   });
+  if (state.currentId === songId) $('#now-favorite').dataset.liked = String(state.favorites.has(songId));
   if (state.view === 'favorites') renderContent();
 }
 
