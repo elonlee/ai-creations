@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
-import { albums, songs, filterAlbums, filterSongs, nextPlayableId, formatTime, effectModes, nextEffectIndex } from '../model.mjs';
+import { albums, songs, filterAlbums, filterSongs, nextPlayableId, formatTime, effectModes, nextEffectIndex, playbackState } from '../model.mjs';
 
 test('所有示例歌曲归属有效专辑，真实录音文件存在', () => {
   const albumIds = new Set(albums.map(album => album.id));
@@ -36,4 +36,10 @@ test('时长格式不会把无效值写进界面', () => {
 test('播放特效按四种模式和关闭状态循环', () => {
   assert.deepEqual(effectModes, ['流体粒子', '螺旋星系', '几何脉冲', '波动网格']);
   assert.deepEqual([0, 1, 2, 3, -1].map(nextEffectIndex), [1, 2, 3, -1, 0]);
+});
+
+test('播放列表区分当前歌曲的播放、暂停和其他歌曲', () => {
+  assert.equal(playbackState('waltz', 'waltz', false), 'playing');
+  assert.equal(playbackState('waltz', 'waltz', true), 'paused');
+  assert.equal(playbackState('shumi', 'waltz', false), 'idle');
 });

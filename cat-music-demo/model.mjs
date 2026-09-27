@@ -61,6 +61,11 @@ export function nextPlayableId(currentId, direction = 1) {
   return playable[(index + direction + playable.length) % playable.length].id;
 }
 
+export function playbackState(songId, currentId, paused) {
+  if (!currentId || songId !== currentId) return 'idle';
+  return paused ? 'paused' : 'playing';
+}
+
 export const effectModes = ['流体粒子', '螺旋星系', '几何脉冲', '波动网格'];
 
 export function nextEffectIndex(index) {

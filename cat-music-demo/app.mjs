@@ -1,4 +1,4 @@
-import { albums, songs, albumFor, songsForAlbum, filterAlbums, filterSongs, artistSummaries, nextPlayableId, effectModes, nextEffectIndex, formatTime } from './model.mjs';
+import { albums, songs, albumFor, songsForAlbum, filterAlbums, filterSongs, artistSummaries, nextPlayableId, playbackState, effectModes, nextEffectIndex, formatTime } from './model.mjs';
 
 const $ = selector => document.querySelector(selector);
 const audio = $('#audio');
@@ -36,6 +36,7 @@ const state = {
 const icon = name => `<svg class="icon" aria-hidden="true"><use href="#icon-${name}"/></svg>`;
 const safe = value => String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
 const albumArt = (album, className = 'album-art') => `<span class="art ${className} ${album.art}" aria-hidden="true"></span>`;
+const playingIndicator = status => `<span class="playing-indicator ${status === 'playing' ? 'is-playing' : ''}" role="img" aria-label="${status === 'playing' ? '播放中' : '已暂停'}"><span></span><span></span><span></span></span>`;
 let toastTimer;
 
 function showToast(message) {
@@ -49,16 +50,14 @@ function showToast(message) {
 function trackRow(song, index) {
   const album = albumFor(song);
   const liked = state.favorites.has(song.id);
-  const button = song.audio
-    ? `<button class="row-play" type="button" data-play-id="${song.id}" aria-label="播放 ${safe(song.title)}">${icon('play')}</button>`
-    : `<span class="mock-tag" title="这首歌曲只有示例信息，没有音频文件">仅展示</span>`;
-  return `<div class="track-row" data-song-id="${song.id}">
-    <span class="track-index">${String(index + 1).padStart(2, '0')}</span>
+  const note = song.audio ? '双击播放或暂停' : '这首歌曲只有示例信息，没有音频文件';
+  return `<div class="track-row ${song.audio ? 'is-playable' : ''}" data-song-id="${song.id}" title="${note}">
+    <span class="track-index" data-position="${index + 1}">${String(index + 1).padStart(2, '0')}</span>
     <div class="track-name">${albumArt(album, 'small-art')}<div><strong>${safe(song.title)}</strong><small class="${song.audio ? 'real-tag' : ''}">${safe(song.note)}</small></div></div>
     <span class="track-secondary track-album">${safe(album.title)}</span>
     <span class="track-secondary track-artist">${safe(song.artist)}</span>
     <span class="track-duration">${formatTime(song.duration)}</span>
-    <div class="track-actions"><button type="button" data-favorite-id="${song.id}" data-liked="${liked}" aria-label="${liked ? '取消喜欢' : '喜欢'} ${safe(song.title)}">${icon('heart')}</button>${button}</div>
+    <div class="track-actions"><button type="button" data-favorite-id="${song.id}" data-liked="${liked}" aria-label="${liked ? '取消喜欢' : '喜欢'} ${safe(song.title)}">${icon('heart')}</button>${song.audio ? '' : '<span class="mock-tag" title="这首歌曲只有示例信息，没有音频文件">仅展示</span>'}</div>
   </div>`;
 }
 
@@ -77,7 +76,7 @@ function albumCard(album) {
 function renderAlbums() {
   const visible = filterAlbums(state.query);
   const featured = albums[0];
-  const feature = state.query ? '' : `<section class="feature" aria-label="推荐专辑"><div class="feature-copy"><span class="feature-label">FEATURED / OPEN AUDIO</span><h2>${safe(featured.title)}</h2><p>在示例音乐库里试听两段真实录音，看看熟悉的播放器界面如何在静态页面中运作。</p><div class="feature-actions"><button class="solid-action" type="button" data-play-id="waltz">${icon('play')}立即试听</button><button class="ghost-action" type="button" data-open-album="open">查看专辑 ${icon('arrow')}</button></div></div>${albumArt(featured, 'feature-art')}</section>`;
+  const feature = state.query ? '' : `<section class="feature" aria-label="推荐专辑"><div class="feature-copy"><span class="feature-label">FEATURED / OPEN AUDIO</span><h2>${safe(featured.title)}</h2><p>在示例音乐库里试听两段真实录音，看看熟悉的播放器界面如何在静态页面中运作。</p><div class="feature-actions"><button class="solid-action" type="button" data-play-id="waltz" data-play-control>${icon('play')}立即试听</button><button class="ghost-action" type="button" data-open-album="open">查看专辑 ${icon('arrow')}</button></div></div>${albumArt(featured, 'feature-art')}</section>`;
   return `${feature}<div class="section-title"><h2>${state.query ? '搜索结果' : '专辑一览'}</h2><span>${visible.length} 张专辑</span></div>${visible.length ? `<div class="album-grid">${visible.map(albumCard).join('')}</div>` : '<div class="empty-state">没有找到匹配的专辑。</div>'}`;
 }
 
@@ -232,7 +231,10 @@ function openQueue() {
   state.queueOpen = true;
   $('#queue-toggle').setAttribute('aria-expanded', 'true');
   $('#queue-toggle').setAttribute('aria-label', '关闭试听队列');
-  queueRoot.innerHTML = `<section class="queue-panel" role="region" aria-label="试听队列"><div class="queue-heading"><strong>试听队列</strong><button class="queue-close" type="button" data-close-queue aria-label="关闭试听队列">${icon('x')}</button></div><p>仅列出已获开放授权、随页面打包的真实录音。</p>${playableSongs.map(song => `<button class="queue-item ${song.id === state.currentId ? 'is-current' : ''}" type="button" data-play-id="${song.id}">${albumArt(albumFor(song), 'small-art')}<span><strong>${safe(song.title)}</strong><small>${safe(song.artist)} · ${formatTime(song.duration)}</small></span></button>`).join('')}</section>`;
+  queueRoot.innerHTML = `<section class="queue-panel" role="region" aria-label="试听队列"><div class="queue-heading"><strong>试听队列</strong><button class="queue-close" type="button" data-close-queue aria-label="关闭试听队列">${icon('x')}</button></div><p>仅列出已获开放授权、随页面打包的真实录音。</p>${playableSongs.map((song, index) => {
+    const status = playbackState(song.id, state.currentId, audio.paused);
+    return `<button class="queue-item ${status !== 'idle' ? 'is-current' : ''}" type="button" data-play-id="${song.id}"><span class="queue-index" data-position="${index + 1}">${status === 'idle' ? index + 1 : playingIndicator(status)}</span><span class="queue-copy"><strong>${safe(song.title)}</strong><small>${safe(song.artist)}</small></span><span class="queue-duration">${formatTime(song.duration)}</span></button>`;
+  }).join('')}</section>`;
 }
 
 function closeQueue() {
@@ -243,12 +245,23 @@ function closeQueue() {
 }
 
 function updatePlaybackButtons() {
-  document.querySelectorAll('[data-song-id]').forEach(row => row.classList.toggle('is-current', row.dataset.songId === state.currentId));
-  document.querySelectorAll('[data-play-id]').forEach(button => {
+  document.querySelectorAll('[data-song-id]').forEach(row => {
+    const status = playbackState(row.dataset.songId, state.currentId, audio.paused);
+    row.classList.toggle('is-current', status !== 'idle');
+    const index = row.querySelector('.track-index');
+    index.innerHTML = status === 'idle' ? String(index.dataset.position).padStart(2, '0') : playingIndicator(status);
+  });
+  document.querySelectorAll('[data-play-control]').forEach(button => {
     const song = songs.find(item => item.id === button.dataset.playId);
     const playing = song.id === state.currentId && !audio.paused;
     button.innerHTML = icon(playing ? 'pause' : 'play') + (button.classList.contains('solid-action') ? '立即试听' : '');
     button.setAttribute('aria-label', `${playing ? '暂停' : '播放'} ${song.title}`);
+  });
+  queueRoot.querySelectorAll('.queue-item').forEach(button => {
+    const status = playbackState(button.dataset.playId, state.currentId, audio.paused);
+    button.classList.toggle('is-current', status !== 'idle');
+    const index = button.querySelector('.queue-index');
+    index.innerHTML = status === 'idle' ? index.dataset.position : playingIndicator(status);
   });
 }
 
@@ -264,7 +277,6 @@ function updatePlayer() {
   $('#play-toggle').innerHTML = icon(playing ? 'pause' : 'play');
   updateProgress();
   updatePlaybackButtons();
-  queueRoot.querySelectorAll('.queue-item').forEach(button => button.classList.toggle('is-current', button.dataset.playId === state.currentId));
   updateCover();
 }
 
@@ -291,7 +303,7 @@ async function playSong(songId) {
     audio.load();
   }
   updatePlayer();
-  try { await audio.play(); } catch { showToast('浏览器未能开始播放，请再次点击播放按钮。'); }
+  try { await audio.play(); } catch { showToast('浏览器未能开始播放，请重试播放操作。'); }
 }
 
 function toggleFavorite(songId) {
@@ -337,6 +349,12 @@ document.addEventListener('click', event => {
     return;
   }
   if (target.dataset.clearArtist !== undefined) { state.artist = null; renderContent(); }
+});
+
+document.addEventListener('dblclick', event => {
+  if (event.target.closest('button')) return;
+  const row = event.target.closest('.track-row[data-song-id]');
+  if (row) void playSong(row.dataset.songId);
 });
 
 $('#search').addEventListener('input', event => { state.query = event.target.value; renderContent(); });
