@@ -131,7 +131,6 @@ a:focus-visible { outline: 2px solid var(--cinnabar); outline-offset: 5px; }
 .chapter--return::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, transparent 0%, rgba(243, 237, 224, .22) 48%, rgba(243, 237, 224, .9) 78%, rgba(243, 237, 224, .96) 100%); }
 .chapter--return .chapter-heading, .chapter--return .story-block, .chapter--return .next-chapter { width: min(100%, 465px); }
 .chapter--return .story-block h2 { font-size: clamp(39px, 4vw, 65px); }
-.chapter--return .chapter-stamp { right: auto; left: 19%; bottom: 20%; }
 
 .chapter--colophon { min-height: 100svh; background: #f2ede2; text-align: center; }
 .colophon-wash { position: absolute; inset: 0; z-index: -2; background: url("./assets/return-boat.jpg") left bottom / cover no-repeat; opacity: .24; mask-image: linear-gradient(to bottom, transparent 16%, #000 100%); }

@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#071d2c">
+  <meta name="description" content="在雨窗前写下日常，调节夜景、雨滴和声音，留住自己的片刻。">
+  <title>雨窗手记 · 写给雨夜的日常</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <div class="scene" aria-hidden="true">
+    <div id="backdrop" class="backdrop"></div>
+    <div class="scene-shade"></div>
+    <div id="mist" class="mist"></div>
+    <canvas id="glassCanvas"></canvas>
+    <canvas id="rainCanvas"></canvas>
+    <div id="lightning" class="lightning"></div>
+  </div>
+
+  <header class="topbar" id="topbar">
+    <div class="brand"><span class="brand-mark"></span><span>雨窗手记</span><span class="brand-en">RAIN WINDOW</span></div>
+    <div class="top-actions">
+      <button class="top-action" id="notesShortcut" type="button" title="查看全部手记">全部手记</button>
+      <span class="top-divider" aria-hidden="true"></span>
+      <button class="top-action" id="panelToggle" type="button" aria-controls="controlPanel" aria-expanded="true" title="显示或隐藏控制面板（P）">控制面板</button>
+      <span class="top-divider" aria-hidden="true"></span>
+      <button class="top-action" id="focusToggle" type="button" aria-pressed="false" title="沉浸书写（H）">沉浸模式</button>
+    </div>
+  </header>
+
+  <main class="writing-space">
+    <div class="writing-meta"><span class="meta-line"></span><span id="todayLabel">雨天，适合慢慢写</span></div>
+    <label class="sr-only" for="noteEditor">手记正文</label>
+    <textarea id="noteEditor" spellcheck="false" placeholder="雨落下来，今天想写些什么……"></textarea>
+    <div class="writing-footer"><span id="wordCount">0 字</span><span class="footer-dot"></span><span id="saveStatus" role="status" aria-live="polite">已保存至此浏览器</span></div>
+  </main>
+
+  <aside id="controlPanel" class="control-panel" aria-label="控制面板">
+    <div class="panel-head"><div><strong>控制面板</strong><span>ATMOSPHERE</span></div><button type="button" id="closePanel" class="icon-button" aria-label="关闭控制面板">×</button></div>
+    <div class="panel-scroll">
+      <details class="panel-section" id="effectsSection" open>
+        <summary><span>效果</span><small>雨 · 玻璃 · 场景</small><span class="chevron" aria-hidden="true"></span></summary>
+        <div class="section-body">
+          <div class="field-caption">天气</div>
+          <div class="weather-options" id="weatherOptions" role="group" aria-label="天气类型">
+            <button type="button" data-weather="drizzle">细雨</button><button type="button" data-weather="shower">阵雨</button><button type="button" data-weather="storm">暴雨</button><button type="button" data-weather="thunder">雷雨</button><button type="button" data-weather="fog">雾窗</button>
+          </div>
+          <div class="field-caption scene-caption">玻璃后方 <span>选择一处风景</span></div>
+          <div class="scene-options" id="sceneOptions" role="group" aria-label="背景图片">
+            <button type="button" class="scene-option tokyo" data-scene="tokyo"><span>东京夜雨</span></button>
+            <button type="button" class="scene-option harbor" data-scene="harbor"><span>港湾黄昏</span></button>
+            <button type="button" class="scene-option terraces" data-scene="terraces"><span>山间梯田</span></button>
+            <button type="button" class="scene-option village" data-scene="village"><span>乡村夜路</span></button>
+            <button type="button" class="scene-option upload" id="uploadTrigger" aria-label="上传自己的背景图片"><span class="upload-plus">＋</span><span>我的照片</span></button>
+          </div>
+          <input class="sr-only" id="imageInput" type="file" accept="image/*" aria-label="上传背景图片">
+          <p id="uploadMessage" class="helper-text" role="status"></p>
+          <div class="field-caption section-subtitle">雨滴</div>
+          <div id="rainSliders" class="slider-group"></div>
+          <div class="field-caption section-subtitle">玻璃</div>
+          <div id="glassSliders" class="slider-group"></div>
+        </div>
+      </details>
+
+      <details class="panel-section" id="notesSection">
+        <summary><span>手记</span><small id="noteCount">1 NOTE</small><span class="chevron" aria-hidden="true"></span></summary>
+        <div class="section-body">
+          <div id="noteList" class="note-list"></div>
+          <button class="create-note" type="button" id="newNote">＋ 新建手记</button>
+          <button class="delete-note" type="button" id="deleteNote">删除当前手记</button>
+        </div>
+      </details>
+
+      <details class="panel-section" id="textSection">
+        <summary><span>文字</span><small>字号 · 颜色</small><span class="chevron" aria-hidden="true"></span></summary>
+        <div class="section-body">
+          <div id="textSliders" class="slider-group"></div>
+          <div class="field-caption section-subtitle">颜色</div>
+          <div id="colorOptions" class="color-options" role="group" aria-label="文字颜色"></div>
+        </div>
+      </details>
+
+      <details class="panel-section" id="soundSection" open>
+        <summary><span>声音</span><small>雨声 · 雷声</small><span class="chevron" aria-hidden="true"></span></summary>
+        <div class="section-body sound-body">
+          <button type="button" id="soundToggle" class="sound-toggle" aria-pressed="false"><span class="sound-icon" aria-hidden="true">◖</span><span>开启雨声</span><span class="sound-led"></span></button>
+          <div id="soundSliders" class="slider-group"></div>
+          <button type="button" id="previewThunder" class="preview-thunder">试听雷声 <span aria-hidden="true">↗</span></button>
+          <p class="helper-text">雷雨时会偶尔响起雷声。声音需点击开启。</p>
+        </div>
+      </details>
+    </div>
+    <div class="panel-foot"><span id="panelSaveStatus">已保存</span><span>静静写，慢慢听雨</span></div>
+  </aside>
+  <button type="button" id="reopenPanel" class="reopen-panel" aria-label="打开控制面板">调整氛围 <span aria-hidden="true">☰</span></button>
+  <script type="module" src="./app.mjs"></script>
+</body>
+</html>
