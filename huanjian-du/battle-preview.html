@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>《还剑渡》战斗画面设计稿</title>
+  <title>战斗画面设计稿</title>
   <link rel="stylesheet" href="battle-preview.css">
 </head>
 <body>
   <main class="preview">
     <div class="preview-heading">
       <div>
-        <p class="eyebrow">还剑渡 · 战斗画面设计</p>
+        <p class="eyebrow"><span data-identity="title"></span> · 战斗画面设计</p>
         <h1>一招一式，先看清对手。</h1>
       </div>
       <nav class="scene-switch" aria-label="切换战斗场景">
@@ -58,19 +58,19 @@
           <p class="action-note" id="action-note">出剑：稳妥的一击，不消耗内力。</p>
         </div>
 
-        <div class="hero-status" aria-label="陆照状态">
-          <div class="hero-name"><span>陆照</span><span>壹</span></div>
+        <div class="hero-status" aria-label="主角状态">
+          <div class="hero-name"><span data-identity="hero"></span><span>壹</span></div>
           <div class="stat-row"><span>气血</span><strong>42 / 42</strong></div>
-          <div class="meter hero-meter" role="img" aria-label="陆照气血充足"><span></span></div>
+          <div class="meter hero-meter" role="img" aria-label="主角气血充足"><span></span></div>
           <div class="stat-row"><span>内力</span><strong>6 / 6</strong></div>
-          <div class="meter qi-meter" role="img" aria-label="陆照内力充足"><span></span></div>
+          <div class="meter qi-meter" role="img" aria-label="主角内力充足"><span></span></div>
         </div>
       </div>
     </section>
 
     <div class="preview-footer">
-      <button type="button" id="preview-enemy-strike">预览陆照受击</button>
-      <p class="preview-note">“出剑”显示对手受击，“破招”显示对手格挡；也可预览陆照未防御时受击。暂不结算伤害或推进回合。</p>
+      <button type="button" id="preview-enemy-strike">预览<span data-identity="hero"></span>受击</button>
+      <p class="preview-note">“出剑”显示对手受击，“破招”显示对手格挡；也可预览<span data-identity="hero"></span>未防御时受击。暂不结算伤害或推进回合。</p>
     </div>
   </main>
   <script type="module" src="battle-preview.js"></script>

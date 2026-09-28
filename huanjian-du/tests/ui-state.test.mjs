@@ -22,15 +22,15 @@ test('气血耗尽时状态条归零，不出现负宽度', () => {
   assert.equal(status.qiPercent, 0);
 });
 
-test('对话立绘固定为左侧陆照、右侧朝向陆照的 NPC', () => {
+test('对话立绘固定为左侧主角、右侧朝向主角的 NPC', () => {
   assert.equal(typeof ui.dialoguePortraits, 'function');
-  assert.deepEqual(ui.dialoguePortraits('沈棠'), {
+  assert.deepEqual(ui.dialoguePortraits(game.CHARACTERS.shen), {
     hero: 'assets/portraits/lu-zhao-v1.png',
     npc: 'assets/portraits/shen-tang-v1-mirrored.png',
   });
-  assert.equal(ui.dialoguePortraits('程砚').npc, 'assets/portraits/cheng-yan-v1-mirrored.png');
-  assert.equal(ui.dialoguePortraits('老船工').npc, 'assets/portraits/old-ferryman-v1-mirrored.png');
-  assert.equal(ui.dialoguePortraits('拦路流民').npc, 'assets/portraits/road-refugee-v1-mirrored.png');
+  assert.equal(ui.dialoguePortraits(game.CHARACTERS.cheng).npc, 'assets/portraits/cheng-yan-v1-mirrored.png');
+  assert.equal(ui.dialoguePortraits(game.CHARACTERS.ferryman).npc, 'assets/portraits/old-ferryman-v1-mirrored.png');
+  assert.equal(ui.dialoguePortraits(game.CHARACTERS.refugee).npc, 'assets/portraits/road-refugee-v1-mirrored.png');
   assert.equal(ui.dialoguePortraits(null).npc, null);
 });
 
@@ -56,15 +56,17 @@ test('普通对话点击文字框继续，流民抉择时只能点击选项', ()
   });
 });
 
-test('战胜程砚后展示旧案阶段结局，并留下名册疑问', () => {
+test('战胜码头对手后展示旧案阶段结局，并留下名册疑问', () => {
   const boss = game.startBattle(game.createInitialState(), 'boss');
   const won = game.resolveBattle({ ...boss, battle: { ...boss.battle, enemyHp: 1 } }, 'strike').state;
   const ending = ui.endingPresentation(won);
+  assert.ok(ending.progress.includes(game.CHARACTERS.hero));
+  assert.ok(ending.kicker.includes(game.GAME_TITLE));
   assert.equal(ending.scene, game.SCENES.dock.image);
   assert.match(ending.title, /粮船|渡口/);
   assert.ok(ending.paragraphs.length >= 3);
-  assert.match(ending.paragraphs.join(' '), /程砚/);
-  assert.match(ending.paragraphs.join(' '), /沈渡|供词/);
+  assert.ok(ending.paragraphs.join(' ').includes(game.CHARACTERS.cheng));
+  assert.ok(ending.paragraphs.join(' ').includes(game.CHARACTERS.shenDu));
   assert.match(ending.paragraphs.join(' '), /名册/);
   assert.match(ending.progress, new RegExp(`${won.hero.level}.*${won.hero.xp}`));
 });
@@ -74,6 +76,6 @@ test('驿道战败时结局画面不误称已到码头', () => {
   const lost = game.resolveBattle({ ...battle, hero: { ...battle.hero, hp: 1 } }, 'guard').state;
   const ending = ui.endingPresentation(lost);
   assert.equal(ending.scene, game.SCENES.road.image);
-  assert.doesNotMatch(ending.paragraphs.join(' '), /程砚收剑|粮船停/);
+  assert.ok(!ending.paragraphs.join(' ').includes(`${game.CHARACTERS.cheng}收剑`));
   assert.match(ending.action, /重试|再来/);
 });

@@ -18,14 +18,14 @@ test('未防御的对手受击，破招时对手格挡', () => {
   ]);
 });
 
-test('敌方出招预览让未防御的陆照受击', () => {
+test('敌方出招预览让未防御的主角受击', () => {
   assert.deepEqual(battleAnimation.previewMoves?.('enemy-strike', 'cheng-yan'), [
     { slot: 'enemy', actor: 'cheng-yan', action: 'attack' },
     { slot: 'hero', actor: 'lu-zhao', action: 'hit', delayFrames: 2 },
   ]);
 });
 
-test('守势时陆照格挡敌方攻击', () => {
+test('守势时主角格挡敌方攻击', () => {
   assert.deepEqual(battleAnimation.previewMoves?.('guard', 'cheng-yan'), [
     { slot: 'hero', actor: 'lu-zhao', action: 'guard' },
     { slot: 'enemy', actor: 'cheng-yan', action: 'attack' },

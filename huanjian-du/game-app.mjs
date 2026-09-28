@@ -1,3 +1,4 @@
+import { CHARACTERS as characters, GAME_TITLE } from './identity.mjs';
 import { SCENES, SITES, createInitialState, move, nearbyInteraction, interact, inspectSword, chooseDialogue, currentDialogueLine, resolveBattle, objective } from './game.mjs';
 import { createAnimationPlayer, previewMoves } from './battle-animation.mjs';
 import { initialScreen, nextScreen } from './menu.mjs';
@@ -6,6 +7,11 @@ import { heroStatus, dialoguePortraits, dialogueBackdrop, dialogueControls, endi
 import { debugScenarioFromUrl } from './debug.mjs';
 
 const $ = (selector) => document.querySelector(selector);
+const identityLabels = { ...characters, title: GAME_TITLE };
+document.querySelectorAll('[data-identity]').forEach((element) => {
+  element.textContent = identityLabels[element.dataset.identity];
+});
+document.title = `${GAME_TITLE} · 第一章`;
 const debugScenario = debugScenarioFromUrl(window.location.href);
 let state = debugScenario?.state ?? createInitialState();
 let screen = debugScenario?.screen ?? initialScreen();
@@ -81,7 +87,7 @@ function renderDialogue() {
   $('#dialogue-text').textContent = line.text;
   $('#dialogue-progress').textContent = `${index + 1} / ${lines.length}${canAdvance ? ' · 点击继续' : ''}`;
   $('#dialogue-hero-portrait').src = portraits.hero;
-  $('#dialogue-hero').classList.toggle('speaking', line.speaker === '陆照');
+  $('#dialogue-hero').classList.toggle('speaking', line.speaker === characters.hero);
   $('#dialogue-npc').hidden = !portraits.npc;
   if (portraits.npc) {
     $('#dialogue-npc-portrait').src = portraits.npc;
@@ -127,7 +133,7 @@ function renderBattle() {
   $('#battle-hero-xp').textContent = `经验 ${status.xp}`;
   $('#battle-hp-fill').style.width = `${status.hpPercent}%`;
   $('#battle-qi-fill').style.width = `${status.qiPercent}%`;
-  $('#enemy-name').textContent = battle.kind === 'boss' ? '程砚' : '劫道山贼';
+  $('#enemy-name').textContent = battle.kind === 'boss' ? characters.cheng : characters.bandit;
   $('#enemy-hp').textContent = `气血 ${battle.enemyHp} / ${battle.maxHp}`;
   $('#enemy-fill').style.width = `${battle.enemyHp / battle.maxHp * 100}%`;
   $('#enemy-intent').textContent = battle.intent === 'windup' ? '对手蓄势，下一击更重' : '对手正伺机出招';
@@ -256,7 +262,7 @@ async function doBattle(action) {
   }
   busy = false;
   state = result.state;
-  if (state.hero.level > previousLevel) state = { ...state, message: `${state.message} 陆照升至 ${state.hero.level} 级！` };
+  if (state.hero.level > previousLevel) state = { ...state, message: `${state.message} ${characters.hero}升至 ${state.hero.level} 级！` };
   render();
 }
 

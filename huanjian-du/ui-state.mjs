@@ -1,12 +1,13 @@
+import { CHARACTERS as characters, GAME_TITLE } from './identity.mjs';
 import { SCENES, experienceForNextLevel } from './game.mjs';
 
 const levelWords = ['零', '壹', '贰', '叁', '肆', '伍', '陆', '柒', '捌', '玖'];
 const percentage = (value, total) => total > 0 ? Math.max(0, Math.min(100, value / total * 100)) : 0;
 const npcPortraits = {
-  '沈棠': 'shen-tang',
-  '老船工': 'old-ferryman',
-  '程砚': 'cheng-yan',
-  '拦路流民': 'road-refugee',
+  [characters.shen]: 'shen-tang',
+  [characters.ferryman]: 'old-ferryman',
+  [characters.cheng]: 'cheng-yan',
+  [characters.refugee]: 'road-refugee',
 };
 
 export function dialoguePortraits(partner) {
@@ -31,18 +32,18 @@ export function dialogueControls(dialogue) {
 }
 
 export function endingPresentation(state) {
-  const progress = `陆照 · ${state.hero.level} 级 · 累计经验 ${state.hero.xp}`;
+  const progress = `${characters.hero} · ${state.hero.level} 级 · 累计经验 ${state.hero.xp}`;
   if (state.mode === 'ending') {
     return {
       scene: SCENES.dock.image,
       kind: 'victory',
-      kicker: '还剑渡 · 第一章终',
+      kicker: `${GAME_TITLE} · 第一章终`,
       title: '粮船停在了渡口',
       lead: '雨夜里，剑锋终于替十年前的冤案留住了这艘船。',
       paragraphs: [
-        '程砚收剑，粮船停泊。仓中的余粮留在渡口，岸上等粮的人终于不必再空手而归。',
-        '陆照把师父的供词交给沈棠。老船工愿意作证：沈渡当年开仓，是为了救被困在洪水中的人。',
-        '可押运名册仍有涂改。是谁改了名字，又是谁扣下余粮？陆照收起旧剑，决定沿粮船的来路继续查。',
+        `${characters.cheng}收剑，粮船停泊。仓中的余粮留在渡口，岸上等粮的人终于不必再空手而归。`,
+        `${characters.hero}把师父的供词交给${characters.shen}。${characters.ferryman}愿意作证：${characters.shenDu}当年开仓，是为了救被困在洪水中的人。`,
+        `可押运名册仍有涂改。是谁改了名字，又是谁扣下余粮？${characters.hero}收起旧剑，决定沿粮船的来路继续查。`,
       ],
       next: '旧案未结 · 江湖再会',
       progress,
@@ -52,9 +53,9 @@ export function endingPresentation(state) {
   return {
     scene: SCENES[state.scene].image,
     kind: 'defeat',
-    kicker: '还剑渡 · 此行未竟',
+    kicker: `${GAME_TITLE} · 此行未竟`,
     title: '剑还没有送到',
-    lead: '陆照倒下了，十年前的赈粮旧案仍等着有人查明。',
+    lead: `${characters.hero}倒下了，十年前的赈粮旧案仍等着有人查明。`,
     paragraphs: [
       '山路与渡口都还在。歇一口气，再循着师父留下的线索出发。',
     ],

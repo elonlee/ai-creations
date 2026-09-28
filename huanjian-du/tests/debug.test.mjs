@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { nearbyInteraction } from '../game.mjs';
+import { nearbyInteraction, CHARACTERS } from '../game.mjs';
 import { debugScenarioFromUrl } from '../debug.mjs';
 
 const localUrl = (name) => `http://127.0.0.1:8765/huanjian-du/?debug=${name}`;
@@ -30,15 +30,15 @@ test('可直接进入序幕和四个有交互目标的探索场景', () => {
 test('可直接检查人物对话和流民的最终选择', () => {
   const shen = debugScenarioFromUrl(localUrl('shen-dialogue')).state;
   assert.equal(shen.mode, 'dialogue');
-  assert.equal(shen.dialogue.partner, '沈棠');
+  assert.equal(shen.dialogue.partner, CHARACTERS.shen);
   const ferryman = debugScenarioFromUrl(localUrl('ferryman-dialogue')).state;
-  assert.equal(ferryman.dialogue.partner, '老船工');
+  assert.equal(ferryman.dialogue.partner, CHARACTERS.ferryman);
   const refugees = debugScenarioFromUrl(localUrl('refugees-choice')).state;
   assert.equal(refugees.dialogue.kind, 'refugees');
   assert.equal(refugees.dialogue.index, refugees.dialogue.lines.length - 1);
   const boss = debugScenarioFromUrl(localUrl('boss-dialogue')).state;
   assert.equal(boss.dialogue.kind, 'boss');
-  assert.equal(boss.dialogue.partner, '程砚');
+  assert.equal(boss.dialogue.partner, CHARACTERS.cheng);
 });
 
 test('可直接检查两场战斗及胜负结局', () => {

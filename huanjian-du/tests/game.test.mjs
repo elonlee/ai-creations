@@ -1,6 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as game from '../game.mjs';
+import { CHARACTERS, GAME_TITLE } from '../identity.mjs';
+
+test('角色称呼和游戏名有统一配置', () => {
+  assert.equal(game.CHARACTERS, CHARACTERS);
+  assert.equal(game.GAME_TITLE, GAME_TITLE);
+  for (const key of ['hero', 'shen', 'cheng', 'ferryman', 'refugee', 'shenDu', 'bandit']) {
+    assert.ok(CHARACTERS[key]?.length > 0, `${key} 缺少称呼`);
+  }
+});
 
 function atSite(state, scene, id) {
   const { x, y } = game.SITES[scene].find((site) => site.id === id);
@@ -50,7 +59,7 @@ test('场景交互按线索顺序推进并解锁码头对质', () => {
   assert.equal(state.battle.kind, 'boss');
 });
 
-test('没有查清旧案时程砚不触发决战', () => {
+test('没有查清旧案时码头对手不触发决战', () => {
   const state = atSite(game.createInitialState(), 'dock', 'cheng');
   const next = game.interact(state);
   assert.equal(next.mode, 'dialogue');
@@ -85,7 +94,7 @@ test('流民可交粮和平解决，也能谈判；没有粮时不能假交粮',
   assert.match(fought.message, /流民.*山贼/);
 });
 
-test('战斗出剑结算伤害，敌人还手时陆照受击', () => {
+test('战斗出剑结算伤害，敌人还手时主角受击', () => {
   const state = game.startBattle(game.createInitialState(), 'bandit');
   const turn = game.resolveBattle(state, 'strike', () => 0.5);
   assert.equal(turn.state.battle.enemyHp, 21);

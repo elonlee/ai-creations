@@ -1,4 +1,11 @@
+import { CHARACTERS as characters, GAME_TITLE } from './identity.mjs';
 import { createAnimationPlayer, frameSource, previewMoves } from './battle-animation.mjs';
+
+const identityLabels = { ...characters, title: GAME_TITLE };
+document.querySelectorAll('[data-identity]').forEach((element) => {
+  element.textContent = identityLabels[element.dataset.identity];
+});
+document.title = `《${GAME_TITLE}》战斗画面设计稿`;
 
 const battleScreen = document.querySelector('.battle-screen');
 const sceneButtons = [...document.querySelectorAll('[data-scene-button]')];
@@ -10,7 +17,7 @@ const scenes = {
   road: {
     name: '荒山驿道',
     time: '暮色',
-    enemy: '劫道山贼',
+    enemy: characters.bandit,
     hp: '气血 28 / 28',
     intent: '架势：试探',
     image: 'assets/battle/road-bandit-stance-v1.png',
@@ -20,12 +27,12 @@ const scenes = {
   dock: {
     name: '乌篷渡码头',
     time: '夜雨',
-    enemy: '程砚',
+    enemy: characters.cheng,
     hp: '气血 84 / 84',
     intent: '下一式：回风挑灯',
     image: 'assets/battle/cheng-yan-stance-v1.png',
     actor: 'cheng-yan',
-    line: '程砚横剑而立，身后是即将离岸的粮船。',
+    line: `${characters.cheng}横剑而立，身后是即将离岸的粮船。`,
   },
 };
 
@@ -99,6 +106,6 @@ for (const button of actionButtons) {
 
 document.querySelector('#preview-enemy-strike').addEventListener('click', () => {
   for (const button of actionButtons) button.setAttribute('aria-pressed', 'false');
-  document.querySelector('#action-note').textContent = '敌方出招预览：陆照没有摆守势，受到攻击。';
+  document.querySelector('#action-note').textContent = `敌方出招预览：${characters.hero}没有摆守势，受到攻击。`;
   void animationPlayer.play(previewMoves('enemy-strike', scenes[battleScreen.dataset.scene].actor));
 });
