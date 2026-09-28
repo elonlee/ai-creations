@@ -11,10 +11,10 @@ const links = [
   './simulated-days/', './rain-window/', './little-harvest/', './tideline/',
   './minigames/Solitaire.html', './minigames/Galaxian.html', './minigames/Snake.html',
   './minigames/Breakout.html', './minigames/Tetris.html', './minigames/Castlevania.html',
-  './cat-music-demo/', './huanjian-du/',
+  './cat-music-demo/', './huanjian-du/', './changfeng-zhuan-godot/web/',
 ];
 
-test('首页的每个原有作品链接都有可点击的缩略图卡片', () => {
+test('首页的每个作品链接都有可点击的缩略图卡片', () => {
   const cards = [...html.matchAll(/<a\b[^>]*class="work-card[^"]*"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g)];
   assert.equal(cards.length, links.length);
   assert.deepEqual(cards.map(match => match[1]), links);
