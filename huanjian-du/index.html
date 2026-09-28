@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="game.css">
   <link rel="stylesheet" href="menu.css">
   <link rel="stylesheet" href="intro-battle.css">
+  <link rel="stylesheet" href="dialogue.css">
 </head>
 <body>
   <section id="title-screen" class="title-screen" aria-label="游戏主界面">
@@ -91,7 +92,13 @@
     </div>
 
     <section id="dialogue" class="overlay" hidden aria-label="剧情对话">
-      <div class="dialogue-card"><img id="dialogue-portrait" alt=""><div class="dialogue-copy"><p id="dialogue-speaker"></p><p id="dialogue-text"></p><div id="dialogue-options" class="dialogue-options"></div></div></div>
+      <div class="dialogue-card">
+        <div class="dialogue-cast">
+          <div id="dialogue-hero" class="dialogue-character speaking"><img id="dialogue-hero-portrait" src="assets/portraits/lu-zhao-v1.png" alt="陆照立绘"><span>陆照</span></div>
+          <div id="dialogue-npc" class="dialogue-character" hidden><img id="dialogue-npc-portrait" alt=""><span id="dialogue-npc-name"></span></div>
+        </div>
+        <div id="dialogue-copy" class="dialogue-copy" aria-describedby="dialogue-text"><div class="dialogue-line-meta"><p id="dialogue-speaker"></p><span id="dialogue-progress"></span></div><p id="dialogue-text"></p><div id="dialogue-options" class="dialogue-options"></div></div>
+      </div>
     </section>
 
     <section id="battle" class="overlay battle-overlay" hidden aria-label="回合制战斗">

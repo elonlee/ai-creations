@@ -79,8 +79,16 @@ export function isWalkable(scene, x, y) {
   return false;
 }
 
-function talk(state, speaker, text, kind = 'story') {
-  return { ...state, mode: 'dialogue', dialogue: { speaker, text, kind }, message: text };
+function talk(state, lines, kind = 'story') {
+  return {
+    ...state, mode: 'dialogue',
+    dialogue: { lines, index: 0, kind, partner: lines.find((line) => line.speaker !== '陆照')?.speaker ?? null },
+    message: lines[0].text,
+  };
+}
+
+export function currentDialogueLine(dialogue) {
+  return dialogue.lines[dialogue.index];
 }
 
 function travel(state, scene) {
@@ -93,32 +101,77 @@ export function interact(state) {
   if (!site) return { ...state, message: '附近没有可以交谈或调查的地方。' };
   if (['road', 'ferry', 'tavern', 'dock'].includes(site.id)) return travel(state, site.id);
   if (site.id === 'cart') {
-    return talk({ ...state, hero: state.flags.cartSeen ? state.hero : awardExperience(state.hero, 3), flags: { ...state.flags, cartSeen: true } }, '陆照', '粮车车辙向渡口而去。车板上还留着官仓的封泥。');
+    return talk({ ...state, hero: state.flags.cartSeen ? state.hero : awardExperience(state.hero, 3), flags: { ...state.flags, cartSeen: true } }, [
+      { speaker: '陆照', text: '车板上还留着官仓封泥，车辙却一路指向乌篷渡。' },
+      { speaker: '陆照', text: '赈粮若真在这里卸过，师父让我还剑，恐怕是要我顺着这条路查下去。' },
+    ]);
   }
   if (site.id === 'shen') {
-    return talk({ ...state, hero: state.flags.shenStory ? state.hero : awardExperience(state.hero, 8), flags: { ...state.flags, shenStory: true } }, '沈棠', '那年大水封了渡口。我父亲沈渡劫下赈粮，先救了被困的人；粮船后来却被人记作贼船。');
+    return talk({ ...state, hero: state.flags.shenStory ? state.hero : awardExperience(state.hero, 8), flags: { ...state.flags, shenStory: true } }, [
+      { speaker: '陆照', text: '山路上有辆废粮车，还留着官仓封泥。十年前的粮船，真是令尊劫的吗？' },
+      { speaker: '沈棠', text: '我爹沈渡把船拦在渡口。那夜水漫到屋檐，岸上还有几十口人等粮。' },
+      { speaker: '陆照', text: '若是救人，为何案卷写他私吞赈粮？' },
+      { speaker: '沈棠', text: '粮分完后，押运名册被人改了。爹认下罪名，只为让领粮的人活下来。' },
+      { speaker: '陆照', text: '是谁改的名册？' },
+      { speaker: '沈棠', text: '爹没说。去找老船工吧，他见过那夜上船的人，也许认得你这把剑。' },
+    ]);
   }
   if (site.id === 'ferryman') {
-    if (!state.flags.shenStory) return talk(state, '老船工', '先去酒肆问问沈棠。你手里的剑，我似乎见过。');
-    return talk({ ...state, hero: state.flags.ferrymanRecognized ? state.hero : awardExperience(state.hero, 8), flags: { ...state.flags, ferrymanRecognized: true } }, '老船工', '这剑是你师父的。当年他在此登船，亲眼见过沈渡把粮分给灾民。剑柄里，或许还留着他写的东西。');
+    if (!state.flags.shenStory) return talk(state, [
+      { speaker: '陆照', text: '老人家，你可认得这把剑？' },
+      { speaker: '老船工', text: '剑鞘上的旧结眼熟。先去酒肆问问沈棠，听了她的话，你才知道该问我什么。' },
+      { speaker: '陆照', text: '好。我问清十年前的粮船，再来见你。' },
+    ]);
+    return talk({ ...state, hero: state.flags.ferrymanRecognized ? state.hero : awardExperience(state.hero, 8), flags: { ...state.flags, ferrymanRecognized: true } }, [
+      { speaker: '陆照', text: '沈棠让我来认剑。你见过我师父？' },
+      { speaker: '老船工', text: '见过。那夜他登船时，剑鞘还挂着青崖门的旧结。' },
+      { speaker: '陆照', text: '他为何一直不肯讲沈渡的事？' },
+      { speaker: '老船工', text: '他亲眼见沈渡开仓救人，却没拦住后来改名册的人。' },
+      { speaker: '陆照', text: '他把什么留下了？' },
+      { speaker: '老船工', text: '看剑柄。你师父临走前缠了一层新皮，像在藏一张薄纸。' },
+    ]);
   }
   if (site.id === 'cheng') {
-    if (!state.flags.swordConfession) return talk(state, '程砚', '没有证据，凭什么拦下这艘粮船？去查清旧案，再来见我。');
-    return startBattle(state, 'boss');
+    if (!state.flags.swordConfession) return talk(state, [
+      { speaker: '程砚', text: '粮船今夜离渡。师弟，你要拦船，总得拿出凭据。' },
+      { speaker: '陆照', text: '沈棠说，十年前的押运名册被人改过。' },
+      { speaker: '程砚', text: '仅凭传闻，谁也不能停船。去查清旧案，再来见我。' },
+    ]);
+    return talk(state, [
+      { speaker: '程砚', text: '粮船今夜离渡，师弟，让开。' },
+      { speaker: '陆照', text: '师兄先看师父留在剑柄里的供词。沈渡开仓救人，他亲眼所见。' },
+      { speaker: '程砚', text: '这字我认得。但一纸供词，还不足以改十年前的官案。' },
+      { speaker: '陆照', text: '押运名册也被涂改。你守着的船，载的正是当年被扣下的余粮。' },
+      { speaker: '程砚', text: '我奉命把粮送走。此刻停船，青崖门也会被牵进旧案。' },
+      { speaker: '陆照', text: '那就让渡口的人看清真相。船不能再走。' },
+      { speaker: '程砚', text: '你要拦我，就先试试手中的剑。' },
+      { speaker: '陆照', text: '这一剑不是为争胜，是替沈渡和渡口百姓讨一句实话。' },
+    ], 'boss');
   }
   return state;
 }
 
 export function inspectSword(state) {
   if (state.mode !== 'explore' || !state.flags.ferrymanRecognized) return state;
-  return talk({ ...state, hero: state.flags.swordConfession ? state.hero : awardExperience(state.hero, 12), flags: { ...state.flags, swordConfession: true } }, '陆照', '剑柄内侧刻着师父的供词：沈渡开仓救人，我亲见。押运粮船之名册，另有涂改。');
+  return talk({ ...state, hero: state.flags.swordConfession ? state.hero : awardExperience(state.hero, 12), flags: { ...state.flags, swordConfession: true } }, [
+    { speaker: '陆照', text: '剑柄的皮缠得太紧了。这里面果然藏着一张薄纸。' },
+    { speaker: '陆照', text: '师父的字：沈渡开仓救人，我亲见。押运粮船之名册，另有涂改。' },
+    { speaker: '陆照', text: '他把供词藏在剑里，是怕有人先一步毁掉它。该去码头见程砚了。' },
+  ]);
 }
 
 export function chooseDialogue(state, choice) {
   if (state.mode !== 'dialogue') return state;
-  if (state.dialogue.kind !== 'refugees') {
-    return choice === 'continue' ? { ...state, mode: 'explore', dialogue: null } : state;
+  const { dialogue } = state;
+  if (choice === 'continue') {
+    if (dialogue.index < dialogue.lines.length - 1) {
+      const index = dialogue.index + 1;
+      return { ...state, dialogue: { ...dialogue, index }, message: dialogue.lines[index].text };
+    }
+    if (dialogue.kind === 'boss') return startBattle(state, 'boss');
+    return dialogue.kind === 'refugees' ? state : { ...state, mode: 'explore', dialogue: null };
   }
+  if (dialogue.kind !== 'refugees' || dialogue.index !== dialogue.lines.length - 1) return state;
   if (choice === 'grain') {
     if (state.hero.grain < 1) return { ...state, message: '身上没有余粮。' };
     return { ...state, mode: 'explore', dialogue: null, hero: awardExperience({ ...state.hero, grain: state.hero.grain - 1 }, 6), message: '你留下口粮。流民让开山路，指了指渡口的方向。获得 6 点经验。' };
@@ -144,7 +197,13 @@ export function move(state, direction, random = Math.random) {
   if (random() >= 0.18) return next;
   next = { ...next, encounterCooldown: 6 };
   if (random() < 0.7) return startBattle(next, 'bandit');
-  return talk(next, '拦路流民', '前面的粮车空了。我们只求一口吃的，你可有余粮？', 'refugees');
+  return talk(next, [
+    { speaker: '拦路流民', text: '前面的粮车空了。我们只求一口吃的，你可有余粮？' },
+    { speaker: '陆照', text: '你们从哪儿来？官府没有放粮吗？' },
+    { speaker: '拦路流民', text: '说是赈粮到了渡口，等了几日却连一斗都没见着。孩子已饿得走不动了。' },
+    { speaker: '陆照', text: '我正要去查那辆粮车。若有余粮，理该分到你们手里。' },
+    { speaker: '拦路流民', text: '那就请你给个准话。眼下这口粮，还是渡口的消息，我们都等不起。' },
+  ], 'refugees');
 }
 
 export function startBattle(state, kind) {
@@ -153,7 +212,7 @@ export function startBattle(state, kind) {
   return {
     ...state, mode: 'battle', dialogue: null, encounterCooldown: 6,
     battle: { kind, enemyHp: maxHp, maxHp, round: 0, intent: 'probe' },
-    message: kind === 'boss' ? '程砚横剑挡在粮船前：拿剑来，让我看看你的证据。' : '山贼拔刀拦路。',
+    message: kind === 'boss' ? '对质已尽。程砚横剑守在粮船前，陆照拔剑迎战。' : '山贼拔刀拦路。',
   };
 }
 

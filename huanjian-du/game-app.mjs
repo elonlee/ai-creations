@@ -1,8 +1,8 @@
-import { SCENES, SITES, createInitialState, move, nearbyInteraction, interact, inspectSword, chooseDialogue, resolveBattle, objective } from './game.mjs';
+import { SCENES, SITES, createInitialState, move, nearbyInteraction, interact, inspectSword, chooseDialogue, currentDialogueLine, resolveBattle, objective } from './game.mjs';
 import { createAnimationPlayer, previewMoves } from './battle-animation.mjs';
 import { initialScreen, nextScreen } from './menu.mjs';
 import { INTRO_LINES, nextIntroIndex } from './intro.mjs';
-import { heroStatus } from './ui-state.mjs';
+import { heroStatus, dialoguePortraits, dialogueBackdrop, dialogueControls } from './ui-state.mjs';
 
 const $ = (selector) => document.querySelector(selector);
 let state = createInitialState();
@@ -13,12 +13,6 @@ let walkTimer;
 let introIndex = 0;
 let introTimer;
 
-const portrait = {
-  '陆照': 'assets/portraits/lu-zhao-v1.png',
-  '沈棠': 'assets/portraits/shen-tang-v1.png',
-  '老船工': 'assets/portraits/old-ferryman-v1.png',
-  '程砚': 'assets/portraits/cheng-yan-v1.png',
-};
 const battleActor = { bandit: 'road-bandit', boss: 'cheng-yan' };
 const battleIdle = { bandit: 'assets/battle/road-bandit-stance-v1.png', boss: 'assets/battle/cheng-yan-stance-v1.png' };
 const facingRow = { down: 0, left: 3, right: 6, up: 9 };
@@ -76,14 +70,33 @@ function renderDialogue() {
   const visible = state.mode === 'dialogue';
   $('#dialogue').hidden = !visible;
   if (!visible) return;
-  const { speaker, text, kind } = state.dialogue;
-  $('#dialogue-speaker').textContent = speaker;
-  $('#dialogue-text').textContent = text;
-  $('#dialogue-portrait').hidden = !portrait[speaker];
-  if (portrait[speaker]) $('#dialogue-portrait').src = portrait[speaker];
-  const choices = kind === 'refugees'
-    ? [['grain', '留下一份口粮'], ['persuade', '答应调查粮车'], ['fight', '拔剑动武']]
-    : [['continue', '继续']];
+  const { partner, index, lines } = state.dialogue;
+  const line = currentDialogueLine(state.dialogue);
+  const { canAdvance, choices } = dialogueControls(state.dialogue);
+  const portraits = dialoguePortraits(partner);
+  $('#dialogue').style.backgroundImage = `url('${dialogueBackdrop(state.scene)}')`;
+  $('#dialogue-speaker').textContent = line.speaker;
+  $('#dialogue-text').textContent = line.text;
+  $('#dialogue-progress').textContent = `${index + 1} / ${lines.length}${canAdvance ? ' · 点击继续' : ''}`;
+  $('#dialogue-hero-portrait').src = portraits.hero;
+  $('#dialogue-hero').classList.toggle('speaking', line.speaker === '陆照');
+  $('#dialogue-npc').hidden = !portraits.npc;
+  if (portraits.npc) {
+    $('#dialogue-npc-portrait').src = portraits.npc;
+    $('#dialogue-npc-portrait').alt = `${partner}立绘`;
+    $('#dialogue-npc-name').textContent = partner;
+    $('#dialogue-npc').classList.toggle('speaking', line.speaker === partner);
+  }
+  const copy = $('#dialogue-copy');
+  copy.classList.toggle('can-advance', canAdvance);
+  copy.tabIndex = canAdvance ? 0 : -1;
+  if (canAdvance) {
+    copy.setAttribute('role', 'button');
+    copy.setAttribute('aria-label', '继续对话');
+  } else {
+    copy.removeAttribute('role');
+    copy.removeAttribute('aria-label');
+  }
   $('#dialogue-options').replaceChildren(...choices.map(([id, label]) => {
     const button = document.createElement('button');
     button.type = 'button';
@@ -93,7 +106,8 @@ function renderDialogue() {
     button.addEventListener('click', () => { state = chooseDialogue(state, id); render(); });
     return button;
   }));
-  $('#dialogue-options button:not([disabled])')?.focus();
+  if (canAdvance) copy.focus();
+  else $('#dialogue-options button:not([disabled])')?.focus();
 }
 
 function renderBattle() {
@@ -254,6 +268,12 @@ $('#return-title').addEventListener('click', () => {
   renderScreen();
 });
 $('#interact').addEventListener('click', doInteract);
+$('#dialogue-copy').addEventListener('click', (event) => {
+  if (event.target.closest('button') || state.mode !== 'dialogue') return;
+  if (!dialogueControls(state.dialogue).canAdvance) return;
+  state = chooseDialogue(state, 'continue');
+  render();
+});
 $('#inspect-sword').addEventListener('click', () => { state = inspectSword(state); render(); });
 for (const id of ['#restart', '#ending-restart']) $(id).addEventListener('click', restartGame);
 
@@ -270,7 +290,12 @@ document.addEventListener('keydown', (event) => {
   const direction = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', w: 'up', s: 'down', a: 'left', d: 'right' }[event.key];
   if (state.mode === 'explore' && direction) { event.preventDefault(); doMove(direction); return; }
   if (state.mode === 'explore' && (event.key === ' ' || event.key === 'e')) { event.preventDefault(); doInteract(); return; }
-  if (state.mode === 'dialogue' && event.key === 'Enter' && state.dialogue.kind !== 'refugees') { event.preventDefault(); state = chooseDialogue(state, 'continue'); render(); return; }
+  if (state.mode === 'dialogue' && (event.key === 'Enter' || event.key === ' ') && !event.target.closest('button') && dialogueControls(state.dialogue).canAdvance) {
+    event.preventDefault();
+    state = chooseDialogue(state, 'continue');
+    render();
+    return;
+  }
   if (state.mode === 'battle') {
     const action = { '1': 'strike', '2': 'break', '3': 'guard', '4': 'item', '5': 'escape' }[event.key];
     if (action) { event.preventDefault(); void doBattle(action); }

@@ -7,6 +7,16 @@ function atSite(state, scene, id) {
   return { ...state, scene, position: { x, y } };
 }
 
+function finishDialogue(state) {
+  while (state.mode === 'dialogue') state = game.chooseDialogue(state, 'continue');
+  return state;
+}
+
+function reachDialogueChoice(state) {
+  while (state.dialogue.index < state.dialogue.lines.length - 1) state = game.chooseDialogue(state, 'continue');
+  return state;
+}
+
 test('初始状态从驿道开始，有完整气血与明确目标', () => {
   assert.equal(typeof game.createInitialState, 'function');
   const state = game.createInitialState();
@@ -24,16 +34,18 @@ test('场景交互按线索顺序推进并解锁码头对质', () => {
   state = atSite(state, 'tavern', 'shen');
   state = game.interact(state);
   assert.equal(state.flags.shenStory, true);
-  state = game.chooseDialogue(state, 'continue');
+  state = finishDialogue(state);
   state = atSite(state, 'ferry', 'ferryman');
   state = game.interact(state);
   assert.equal(state.flags.ferrymanRecognized, true);
-  state = game.chooseDialogue(state, 'continue');
+  state = finishDialogue(state);
   state = game.inspectSword(state);
   assert.equal(state.flags.swordConfession, true);
-  state = game.chooseDialogue(state, 'continue');
+  state = finishDialogue(state);
   state = atSite(state, 'dock', 'cheng');
   state = game.interact(state);
+  assert.equal(state.mode, 'dialogue');
+  state = finishDialogue(state);
   assert.equal(state.mode, 'battle');
   assert.equal(state.battle.kind, 'boss');
 });
@@ -57,7 +69,7 @@ test('驿道行走可触发山贼遭遇，冷却期不会连战', () => {
 
 test('流民可交粮和平解决，也能谈判；没有粮时不能假交粮', () => {
   const start = { ...game.createInitialState(), encounterCooldown: 0 };
-  const event = game.move(start, 'right', (i => () => [0, 0.95][i++])());
+  const event = reachDialogueChoice(game.move(start, 'right', (i => () => [0, 0.95][i++])()));
   assert.equal(event.dialogue.kind, 'refugees');
   const fed = game.chooseDialogue(event, 'grain');
   assert.equal(fed.mode, 'explore');
@@ -125,7 +137,7 @@ test('关键线索只奖励一次经验，普通战胜利也获得经验', () =>
   state = game.interact(state);
   const gained = state.hero.xp;
   assert.ok(gained > 0);
-  state = game.chooseDialogue(state, 'continue');
+  state = finishDialogue(state);
   state = game.interact(state);
   assert.equal(state.hero.xp, gained);
   const battle = game.startBattle(game.createInitialState(), 'bandit');
