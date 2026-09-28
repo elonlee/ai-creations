@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>还剑渡 · 第一章</title>
+  <link rel="stylesheet" href="game.css">
+  <link rel="stylesheet" href="menu.css">
+</head>
+<body>
+  <section id="title-screen" class="title-screen" aria-label="游戏主界面">
+    <div class="title-backdrop" aria-hidden="true"></div>
+    <div class="title-content">
+      <p class="title-kicker">青崖门旧案 · 乌篷渡口</p>
+      <h1>还剑渡</h1>
+      <p class="title-chapter">第一章 · 雨夜粮船</p>
+      <p class="title-intro">一柄旧剑，一封藏在剑柄里的供词。陆照循着被掩埋的赈粮旧案，走向乌篷渡。</p>
+      <nav class="title-menu" aria-label="主选单">
+        <button id="menu-start" type="button">开始游戏 <span aria-hidden="true">›</span></button>
+        <button id="menu-instructions" type="button">游戏说明 <span aria-hidden="true">›</span></button>
+      </nav>
+      <p class="title-tip">剧情探索 · 回合制战斗</p>
+    </div>
+    <img class="title-character" src="assets/battle/lu-zhao-stance-v1.png" alt="">
+  </section>
+
+  <section id="instructions-screen" class="instructions-screen" hidden aria-label="游戏说明">
+    <div class="instructions-card">
+      <p class="title-kicker">还剑渡 · 第一章</p>
+      <h2>游戏说明</h2>
+      <p class="instructions-lead">沿山路寻找旧案线索，走访渡口，再去码头与程砚对质。</p>
+      <div class="instructions-grid">
+        <section><span>壹 · 探索</span><p>用方向键或 WASD 移动。靠近金色标记后，按空格调查或交谈。触屏可使用游戏里的方向按钮。</p></section>
+        <section><span>贰 · 遭遇</span><p>荒山驿道会遇到山贼或拦路流民。流民可以交出口粮或答应调查；选择动武会进入战斗。</p></section>
+        <section><span>叁 · 战斗</span><p>按数字 1～5 选择出剑、破招、守势、用药或退走。破招能打断蓄势，守势能减伤并恢复内力。</p></section>
+        <section><span>肆 · 成长</span><p>发现线索、帮助流民和战斗胜利都能获得经验。升级后，陆照的气血、内力和招式伤害会提高。</p></section>
+      </div>
+      <p class="instructions-note">当前没有存档。刷新会返回主界面，再次开始会从驿道起点重来。</p>
+      <button id="instructions-back" type="button">返回主界面</button>
+    </div>
+  </section>
+
+  <main id="game-shell" class="game-shell" hidden>
+    <header class="game-header">
+      <div><p class="overline">像素武侠 · 剧情探索</p><h1>还剑渡 <span>第一章</span></h1></div>
+      <div class="header-actions"><button id="return-title" type="button">返回主界面</button><button id="restart" type="button">重新开始</button></div>
+    </header>
+
+    <div class="game-layout">
+      <section class="world-panel" aria-label="探索场景">
+        <div class="world-top"><strong id="scene-title">荒山驿道</strong><span id="scene-caption">暮色将尽，剑指渡口</span></div>
+        <div class="map" id="map" tabindex="-1" aria-label="用方向键或下方方向按钮移动陆照">
+          <img id="map-image" class="map-image" src="assets/scenes/mountain-road-concept-v1.png" alt="">
+          <div id="map-markers" class="map-markers"></div>
+          <img id="player-sprite" class="player-sprite" src="assets/sprites/lu-zhao-walk-frames/frame-01.png" alt="陆照">
+        </div>
+        <div class="world-bottom">
+          <p id="world-message" role="status">暮色将尽。师父留下的剑，指向乌篷渡。</p>
+          <span id="nearby-label">沿山路前行</span>
+        </div>
+      </section>
+
+      <aside class="sidebar" aria-label="角色与操作">
+        <section class="side-card hero-card">
+          <div class="hero-card-head"><img src="assets/portraits/lu-zhao-v1.png" alt=""><div><span>青崖门弟子</span><h2>陆照 <small id="hero-level">壹级</small></h2></div></div>
+          <div class="stat"><span>气血</span><strong id="hero-hp">42 / 42</strong></div><div class="meter"><i id="hp-fill"></i></div>
+          <div class="stat"><span>内力</span><strong id="hero-qi">6 / 6</strong></div><div class="meter qi"><i id="qi-fill"></i></div>
+          <div class="stat"><span>经验</span><strong id="hero-xp">0 / 20</strong></div><div class="meter xp"><i id="xp-fill"></i></div>
+          <div class="supplies"><span id="hero-herbs">金疮药 × 2</span><span id="hero-grain">口粮 × 1</span></div>
+        </section>
+        <section class="side-card objective-card"><p class="card-title">眼下要做的事</p><p id="objective"></p><button id="inspect-sword" type="button" hidden>检查剑柄</button></section>
+        <section class="side-card control-card">
+          <p class="card-title">行走与交互</p>
+          <div class="controls"><div class="dpad" aria-label="方向控制"><button type="button" data-move="up" aria-label="向上">↑</button><button type="button" data-move="left" aria-label="向左">←</button><button type="button" data-move="down" aria-label="向下">↓</button><button type="button" data-move="right" aria-label="向右">→</button></div><button id="interact" type="button">调查 / 交谈</button></div>
+          <p class="hint">键盘：方向键或 WASD 移动，空格交互。靠近地图上的标记后调查。</p>
+        </section>
+      </aside>
+    </div>
+
+    <section id="dialogue" class="overlay" hidden aria-label="剧情对话">
+      <div class="dialogue-card"><img id="dialogue-portrait" alt=""><div class="dialogue-copy"><p id="dialogue-speaker"></p><p id="dialogue-text"></p><div id="dialogue-options" class="dialogue-options"></div></div></div>
+    </section>
+
+    <section id="battle" class="overlay battle-overlay" hidden aria-label="回合制战斗">
+      <div class="battle-card">
+        <div class="battle-heading"><span id="battle-scene"></span><span id="battle-round"></span></div>
+        <div class="battle-arena" id="battle-arena"><div class="battle-shade"></div><div class="enemy-info"><strong id="enemy-name"></strong><span id="enemy-hp"></span><div class="meter"><i id="enemy-fill"></i></div><small id="enemy-intent"></small></div><img id="battle-hero" class="battle-fighter hero" src="assets/battle/lu-zhao-stance-v1.png" alt="陆照"><img id="battle-enemy" class="battle-fighter enemy" src="assets/battle/road-bandit-stance-v1.png" alt="对手"></div>
+        <div class="battle-bottom"><p id="battle-message" role="status"></p><div class="battle-commands"><button type="button" data-battle="strike"><kbd>1</kbd>出剑</button><button type="button" data-battle="break"><kbd>2</kbd>破招</button><button type="button" data-battle="guard"><kbd>3</kbd>守势</button><button type="button" data-battle="item"><kbd>4</kbd>用药</button><button type="button" data-battle="escape"><kbd>5</kbd>退走</button></div><p class="battle-help">出剑稳定伤害；破招消耗 2 内力，可打断蓄势；守势减伤并恢复 1 内力。</p></div>
+      </div>
+    </section>
+
+    <section id="ending" class="overlay end-overlay" hidden aria-label="章节结果"><div class="ending-card"><p id="ending-kicker">第一章 · 终</p><h2 id="ending-title"></h2><p id="ending-text"></p><p id="ending-level"></p><button id="ending-restart" type="button">重新开始</button></div></section>
+  </main>
+  <script type="module" src="game-app.mjs"></script>
+</body>
+</html>

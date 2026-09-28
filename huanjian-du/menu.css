@@ -1,0 +1,184 @@
+.title-screen,
+.instructions-screen {
+  position: relative;
+  min-height: 100svh;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.title-screen {
+  display: flex;
+  align-items: center;
+  background: #111f24;
+}
+
+.title-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background: linear-gradient(90deg, #071417f5 0%, #0b1a1ddb 39%, #0c1b1f83 68%, #0a171b9b 100%),
+    linear-gradient(0deg, #071216eb, transparent 45%),
+    url("assets/scenes/wupeng-ferry-concept-v1.png") center / cover no-repeat;
+  image-rendering: pixelated;
+}
+
+.title-screen::after {
+  content: "";
+  position: absolute;
+  inset: 15px;
+  z-index: -1;
+  border: 1px solid #b8945a75;
+  pointer-events: none;
+}
+
+.title-content {
+  width: min(100% - 72px, 1220px);
+  margin: 0 auto;
+  padding: 80px 0 90px;
+  position: relative;
+  z-index: 2;
+}
+
+.title-kicker {
+  margin: 0 0 18px;
+  color: #dbbd82;
+  font-size: 14px;
+  letter-spacing: .24em;
+}
+
+.title-content h1 {
+  margin: 0;
+  font-family: "Songti SC", "SimSun", serif;
+  font-size: clamp(68px, 11vw, 146px);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: .18em;
+  text-shadow: 0 8px 26px #000b;
+}
+
+.title-chapter {
+  margin: 13px 0 27px;
+  color: #e4ca98;
+  font-family: "Songti SC", "SimSun", serif;
+  font-size: clamp(18px, 2vw, 27px);
+  letter-spacing: .3em;
+}
+
+.title-intro {
+  max-width: 470px;
+  color: #d1d5ca;
+  font-size: 16px;
+  line-height: 1.9;
+}
+
+.title-menu {
+  display: grid;
+  gap: 12px;
+  width: min(100%, 335px);
+  margin-top: 38px;
+}
+
+.title-menu button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 61px;
+  padding: 12px 20px 12px 24px;
+  border: 1px solid #b19059;
+  background: #14262be8;
+  color: #f5e9cd;
+  font-family: "Songti SC", "SimSun", serif;
+  font-size: 21px;
+  letter-spacing: .18em;
+  text-align: left;
+  transition: background .16s, transform .16s;
+}
+
+.title-menu button:first-child { background: #685032ec; }
+.title-menu button:hover { background: #8a6a3d; transform: translateX(4px); }
+.title-menu button span { font-family: sans-serif; font-size: 30px; line-height: 1; }
+.title-tip { margin-top: 28px; color: #aebdb7; font-size: 13px; letter-spacing: .12em; }
+
+.title-character {
+  position: absolute;
+  right: max(4%, calc((100vw - 1240px) / 2));
+  bottom: 4%;
+  z-index: 1;
+  width: min(45vw, 560px);
+  height: min(84svh, 760px);
+  object-fit: contain;
+  object-position: bottom;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 20px 28px #000d);
+  pointer-events: none;
+}
+
+.instructions-screen {
+  display: grid;
+  place-items: center;
+  padding: 32px 20px;
+  background: linear-gradient(#09171bea, #0c1a1fe8),
+    url("assets/scenes/wine-shop-concept-v1.png") center / cover no-repeat;
+}
+
+.instructions-card {
+  width: min(100%, 840px);
+  padding: clamp(24px, 4vw, 48px);
+  border: 2px solid #b08d58;
+  background: #13242bee;
+  box-shadow: 0 0 0 5px #0a171b, 0 28px 70px #0009;
+}
+
+.instructions-card h2 {
+  margin: 0;
+  font-family: "Songti SC", "SimSun", serif;
+  font-size: clamp(32px, 4vw, 49px);
+  letter-spacing: .18em;
+}
+
+.instructions-lead {
+  margin: 12px 0 28px;
+  color: #d0c7ae;
+  line-height: 1.7;
+}
+
+.instructions-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 15px;
+}
+
+.instructions-grid section {
+  padding: 17px 19px;
+  border: 1px solid #5d7068;
+  background: #1c3032;
+}
+
+.instructions-grid span { color: #e9c68d; font-size: 17px; }
+.instructions-grid p { margin: 10px 0 0; color: #d7d9c9; font-size: 14px; line-height: 1.75; }
+.instructions-note { margin: 21px 0; color: #b9c4b7; font-size: 13px; line-height: 1.6; }
+
+#instructions-back {
+  min-height: 46px;
+  padding: 9px 21px;
+  border: 1px solid #d4b279;
+  background: #59452e;
+  color: #f7e8c9;
+}
+
+#instructions-back:hover { background: #795d38; }
+
+@media (max-width: 700px) {
+  .title-content { width: min(100% - 42px, 470px); padding: 85px 0 62px; }
+  .title-content h1 { font-size: clamp(62px, 15vw, 100px); }
+  .title-intro { max-width: 340px; font-size: 15px; }
+  .title-character { right: -13%; bottom: 0; width: 75vw; height: 55svh; opacity: .48; }
+  .title-backdrop { background-position: 53% center; }
+  .instructions-grid { grid-template-columns: 1fr; gap: 10px; }
+  .instructions-card { padding: 22px; }
+  .instructions-grid section { padding: 12px 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .title-menu button { transition: none; }
+}
