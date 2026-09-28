@@ -2,11 +2,13 @@ import { SCENES, SITES, createInitialState, move, nearbyInteraction, interact, i
 import { createAnimationPlayer, previewMoves } from './battle-animation.mjs';
 import { initialScreen, nextScreen } from './menu.mjs';
 import { INTRO_LINES, nextIntroIndex } from './intro.mjs';
-import { heroStatus, dialoguePortraits, dialogueBackdrop, dialogueControls } from './ui-state.mjs';
+import { heroStatus, dialoguePortraits, dialogueBackdrop, dialogueControls, endingPresentation } from './ui-state.mjs';
+import { debugScenarioFromUrl } from './debug.mjs';
 
 const $ = (selector) => document.querySelector(selector);
-let state = createInitialState();
-let screen = initialScreen();
+const debugScenario = debugScenarioFromUrl(window.location.href);
+let state = debugScenario?.state ?? createInitialState();
+let screen = debugScenario?.screen ?? initialScreen();
 let busy = false;
 let stepFrame = false;
 let walkTimer;
@@ -145,12 +147,22 @@ function renderEnding() {
   const visible = state.mode === 'ending' || state.mode === 'defeat';
   $('#ending').hidden = !visible;
   if (!visible) return;
-  const won = state.mode === 'ending';
-  $('#ending-kicker').textContent = won ? '第一章 · 终' : '山路未尽';
-  $('#ending-title').textContent = won ? '粮船停在了渡口' : '剑还没有送到';
-  $('#ending-text').textContent = state.message;
-  $('#ending-level').textContent = `陆照达到 ${state.hero.level} 级，累计获得 ${state.hero.xp} 点经验。`;
-  $('#ending-restart').focus();
+  const ending = endingPresentation(state);
+  $('#ending').dataset.result = ending.kind;
+  $('#ending').style.backgroundImage = `linear-gradient(90deg, #07161af5 0%, #0a1c20e8 47%, #0a1a1bb0 100%), url('${ending.scene}')`;
+  $('#ending-kicker').textContent = ending.kicker;
+  $('#ending-title').textContent = ending.title;
+  $('#ending-lead').textContent = ending.lead;
+  $('#ending-epilogue').replaceChildren(...ending.paragraphs.map((line) => {
+    const paragraph = document.createElement('p');
+    paragraph.textContent = line;
+    return paragraph;
+  }));
+  $('#ending-next').textContent = ending.next;
+  $('#ending-level').textContent = ending.progress;
+  $('#ending-restart').textContent = ending.action;
+  $('#ending').scrollTop = 0;
+  $('#ending-title').focus({ preventScroll: true });
 }
 
 function render() {
@@ -267,6 +279,10 @@ $('#return-title').addEventListener('click', () => {
   screen = nextScreen(screen, 'home');
   renderScreen();
 });
+$('#ending-home').addEventListener('click', () => {
+  screen = nextScreen(screen, 'home');
+  renderScreen();
+});
 $('#interact').addEventListener('click', doInteract);
 $('#dialogue-copy').addEventListener('click', (event) => {
   if (event.target.closest('button') || state.mode !== 'dialogue') return;
@@ -302,5 +318,6 @@ document.addEventListener('keydown', (event) => {
   }
 });
 
-render();
 renderScreen();
+render();
+if (screen === 'intro') showIntroLine();

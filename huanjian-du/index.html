@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="menu.css">
   <link rel="stylesheet" href="intro-battle.css">
   <link rel="stylesheet" href="dialogue.css">
+  <link rel="stylesheet" href="ending.css">
 </head>
 <body>
   <section id="title-screen" class="title-screen" aria-label="游戏主界面">
@@ -109,7 +110,26 @@
       </div>
     </section>
 
-    <section id="ending" class="overlay end-overlay" hidden aria-label="章节结果"><div class="ending-card"><p id="ending-kicker">第一章 · 终</p><h2 id="ending-title"></h2><p id="ending-text"></p><p id="ending-level"></p><button id="ending-restart" type="button">重新开始</button></div></section>
+    <section id="ending" class="overlay end-overlay" hidden aria-label="章节结局">
+      <div class="ending-frame">
+        <div class="ending-story">
+          <p id="ending-kicker" class="ending-kicker"></p>
+          <h2 id="ending-title" tabindex="-1"></h2>
+          <p id="ending-lead" class="ending-lead"></p>
+          <div id="ending-epilogue" class="ending-epilogue"></div>
+          <p id="ending-next" class="ending-next"></p>
+          <p id="ending-level" class="ending-level"></p>
+          <div class="ending-actions">
+            <button id="ending-home" type="button">返回主界面</button>
+            <button id="ending-restart" type="button">再走一遍</button>
+          </div>
+        </div>
+        <div class="ending-art" aria-hidden="true">
+          <img src="assets/battle/lu-zhao-stance-v1.png" alt="">
+          <span>还剑渡</span>
+        </div>
+      </div>
+    </section>
   </main>
   <script type="module" src="game-app.mjs"></script>
 </body>
