@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>《还剑渡》战斗画面设计稿</title>
+  <link rel="stylesheet" href="battle-preview.css">
+</head>
+<body>
+  <main class="preview">
+    <div class="preview-heading">
+      <div>
+        <p class="eyebrow">还剑渡 · 战斗画面设计</p>
+        <h1>一招一式，先看清对手。</h1>
+      </div>
+      <nav class="scene-switch" aria-label="切换战斗场景">
+        <button type="button" data-scene-button="road" aria-pressed="true">驿道遭遇</button>
+        <button type="button" data-scene-button="dock" aria-pressed="false">码头决战</button>
+      </nav>
+    </div>
+
+    <section class="battle-screen" data-scene="road" aria-label="战斗画面预览">
+      <div class="weather-layer" aria-hidden="true"></div>
+      <div class="scene-label">
+        <span id="scene-name">荒山驿道</span>
+        <span class="scene-divider" aria-hidden="true"></span>
+        <span id="scene-time">暮色</span>
+      </div>
+
+      <div class="enemy-status" aria-label="敌方状态">
+        <div class="status-line"><strong id="enemy-name">劫道山贼</strong><span id="enemy-hp-text">气血 28 / 28</span></div>
+        <div class="meter enemy-meter" role="img" aria-label="敌方气血充足"><span></span></div>
+        <p id="enemy-intent">架势：试探</p>
+      </div>
+
+      <div class="battle-ground" aria-hidden="true">
+        <div class="ground-glow hero-glow"></div>
+        <div class="ground-glow enemy-glow"></div>
+        <img class="fighter hero" id="hero-image" src="assets/battle/lu-zhao-stance-v1.png" alt="">
+        <img class="fighter enemy" id="enemy-image" src="assets/battle/road-bandit-stance-v1.png" alt="">
+      </div>
+
+      <div class="battle-panel">
+        <div class="commands">
+          <p class="panel-label">选择行动</p>
+          <div class="command-grid" role="group" aria-label="战斗指令">
+            <button type="button" data-action="strike" aria-pressed="true"><span class="key">01</span>出剑</button>
+            <button type="button" data-action="break" aria-pressed="false"><span class="key">02</span>破招</button>
+            <button type="button" data-action="guard" aria-pressed="false"><span class="key">03</span>守势</button>
+            <button type="button" data-action="item" aria-pressed="false"><span class="key">04</span>物品</button>
+            <button type="button" data-action="escape" aria-pressed="false"><span class="key">05</span>退走</button>
+          </div>
+        </div>
+
+        <div class="battle-copy" aria-live="polite">
+          <p class="panel-label">战况</p>
+          <p id="battle-line">山贼按住刀柄，拦在去渡口的路上。</p>
+          <p class="action-note" id="action-note">出剑：稳妥的一击，不消耗内力。</p>
+        </div>
+
+        <div class="hero-status" aria-label="陆照状态">
+          <div class="hero-name"><span>陆照</span><span>壹</span></div>
+          <div class="stat-row"><span>气血</span><strong>42 / 42</strong></div>
+          <div class="meter hero-meter" role="img" aria-label="陆照气血充足"><span></span></div>
+          <div class="stat-row"><span>内力</span><strong>6 / 6</strong></div>
+          <div class="meter qi-meter" role="img" aria-label="陆照内力充足"><span></span></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="preview-footer">
+      <button type="button" id="preview-enemy-strike">预览陆照受击</button>
+      <p class="preview-note">“出剑”显示对手受击，“破招”显示对手格挡；也可预览陆照未防御时受击。暂不结算伤害或推进回合。</p>
+    </div>
+  </main>
+  <script type="module" src="battle-preview.js"></script>
+</body>
+</html>

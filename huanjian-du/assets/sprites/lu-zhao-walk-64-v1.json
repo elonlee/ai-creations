@@ -1,0 +1,14 @@
+{
+  "image": "lu-zhao-walk-64-v1.png",
+  "frameWidth": 64,
+  "frameHeight": 64,
+  "directions": {
+    "down": 0,
+    "left": 1,
+    "right": 2,
+    "up": 3
+  },
+  "columns": ["stepLeft", "idle", "stepRight"],
+  "walkCycle": [1, 0, 1, 2],
+  "suggestedFps": 6
+}
