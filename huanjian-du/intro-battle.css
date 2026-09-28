@@ -1,0 +1,87 @@
+.intro-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #050607;
+  color: #e8e1d1;
+}
+
+.intro-screen:focus { outline: none; }
+
+.intro-content {
+  width: min(100%, 800px);
+  text-align: center;
+}
+
+.intro-heading {
+  margin: 0 0 65px;
+  color: #ad926b;
+  font-size: 14px;
+  letter-spacing: .3em;
+}
+
+.intro-caption {
+  display: grid;
+  place-items: center;
+  min-height: 170px;
+  margin: 0;
+  font-family: "Songti SC", "SimSun", serif;
+  font-size: clamp(24px, 3.2vw, 39px);
+  line-height: 1.7;
+  letter-spacing: .1em;
+}
+
+.intro-caption.appear { animation: intro-appear .7s ease-out both; }
+
+@keyframes intro-appear {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.intro-count { margin: 22px 0 30px; color: #907f6a; font-size: 13px; letter-spacing: .12em; }
+.intro-actions { display: flex; justify-content: center; gap: 14px; }
+.intro-actions button { min-width: 110px; min-height: 44px; padding: 8px 14px; border: 1px solid #7d735f; background: #191b1b; color: #e5d9c2; }
+.intro-actions button:first-child { border-color: #c1a47a; }
+.intro-actions button:hover { background: #40392c; }
+
+.battle-hero-info {
+  position: absolute;
+  z-index: 2;
+  top: 18px;
+  left: 20px;
+  width: min(38%, 290px);
+  padding: 10px 13px;
+  border: 1px solid #a17e52;
+  background: #101d23e8;
+}
+
+.battle-hero-head,
+.battle-stat { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.battle-hero-head strong { font-size: 17px; }
+.battle-hero-head small { color: #e9c58e; font-size: 12px; font-weight: normal; }
+.battle-hero-head span { color: #d5c4a4; font-size: 11px; }
+.battle-stat { margin: 8px 0 4px; font-size: 12px; }
+.battle-stat strong { font-family: ui-monospace, monospace; font-weight: 600; }
+.battle-hero-info .meter i { background: #b86053; }
+.battle-hero-info .meter.qi i { background: #5c9fa9; }
+
+@media (max-width: 600px) {
+  .intro-heading { margin-bottom: 35px; }
+  .intro-caption { min-height: 190px; font-size: clamp(23px, 7vw, 31px); }
+  .battle-hero-info { top: 7px; left: 7px; width: 47%; padding: 6px; }
+  .battle-hero-info .meter { height: 6px; }
+  .battle-hero-head { display: block; }
+  .battle-hero-head strong { font-size: 13px; }
+  .battle-hero-head span { display: block; margin-top: 2px; font-size: 9px; }
+  .battle-stat { margin: 4px 0 2px; font-size: 10px; }
+  .enemy-info { width: 43%; }
+  .enemy-info strong { font-size: 13px; }
+  .enemy-info span, .enemy-info small { font-size: 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro-caption.appear { animation: none; }
+}

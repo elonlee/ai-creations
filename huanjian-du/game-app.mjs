@@ -1,6 +1,8 @@
-import { SCENES, SITES, createInitialState, experienceForNextLevel, move, nearbyInteraction, interact, inspectSword, chooseDialogue, resolveBattle, objective } from './game.mjs';
+import { SCENES, SITES, createInitialState, move, nearbyInteraction, interact, inspectSword, chooseDialogue, resolveBattle, objective } from './game.mjs';
 import { createAnimationPlayer, previewMoves } from './battle-animation.mjs';
 import { initialScreen, nextScreen } from './menu.mjs';
+import { INTRO_LINES, nextIntroIndex } from './intro.mjs';
+import { heroStatus } from './ui-state.mjs';
 
 const $ = (selector) => document.querySelector(selector);
 let state = createInitialState();
@@ -8,6 +10,8 @@ let screen = initialScreen();
 let busy = false;
 let stepFrame = false;
 let walkTimer;
+let introIndex = 0;
+let introTimer;
 
 const portrait = {
   '陆照': 'assets/portraits/lu-zhao-v1.png',
@@ -18,7 +22,6 @@ const portrait = {
 const battleActor = { bandit: 'road-bandit', boss: 'cheng-yan' };
 const battleIdle = { bandit: 'assets/battle/road-bandit-stance-v1.png', boss: 'assets/battle/cheng-yan-stance-v1.png' };
 const facingRow = { down: 0, left: 3, right: 6, up: 9 };
-const levelWords = ['零', '壹', '贰', '叁', '肆', '伍', '陆', '柒', '捌', '玖'];
 
 const animation = createAnimationPlayer({
   render(slot, source) { $(slot === 'hero' ? '#battle-hero' : '#battle-enemy').src = source; },
@@ -55,17 +58,16 @@ function renderMap() {
 
 function renderHero() {
   const { hero } = state;
-  $('#hero-level').textContent = `${levelWords[hero.level] ?? hero.level}级`;
-  $('#hero-hp').textContent = `${hero.hp} / ${hero.maxHp}`;
-  $('#hero-qi').textContent = `${hero.qi} / ${hero.maxQi}`;
-  const start = hero.level === 1 ? 0 : experienceForNextLevel(hero.level - 1);
-  const next = experienceForNextLevel(hero.level);
-  $('#hero-xp').textContent = `${hero.xp} / ${next}`;
-  $('#hp-fill').style.width = `${hero.hp / hero.maxHp * 100}%`;
-  $('#qi-fill').style.width = `${hero.qi / hero.maxQi * 100}%`;
-  $('#xp-fill').style.width = `${(hero.xp - start) / (next - start) * 100}%`;
-  $('#hero-herbs').textContent = `金疮药 × ${hero.herbs}`;
-  $('#hero-grain').textContent = `口粮 × ${hero.grain}`;
+  const status = heroStatus(hero);
+  $('#hero-level').textContent = status.level;
+  $('#hero-hp').textContent = status.hp;
+  $('#hero-qi').textContent = status.qi;
+  $('#hero-xp').textContent = status.xp;
+  $('#hp-fill').style.width = `${status.hpPercent}%`;
+  $('#qi-fill').style.width = `${status.qiPercent}%`;
+  $('#xp-fill').style.width = `${status.xpPercent}%`;
+  $('#hero-herbs').textContent = status.herbs;
+  $('#hero-grain').textContent = status.grain;
   $('#objective').textContent = objective(state);
   $('#inspect-sword').hidden = state.mode !== 'explore' || !state.flags.ferrymanRecognized || state.flags.swordConfession;
 }
@@ -99,10 +101,16 @@ function renderBattle() {
   $('#battle').hidden = !visible;
   if (!visible) return;
   const { battle } = state;
-  const actor = battleActor[battle.kind];
+  const status = heroStatus(state.hero);
   $('#battle-scene').textContent = SCENES[state.scene].name;
   $('#battle-round').textContent = `第 ${battle.round + 1} 回合`;
   $('#battle-arena').style.backgroundImage = `url('${SCENES[state.scene].image}')`;
+  $('#battle-hero-level').textContent = status.level;
+  $('#battle-hero-hp').textContent = status.hp;
+  $('#battle-hero-qi').textContent = status.qi;
+  $('#battle-hero-xp').textContent = `经验 ${status.xp}`;
+  $('#battle-hp-fill').style.width = `${status.hpPercent}%`;
+  $('#battle-qi-fill').style.width = `${status.qiPercent}%`;
   $('#enemy-name').textContent = battle.kind === 'boss' ? '程砚' : '劫道山贼';
   $('#enemy-hp').textContent = `气血 ${battle.enemyHp} / ${battle.maxHp}`;
   $('#enemy-fill').style.width = `${battle.enemyHp / battle.maxHp * 100}%`;
@@ -145,10 +153,39 @@ function render() {
 function renderScreen() {
   $('#title-screen').hidden = screen !== 'title';
   $('#instructions-screen').hidden = screen !== 'instructions';
+  $('#intro-screen').hidden = screen !== 'intro';
   $('#game-shell').hidden = screen !== 'game';
   if (screen === 'title') $('#menu-start').focus();
   if (screen === 'instructions') $('#instructions-back').focus();
+  if (screen === 'intro') $('#intro-screen').focus();
   if (screen === 'game') $('#map').focus();
+}
+
+function showIntroLine() {
+  const caption = $('#intro-caption');
+  caption.classList.remove('appear');
+  caption.textContent = INTRO_LINES[introIndex];
+  $('#intro-count').textContent = `第 ${introIndex + 1} / ${INTRO_LINES.length} 段`;
+  $('#intro-next').textContent = introIndex === INTRO_LINES.length - 1 ? '进入游戏' : '继续';
+  void caption.offsetWidth;
+  caption.classList.add('appear');
+  clearTimeout(introTimer);
+  introTimer = setTimeout(advanceIntro, 3400);
+}
+
+function finishIntro(action) {
+  if (screen !== 'intro') return;
+  clearTimeout(introTimer);
+  screen = nextScreen(screen, action);
+  renderScreen();
+  render();
+}
+
+function advanceIntro() {
+  if (screen !== 'intro') return;
+  const next = nextIntroIndex(introIndex);
+  if (next === null) finishIntro('finish');
+  else { introIndex = next; showIntroLine(); }
 }
 
 function restartGame() {
@@ -202,10 +239,14 @@ document.querySelectorAll('[data-battle]').forEach((button) => button.addEventLi
 $('#menu-start').addEventListener('click', () => {
   screen = nextScreen(screen, 'start');
   restartGame();
+  introIndex = 0;
   renderScreen();
+  showIntroLine();
 });
 $('#menu-instructions').addEventListener('click', () => { screen = nextScreen(screen, 'instructions'); renderScreen(); });
 $('#instructions-back').addEventListener('click', () => { screen = nextScreen(screen, 'back'); renderScreen(); });
+$('#intro-next').addEventListener('click', advanceIntro);
+$('#intro-skip').addEventListener('click', () => finishIntro('skip'));
 $('#return-title').addEventListener('click', () => {
   if (busy) return;
   animation.reset();
@@ -217,6 +258,14 @@ $('#inspect-sword').addEventListener('click', () => { state = inspectSword(state
 for (const id of ['#restart', '#ending-restart']) $(id).addEventListener('click', restartGame);
 
 document.addEventListener('keydown', (event) => {
+  if (screen === 'intro') {
+    if (event.key === 'Escape') { event.preventDefault(); finishIntro('skip'); }
+    else if ([' ', 'Enter', 'ArrowRight'].includes(event.key) && !event.target.closest('button')) {
+      event.preventDefault();
+      advanceIntro();
+    }
+    return;
+  }
   if (screen !== 'game') return;
   const direction = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', w: 'up', s: 'down', a: 'left', d: 'right' }[event.key];
   if (state.mode === 'explore' && direction) { event.preventDefault(); doMove(direction); return; }

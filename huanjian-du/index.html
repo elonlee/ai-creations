@@ -6,6 +6,7 @@
   <title>还剑渡 · 第一章</title>
   <link rel="stylesheet" href="game.css">
   <link rel="stylesheet" href="menu.css">
+  <link rel="stylesheet" href="intro-battle.css">
 </head>
 <body>
   <section id="title-screen" class="title-screen" aria-label="游戏主界面">
@@ -22,6 +23,18 @@
       <p class="title-tip">剧情探索 · 回合制战斗</p>
     </div>
     <img class="title-character" src="assets/battle/lu-zhao-stance-v1.png" alt="">
+  </section>
+
+  <section id="intro-screen" class="intro-screen" hidden tabindex="-1" aria-label="剧情序幕">
+    <div class="intro-content">
+      <p class="intro-heading">还剑渡 · 序</p>
+      <p id="intro-caption" class="intro-caption" aria-live="polite"></p>
+      <p id="intro-count" class="intro-count"></p>
+      <div class="intro-actions">
+        <button id="intro-next" type="button">继续</button>
+        <button id="intro-skip" type="button">跳过剧情</button>
+      </div>
+    </div>
   </section>
 
   <section id="instructions-screen" class="instructions-screen" hidden aria-label="游戏说明">
@@ -84,7 +97,7 @@
     <section id="battle" class="overlay battle-overlay" hidden aria-label="回合制战斗">
       <div class="battle-card">
         <div class="battle-heading"><span id="battle-scene"></span><span id="battle-round"></span></div>
-        <div class="battle-arena" id="battle-arena"><div class="battle-shade"></div><div class="enemy-info"><strong id="enemy-name"></strong><span id="enemy-hp"></span><div class="meter"><i id="enemy-fill"></i></div><small id="enemy-intent"></small></div><img id="battle-hero" class="battle-fighter hero" src="assets/battle/lu-zhao-stance-v1.png" alt="陆照"><img id="battle-enemy" class="battle-fighter enemy" src="assets/battle/road-bandit-stance-v1.png" alt="对手"></div>
+        <div class="battle-arena" id="battle-arena"><div class="battle-shade"></div><div class="battle-hero-info" aria-label="陆照战斗状态"><div class="battle-hero-head"><strong>陆照 <small id="battle-hero-level">壹级</small></strong><span id="battle-hero-xp">经验 0 / 20</span></div><div class="battle-stat"><span>气血</span><strong id="battle-hero-hp">42 / 42</strong></div><div class="meter"><i id="battle-hp-fill"></i></div><div class="battle-stat"><span>内力</span><strong id="battle-hero-qi">6 / 6</strong></div><div class="meter qi"><i id="battle-qi-fill"></i></div></div><div class="enemy-info"><strong id="enemy-name"></strong><span id="enemy-hp"></span><div class="meter"><i id="enemy-fill"></i></div><small id="enemy-intent"></small></div><img id="battle-hero" class="battle-fighter hero" src="assets/battle/lu-zhao-stance-v1.png" alt="陆照"><img id="battle-enemy" class="battle-fighter enemy" src="assets/battle/road-bandit-stance-v1.png" alt="对手"></div>
         <div class="battle-bottom"><p id="battle-message" role="status"></p><div class="battle-commands"><button type="button" data-battle="strike"><kbd>1</kbd>出剑</button><button type="button" data-battle="break"><kbd>2</kbd>破招</button><button type="button" data-battle="guard"><kbd>3</kbd>守势</button><button type="button" data-battle="item"><kbd>4</kbd>用药</button><button type="button" data-battle="escape"><kbd>5</kbd>退走</button></div><p class="battle-help">出剑稳定伤害；破招消耗 2 内力，可打断蓄势；守势减伤并恢复 1 内力。</p></div>
       </div>
     </section>
