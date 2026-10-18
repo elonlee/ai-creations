@@ -11,7 +11,7 @@ const links = [
   './simulated-days/', './rain-window/', './little-harvest/', './tideline/',
   './minigames/Solitaire.html', './minigames/Galaxian.html', './minigames/Snake.html',
   './minigames/Breakout.html', './minigames/Tetris.html', './minigames/Castlevania.html',
-  './cat-music-demo/', './changfeng-zhuan-godot/web/',
+  './cat-music-demo/', './changfeng-zhuan-godot/web/', './godot-test/web/',
 ];
 
 test('首页的每个作品链接都有可点击的缩略图卡片', () => {
@@ -24,6 +24,9 @@ test('首页的每个作品链接都有可点击的缩略图卡片', () => {
     assert.ok(statSync(target).isFile() || existsSync(path.join(target, 'index.html')), `${href} 没有入口页面`);
     assert.match(content, /<(?:img|svg)\b/, `${href} 缺少缩略图`);
     assert.match(content, /<h3\b/, `${href} 缺少可见标题`);
+    for (const [, src] of content.matchAll(/<img\b[^>]*src="([^"]+)"/g)) {
+      assert.ok(existsSync(path.resolve(root, src)), `${href} 的缩略图 ${src} 不存在`);
+    }
   }
 });
 

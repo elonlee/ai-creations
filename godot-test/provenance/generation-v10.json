@@ -1,0 +1,52 @@
+{
+  "tool": "built-in imagegen",
+  "date": "2026-10-18",
+  "assets": [
+    {
+      "path": "assets/art/meadow-ground-v10.png",
+      "source_file": "exec-2157ab43-a6a4-499e-bdac-96c8e106ae01.png",
+      "prompt": "Use case: stylized-concept. Asset type: complete playable 2D Chinese wuxia RPG exploration ground map, landscape1536x1024. Primary request: a beautiful NEW riverside meadow and old ferry village, classic orthographic three-quarter overhead RPG view with approximately35degree downward look. Screen UP is north, RIGHT is east. DO NOT use isometric diamonds or diagonally rotated world axes. No horizon or sky: map fills entire frame edge to edge. Composition: a wide clear warm-gray stone lane runs horizontally from x0 y650 to x1536 y650. Another wide stone lane runs VERTICALLY from x760 y1024 to x760 y210, intersecting at a generous open circular village clearing centered(760,650). Keep a broad area of walkable short grass and bare ground around the intersection, enough space for moving in ANY compass direction. A jade-green stream flows VERTICALLY down the right side between x1140 and x1310 from top to bottom, with gently curving banks, reeds and pebble margins. A small low single-span stone bridge crosses the stream HORIZONTALLY at y650, with a flat visible walkable deck about100pxdeep from y600 to700, no tall arch obscuring people. Far bank has grass and an east continuation of the lane. At upper left(300,200) a modest white-plaster dark-tile-roof ancient cottage with a front porch; at upper middle(770,130) a small peaceful roofed roadside shrine facing DOWN, both at the north boundary and out of central movement space. Sparse willows, pale flowering trees and pines ONLY along the far upper/left/lower edges. Foreground central space MUST remain open with readable foot-contact ground, short meadow grass, tiny daisies, dandelions and a few low flat mossy stones. A low wooden ferry notice board near(980,520), small stone lanterns by bridge banks. Warm afternoon sunlight, fresh jade/ochre/cream palette, inviting quiet natural scene. Polished detailed original hand-painted pixel-art Chinese RPG style, crisp pixel clusters, subtle tactile material shading. Ground paving lines predominantly horizontal and vertical to reinforce direct screen movement, water foreshortened consistently. No people, animals, UI, labels, text, borders or grid. Avoid crowded trees in the middle, opaque canopy above central paths, camera rotation, perspective vanishing point, realistic smooth airbrush or heavy dark shadows.",
+      "transparent_background": false,
+      "references": []
+    },
+    {
+      "path": "assets/art/swordsman-cardinal-v10.png",
+      "source_file": "exec-0532dd68-6e94-4c54-8299-bdea0093d3f0.png",
+      "prompt": "Use case: identity-preserve. Asset type: NEW true-CARDINAL-direction exploration sprite atlas for a 2D Chinese wuxia RPG, using attached swordsman ONLY as appearance reference. Keep his white robe, blue-gray vest, dark trousers/boots, blue sash, jade pendant, dark ponytail and blue hair ribbon; sword sheathed. Render with a fixed traditional three-quarter overhead orthographic RPG camera about35degrees DOWN, world axes aligned to screen, NOT rotated isometric directions. EXACTLY FOUR columns and THREE rows, twelve separate full-body figures, on1536x1152transparentcanvas. Each384x384cell: same260pxtall figure, maximum170pxwide, centered pelvis x192, foot-floor anchor y338, generous empty transparent gutters. Row0: SOUTH facing STRAIGHT DOWN toward viewer, perfectly front view, shoulders level/symmetric, both eyes visible. Row1: WEST facing STRAIGHT LEFT, true left profile, feet point horizontally left, one side of face visible. Row2: NORTH facing STRAIGHT UP away from viewer, full rear view, back of head and symmetric shoulders, NO face visible. These must be unmistakably distinct cardinal directions, NOT three-quarter diagonal stances. In EACH row, columns0-3:0neutral idle both feet grounded;1left-leg-forward contact/right behind;2passing pose with legs close;3right-leg-forward contact/left behind. Broad comfortable grounded walking strides, correct alternating limbs, upright torso, minimal hem/hair sway, no lunges, flying, bobbing, afterimages or magic. Production animation atlas with exact identical character size and clear shoes in every frame, no frame overlaps. Match the detailed painted pixel art and recognizable costume from reference while rotating the body for each requested direction. True transparent alpha, NO shadows, scenery, grid lines, text or labels.",
+      "transparent_background": true,
+      "references": [
+        "assets/art/swordsman-v3.png"
+      ]
+    },
+    {
+      "path": "assets/art/swordsman-diagonal-v10.png",
+      "source_file": "exec-ea5bb26c-2265-42e9-a536-37392560ab8a.png",
+      "prompt": "Use case: identity-preserve. Asset type: exploration sprite atlas with two DIAGONAL directions, matching a true cardinal atlas. Preserve the exact male hero from references: white long martial robe, rich blue vest/belt, dark boots, black topknot with long ponytail, sheathed sword at waist. Crisp high-quality detailed original pixel art, fixed 35-degree downward orthographic three-quarter overhead RPG view, consistent natural proportions. Transparent background, no shadows or scenery, no text.\nEXACTLY 4 columns and 2 rows, eight isolated full-body figures. Landscape 1536x768, each cell 384x384. Keep every character entirely in its cell, consistent scale, about 270px tall, no more than 190px wide, body center at cell x192, foot baseline cell y338.\nROW 1: character faces SOUTHWEST, toward bottom-left of image, 45 degrees left from front. Front-left three-quarter view.\nROW 2: character faces NORTHWEST, toward top-left of image. Back-left three-quarter view, face almost hidden.\nIn EACH row, column 1 relaxed standing idle with both feet planted; column 2 left-leg forward heel contact and right leg back; column 3 passing pose one foot flat under pelvis, other heel lifting; column 4 right-leg forward heel contact, left leg back. Broad comfortable grounded steps, minimal vertical body displacement, natural reciprocal arms, robe opens to show the alternating boots. Keep sword sheathed; no attack, running, jumping, floating or ghost trails. Main torso registration identical across each row. Every pose retains the correct diagonal direction.",
+      "transparent_background": true,
+      "references": [
+        "assets/art/swordsman-v3.png",
+        "assets/art/swordsman-cardinal-v10.png"
+      ]
+    },
+    {
+      "path": "assets/art/companion-cardinal-v10.png",
+      "source_file": "exec-5e6b4178-74ce-4cb9-8e83-68c972079462.png",
+      "prompt": "Use case: identity-preserve. Asset type: true CARDINAL direction walking sprite atlas. Preserve the exact female companion in the reference: ivory-and-teal long hanfu, light green sash and ribbons, dark long hair partly up with small pink blossoms, graceful practical boots, closed folded fan carried near waist. Same age, face and costume palette. Crisp detailed high quality original pixel art matching the referenced male exploration atlas, fixed 35-degree downward orthographic overhead RPG view. Transparent background, no scenery/shadow/text.\nEXACTLY FOUR columns and THREE rows, twelve separated full-body figures, 1536x1152. Each 384 square cell: figure about270px tall maximum180px wide, center body x192 with soles at y338. Same scale and torso registration in all frames.\nROW 1 SOUTH: straight toward BOTTOM of image, completely frontal symmetrical shoulders, both eyes visible, no diagonal body turn.\nROW 2 WEST: straight toward LEFT of image, true left side profile, one eye visible, no diagonal body turn.\nROW 3 NORTH: straight toward TOP of image, completely rear view with symmetric shoulders and both arms equally visible, no visible face, no diagonal turn.\nIn EACH row, four columns are 1 relaxed standing idle bothfeetplanted, 2 leftleg forwardheelcontact rightlegback, 3 passing pose footunderpelvis and otherheel lifts, 4 rightleg forwardheelcontact leftlegback. Visible broad comfortable walking steps; boots appear below skirt so alternate weight is legible. Very little vertical bob. Arms alternate naturally with gait; closedfan keptlow. No attacks, floating, running, jumping or ghost trails. Fullbodyeachframe with clear transparent gutters.",
+      "transparent_background": true,
+      "references": [
+        "assets/art/companion-v4.png",
+        "assets/art/swordsman-cardinal-v10.png"
+      ]
+    },
+    {
+      "path": "assets/art/companion-diagonal-v10.png",
+      "source_file": "exec-6b75f4aa-0829-4bea-80c5-beb21d681efb.png",
+      "prompt": "Use case: identity-preserve. Asset type: DIAGONAL-direction exploration walking sprite atlas. Preserve the exact female companion and style from reference images: ivory-and-teal long hanfu with green sash and ribbons, dark long hair partially up with pink and white flowers, folded fan carried low, practical visible boots. Crisp detailed original pixel art. Fixed 35degree downward orthographic RPG view, consistent scale matching cardinal sprites.\nEXACTLY FOUR columns TWO rows, EIGHT separate full-body figures, transparent background with no ground or shadows, no text. Landscape1536x768,384squarecells; eachfigure270px tallmax190wide, torso centeratcellx192 solesaty338, allbodypartsinsidecell.\nROW1 SOUTHWEST front-left threequarter view, walking toward bottom-left corner. ROW2 NORTHWEST rear-left threequarter view, walking toward top-leftcorner with face mostlyhidden.\nEach row hasfourposes: col1idle bothfeetplanted; col2leftleg forwardheelcontact rightlegback; col3passingpose onefootunderpelvis otherheellifting; col4rightleg forwardheelcontact leftlegback. Widecomfortable groundedsteps, bothbootsvisibleso legalternationclear. Minimalverticalbob, naturalreciprocalarms, fanclosed keptlow. Keep torso position andscale consistent. No attack, running,jumping,floating,ghosttrails or scenery.",
+      "transparent_background": true,
+      "references": [
+        "assets/art/companion-v4.png",
+        "assets/art/companion-cardinal-v10.png"
+      ]
+    }
+  ]
+}

@@ -4,7 +4,7 @@
 
 ## 浏览作品首页
 
-根目录的 [index.html](index.html) 用缩略图卡片展示 16 个作品入口。前置条件是 Python 3 和现代浏览器。在仓库根目录运行：
+根目录的 [index.html](index.html) 用缩略图卡片展示 17 个作品入口。前置条件是 Python 3 和现代浏览器。在仓库根目录运行：
 
 ```sh
 python3 -m http.server 8767
@@ -29,5 +29,6 @@ python3 -m http.server 8767
 | [潮汐之间](tideline/README.md) | 全屏实时海景与四幕滚动叙事。 | 查看目录中的 README，使用本地 HTTP 服务运行。 |
 | [Cat Music 静态播放器](cat-music-demo/README.md) | 浏览示例专辑与歌曲，试听两首开放授权录音。 | 查看目录中的 README，使用本地 HTTP 服务运行。 |
 | [长风传 · Godot 版](changfeng-zhuan-godot/README.md) | 使用 Godot 4 和 GDScript 制作的像素武侠 RPG 第一章。 | 通过首页运行 Web release，操作与发布说明见项目 README。 |
+| [碎岳 · 同行](godot-test/README.md) | 青溪渡口与青岚野林的八方向探索、双人队伍与回合战斗 Demo。 | 通过首页运行 Web release；导出与操作说明见项目 README。 |
 
 这些作品仅用于个人学习和测试。具体运行方法及素材说明以各作品目录中的文档为准。

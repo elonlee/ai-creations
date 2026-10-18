@@ -1,0 +1,19 @@
+{
+  "mode": "Built-in image_gen",
+  "assets": {
+    "companion": "assets/art/companion-v4.png",
+    "enemy": "assets/art/wolf-v4.png"
+  },
+  "prompts": [
+    {
+      "key": "companion_v4",
+      "prompt": "Use case: stylized-concept. Asset: final original animated game character sprite atlas for a mid-1990s DOS Chinese wuxia RPG. Square PNG with exactly 2 columns and 2 rows, four equal square cells, TRUE TRANSPARENT background. Each cell contains the same adult young Chinese female companion, slender realistic 5.5-head proportions, delicate dignified face, long dark hair in half-up double ornaments and a long trailing ribbon, flowing pale jade-green and ivory hanfu with layered split skirts, turquoise waist sash, embroidered hems, small jade pendants, dark cloth shoes. Holds a small ivory-and-jade folding fan, no sword. She faces NORTHWEST, toward upper left, in elevated 45-degree three-quarter REAR view, show top and back of hair and small left cheek, matching the party in a classic isometric battle. Detailed crisp pixel art with fine cloth folds, colored outlines, dithered shading and hair strands, muted DOS jade/cream/blue palette, no blur or smooth rendering, no giant chibi head. Four poses row-major: 0 poised idle with closed fan down northwest; 1 spellcast with left hand performing an elegant raised mudra toward upper left and right fan open, sleeves lifted; 2 committed fan strike lunge toward northwest, open fan extended and skirts/ribbon trailing southeast; 3 hurt recoil leaning back southeast with bent knees and flaring sleeves. Exactly the same body size and identity across cells. IMPORTANT game atlas alignment: complete silhouettes including fan and ribbons must fit within central 75% of each square cell, with wide fully transparent gutters on all edges. With a 512cell use foot anchor at(256,450), tallest hair at y95, consistent baseline. No overlap with neighboring cells. No grid lines, no labels, no text, no platform, no shadow or background. This is production pixel game art, not a concept sheet with typography.",
+      "transparent_background": true
+    },
+    {
+      "key": "wolf_v4",
+      "prompt": "Use case: stylized-concept. Asset: original four-frame enemy sprite atlas for a 1995 DOS Chinese fantasy isometric pixel RPG. True transparent square PNG, exactly 2 by 2 equal square cells. SAME lean ferocious wolf yaoguai in all four cells, elevated isometric camera facing SOUTHEAST toward lower right, three-quarter FRONT view with visible head top. A crouching grey-blue wolf spirit with long angular muzzle, amber eyes, rough silver-grey fur tufts, pointed ears, clawed long limbs, long bushy tail, dark indigo talisman cloth tied at shoulders, a few pale cyan spirit markings. Mature dangerous creature, not cute, no huge head. Finely clustered crisp pixel art, dithered material shading, cool slate/steel blue palette, readable silhouette, colored dark outlines, matching a classic DOS wuxia battle. Frames row-major: 0 hunched idle four-paw stance; 1 attacks forward with raised claw and snarling face; 2 recoils from impact with head thrown back and forelegs bent; 3 collapsed defeated pose, lowered head, resting body. Complete creature size about 330px tall in each512cell, feet baseline at y450, center x256, consistent scale. Keep silhouette including tail and claws wholly inside central 78% of every square cell with wide empty alpha gutters; no touching or crossing cell edges. No shadows, no environment, no borders, no lettering, no effects.",
+      "transparent_background": true
+    }
+  ]
+}
