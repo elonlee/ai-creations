@@ -11,7 +11,7 @@ const links = [
   './simulated-days/', './rain-window/', './little-harvest/', './tideline/',
   './minigames/Solitaire.html', './minigames/Galaxian.html', './minigames/Snake.html',
   './minigames/Breakout.html', './minigames/Tetris.html', './minigames/Castlevania.html',
-  './cat-music-demo/', './huanjian-du/', './changfeng-zhuan-godot/web/',
+  './cat-music-demo/', './changfeng-zhuan-godot/web/',
 ];
 
 test('首页的每个作品链接都有可点击的缩略图卡片', () => {
