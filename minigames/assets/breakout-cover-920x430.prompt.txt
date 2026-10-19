@@ -1,0 +1,15 @@
+Generator: built-in image_gen tool
+Reference: breakout-cover-600x900.png
+Final asset: breakout-cover-920x430.png
+Final dimensions verified after downsampling with macOS sips.
+
+Use case: ads-marketing.
+Asset type: horizontal game store cover for the mobile arcade game 经典打砖块.
+Input image: reference image for the established title styling, neon arcade palette, bricks, paddle and ball. Recompose into a new wide horizontal cover; do not stretch or simply crop the portrait.
+Primary request: create a polished horizontal sibling of the supplied game cover, intended final canvas 920 x 430 pixels, aspect ratio 92:43 (approximately 2.14:1). Generate a wide image at this aspect ratio, ideally 1840 x 860 for downsampling.
+Scene/backdrop: midnight navy, subtle blue-violet gradient, vivid cyan glow with magenta and golden orange accents.
+Subject: recognizable breakout action, a horizontal cyan paddle below, one luminous white-cyan ball and an upward angled cyan light trail striking an orderly wall of multicolored rectangular bricks, some fragments flying from the impact.
+Style: match the reference's crisp dimensional beveled bricks, selective bloom, luminous bold Chinese title, premium arcade key art.
+Composition: purpose-designed panoramic store banner. Large legible Chinese title occupies left half, action occupies right half. On right, brick wall above and paddle below, linked by the ball trail; all essential objects fit fully within frame. Preserve at least 6% safe margin around title and paddle. Strong thumbnail clarity, rich dark contrast, intentional visual balance, full bleed.
+Text verbatim: "经典打砖块". Exact characters, no other text. Match reference's clean bold white geometric lettering with subtle cyan edging; arrange title over two balanced lines if necessary for readability.
+Constraints: one paddle, one ball, rectangular brick shapes, no characters, no device mockup, no logo, no TapTap branding, no UI controls, no watermark. Do not distort shapes or typography. This is a horizontal companion cover with consistent visual identity.

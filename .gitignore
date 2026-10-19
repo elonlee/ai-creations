@@ -3,6 +3,9 @@ worktrees/
 .DS_Store
 .venv-web/
 
+# 本地任务与经验记录
+/tasks/
+
 # 小游戏平台上传包、平台素材和本地验证产物（适用于各项目）
 .taptap-upload/
 taptap/

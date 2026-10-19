@@ -1,0 +1,13 @@
+Generator: built-in image_gen tool
+Final asset: breakout-cover-600x900.png
+Generated at 1024x1536; downsampled to 600x900 with macOS sips.
+
+Use case: ads-marketing.
+Asset type: portrait cover image for the mobile arcade game 经典打砖块, intended for its TapTap game listing.
+Primary request: create a polished original game cover, exact final canvas 600 x 900 pixels, portrait 2:3 aspect ratio. Full bleed illustration, no device mockup.
+Scene/backdrop: deep midnight navy and subtle blue-violet gradient, matching a dark neon breakout arcade game.
+Subject: an instantly recognizable breakout game: a luminous cyan horizontal paddle near the bottom, one bright white-cyan ball with a graceful angled cyan trail shooting upward into an orderly wall of colorful rectangular bricks. Several bricks at the impact point burst into crisp glowing shards, conveying satisfying arcade action. Keep the paddle and ball visually prominent and brick arrangement legible; no characters.
+Style/medium: premium stylized arcade key art with dimensional beveled bricks, crisp geometry, selective neon bloom, rich contrast and controlled particles. Sophisticated and clean, readable as a small mobile store thumbnail.
+Composition/framing: title in the upper quarter with generous safe margins, brick wall occupies the middle, ball trail connects the action to the paddle in the lower quarter. Balanced full-bleed vertical layout, leave no dull empty bottom. Colors cyan, blue, magenta and warm golden-orange bricks against dark navy.
+Text (verbatim): "经典打砖块". Render this exact Chinese title prominently, bold clean geometric lettering in luminous white with restrained cyan edging. No other text.
+Constraints: depict actual breakout mechanics and rectangular brick blocks, one ball, one paddle; strong mobile thumbnail clarity. All title characters completely inside image with at least 40px margin. No TapTap logo, no invented brands, no app icon frame, no buttons, no HUD, no watermark. Deliver exactly 600x900px if supported; otherwise 2:3 portrait suitable for clean downsampling.

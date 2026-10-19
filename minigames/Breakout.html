@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>Breakout - Classic Arcade</title>
+    <title>Breakout · 竖屏打砖块</title>
     <style>
         :root {
             --bg-1: #06070d;
@@ -36,48 +36,62 @@
         }
 
         #game-shell {
-            width: 940px;
+            width: 560px;
             max-width: 100%;
-            height: min(780px, 100%);
+            height: 100%;
+            max-height: 1100px;
             min-height: 0;
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 56px;
+            grid-template-rows: auto auto minmax(0, 1fr) auto;
+            gap: 8px;
             background: linear-gradient(160deg, rgba(31, 40, 70, 0.7), rgba(9, 13, 25, 0.95));
             border: 1px solid var(--panel-border);
             box-shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
-            padding: 14px;
+            padding: 10px;
+            border-radius: 18px;
         }
 
         #hud {
+            grid-column: 1;
+            grid-row: 1;
+            min-width: 0;
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 10px;
-            margin-bottom: 10px;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 4px;
             font-family: 'Courier New', monospace;
             font-size: 14px;
         }
 
         .hud-item {
+            min-width: 0;
             background: rgba(16, 21, 38, 0.9);
             border: 1px solid #2f3a61;
-            padding: 8px;
+            border-radius: 8px;
+            padding: 6px 2px;
             text-align: center;
         }
 
-        .label { color: var(--muted); display: block; font-size: 12px; }
-        .value { color: var(--text); font-weight: bold; font-size: 18px; }
+        .label { color: var(--muted); display: block; font: 10px Arial, sans-serif; }
+        .value { display: block; color: var(--text); font-weight: bold; font-size: 18px; overflow: hidden; text-overflow: ellipsis; }
         .value.combo { color: #ffd43b; }
+        #level { font-family: Arial, sans-serif; }
 
         #status {
-            margin: 8px 0;
+            grid-column: 1 / -1;
+            grid-row: 2;
             color: var(--muted);
             min-height: 18px;
-            font-size: 13px;
+            font-size: 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         #game-stage {
+            grid-column: 1 / -1;
+            grid-row: 3;
             position: relative;
-            flex: 1;
             min-height: 0;
             min-width: 0;
             display: flex;
@@ -114,22 +128,21 @@
             background: #070a15;
             box-shadow: inset 0 0 0 1px #2e3757;
             display: block;
+            border-radius: 10px;
             touch-action: none;
             user-select: none;
             -webkit-user-select: none;
         }
 
-        #actions {
-            margin-top: 10px;
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
+        #actions { grid-column: 2; grid-row: 1; }
+        #actions button:not(#pause-btn), #leaderboard-status { display: none; }
+        #pause-btn { width: 100%; height: 100%; padding: 6px 2px; }
 
         button {
             background: #18213b;
             color: var(--text);
             border: 1px solid #384671;
+            border-radius: 8px;
             padding: 8px 12px;
             min-height: 44px;
             cursor: pointer;
@@ -170,14 +183,15 @@
         }
 
         #mobile-controls {
-            margin-top: 10px;
-            display: none;
-            grid-template-columns: repeat(3, 1fr);
+            grid-column: 1 / -1;
+            grid-row: 4;
+            display: grid;
+            grid-template-columns: 1fr 1.4fr 1fr;
             gap: 8px;
         }
 
         #mobile-controls button {
-            min-height: 48px;
+            min-height: 56px;
             font-size: 18px;
             font-weight: bold;
             touch-action: none;
@@ -185,45 +199,15 @@
             -webkit-user-select: none;
         }
 
-        @media (max-width: 1024px), (pointer: coarse) {
+        #launch-mobile-btn { background: var(--accent); border-color: var(--accent); color: #061423; }
+
+        @media (max-width: 600px) {
             body {
                 padding: max(4px, env(safe-area-inset-top)) max(4px, env(safe-area-inset-right))
                     max(4px, env(safe-area-inset-bottom)) max(4px, env(safe-area-inset-left));
             }
-            #game-shell {
-                height: 100%;
-                padding: 6px;
-                display: grid;
-                grid-template-columns: minmax(0, 1fr) 64px;
-                grid-template-rows: auto auto minmax(0, 1fr) auto;
-                gap: 6px;
-            }
-            #hud {
-                grid-column: 1;
-                grid-row: 1;
-                grid-template-columns: repeat(5, minmax(0, 1fr));
-                gap: 4px;
-                margin: 0;
-                min-width: 0;
-            }
-            .hud-item { min-width: 0; padding: 4px 2px; }
-            .label { font-size: 10px; }
-            .value { display: block; font-size: 16px; overflow: hidden; text-overflow: ellipsis; }
-            #status {
-                grid-column: 1 / -1;
-                grid-row: 2;
-                margin: 0;
-                font-size: 12px;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-            #game-stage { grid-column: 1 / -1; grid-row: 3; }
-            #actions { grid-column: 2; grid-row: 1; margin: 0; }
-            #actions button:not(#pause-btn) { display: none; }
-            #pause-btn { width: 64px; padding: 6px; }
-            #leaderboard-status { display: none; }
-            #mobile-controls { display: grid; grid-column: 1 / -1; grid-row: 4; margin: 0; }
+            #game-shell { padding: 6px; gap: 6px; }
+            .value { font-size: clamp(13px, 4vw, 16px); }
             #game-menu { padding: 22px; }
             #result-panel { padding: 10px; }
             #result-title { font-size: 23px; }
@@ -232,11 +216,10 @@
             #share-status { margin-top: 6px; }
         }
 
-        @media (max-width: 1024px) and (max-height: 500px) and (orientation: landscape),
-            (pointer: coarse) and (max-height: 500px) and (orientation: landscape) {
+        @media (max-height: 500px) and (orientation: landscape) {
             #game-shell {
                 grid-template-columns: 64px minmax(0, 1fr) 64px;
-                grid-template-rows: 44px minmax(0, 1fr);
+                grid-template-rows: 56px minmax(0, 1fr);
             }
             #hud { grid-column: 2; grid-row: 1; }
             #actions { grid-column: 3; grid-row: 1; }
@@ -246,7 +229,7 @@
             #left-btn { grid-column: 1; grid-row: 2; }
             #right-btn { grid-column: 3; grid-row: 2; }
             #left-btn, #right-btn { align-self: center; height: 96px; }
-            #launch-mobile-btn { grid-column: 1; grid-row: 1; min-height: 44px; }
+            #launch-mobile-btn { grid-column: 1; grid-row: 1; }
             #game-menu { width: min(620px, calc(100% - 32px)); padding: 16px; }
             #menu-title { font-size: 28px; margin: 6px 0; }
             .menu-eyebrow { font-size: 10px; letter-spacing: 2px; }
@@ -262,15 +245,15 @@
 <body>
     <div id="game-shell">
         <div id="hud">
-            <div class="hud-item"><span class="label">SCORE</span><span class="value" id="score">0</span></div>
-            <div class="hud-item"><span class="label">HIGH</span><span class="value" id="high-score">0</span></div>
-            <div class="hud-item"><span class="label">LIVES</span><span class="value" id="lives">3</span></div>
-            <div class="hud-item"><span class="label">LEVEL</span><span class="value" id="level">1</span></div>
-            <div class="hud-item"><span class="label">COMBO</span><span class="value combo" id="combo">x1</span></div>
+            <div class="hud-item"><span class="label">得分</span><span class="value" id="score">0</span></div>
+            <div class="hud-item"><span class="label">最高</span><span class="value" id="high-score">0</span></div>
+            <div class="hud-item"><span class="label">生命</span><span class="value" id="lives">3</span></div>
+            <div class="hud-item"><span class="label">关卡</span><span class="value" id="level">1</span></div>
+            <div class="hud-item"><span class="label">连击</span><span class="value combo" id="combo">x1</span></div>
         </div>
-        <div id="status">按空格发球，左右方向键移动挡板</div>
+        <div id="status">点击下方发球 · 在球场下方左右滑动控制挡板</div>
         <div id="game-stage">
-            <canvas id="game-canvas" width="900" height="540" aria-label="Breakout 游戏画布，可拖动移动挡板" tabindex="0"></canvas>
+            <canvas id="game-canvas" width="540" height="900" aria-label="竖屏打砖块球场，可在底部左右滑动控制挡板" tabindex="0"></canvas>
             <section id="result-panel" aria-labelledby="result-title" hidden>
                 <h2 id="result-title">挑战结束</h2>
                 <p id="result-summary" aria-live="polite"></p>
@@ -301,7 +284,7 @@
     </div>
 
     <dialog id="game-menu" aria-labelledby="menu-title" aria-describedby="menu-description">
-        <div class="menu-eyebrow">CLASSIC ARCADE · 01</div>
+        <div class="menu-eyebrow">PORTRAIT ARCADE · 10 STAGES</div>
         <h1 id="menu-title">BREAKOUT</h1>
         <p id="menu-description">守住挡板，击碎每一块砖。<br>挑战十个主题关卡，刷新你的最高分。</p>
         <div class="menu-buttons">
@@ -314,8 +297,9 @@
         </div>
         <p id="menu-leaderboard-status" class="leaderboard-status" role="status">本周最高单局分数 · 每周重置</p>
         <div class="menu-help">
+            <p>竖握手机 · 点击发球 · 在球场下方左右滑动</p>
             <p>← → / A D / 鼠标 / 触屏移动挡板</p>
-            <p>空格发球 · P / Esc 暂停 · R 重开</p>
+            <p>鼠标左键点击球场 / 空格发球 · P / Esc 暂停 · R 重开</p>
         </div>
     </dialog>
 
@@ -354,7 +338,7 @@
         const WIDTH = canvas.width;
         const HEIGHT = canvas.height;
         function fitCanvas() {
-            // 只缩放显示尺寸，物理坐标保持 900×540，旋屏不会重置本局。
+            // 只缩放显示尺寸，物理坐标保持 540×900，旋屏不会重置本局。
             const width = Math.min(gameStage.clientWidth, gameStage.clientHeight * WIDTH / HEIGHT);
             canvas.style.width = `${width}px`;
             canvas.style.height = `${width * HEIGHT / WIDTH}px`;
@@ -525,33 +509,33 @@
         }
 
         const BRICK_COLS = 12;
-        const BRICK_W = 62;
-        const BRICK_H = 22;
-        const BRICK_GAP = 8;
-        const BRICK_TOP = 72;
+        const BRICK_W = 36;
+        const BRICK_H = 24;
+        const BRICK_GAP = 6;
+        const BRICK_TOP = 88;
         const BRICK_LEFT = (WIDTH - (BRICK_COLS * BRICK_W + (BRICK_COLS - 1) * BRICK_GAP)) / 2;
 
         // 每行 12 格：. 留空，1–4 为耐久，* 为连锁爆破砖。没有不可摧毁砖。
         const LEVELS = [
-            { name: '霓虹启航', hint: '从挡板两侧击球，寻找反弹角度', color: '#63e6ff', speed: 360, paddle: 148,
+            { name: '霓虹启航', hint: '从挡板两侧击球，寻找反弹角度', color: '#63e6ff', speed: 360, paddle: 116,
                 map: ['111111111111', '111111111111', '.111....111.', '..111..111..', '...111111...'] },
-            { name: '双子之门', hint: '穿过中间通道，从背后拆掉双塔', color: '#69db7c', speed: 380, paddle: 144,
+            { name: '双子之门', hint: '穿过中间通道，从背后拆掉双塔', color: '#69db7c', speed: 380, paddle: 112,
                 map: ['.222....222.', '.111....111.', '.111....111.', '.111....111.', '.111....111.', '11111..11111'] },
-            { name: '棱镜之心', hint: '装甲砖需要多次击中，观察剩余耐久', color: '#b197fc', speed: 400, paddle: 140,
+            { name: '棱镜之心', hint: '装甲砖需要多次击中，观察剩余耐久', color: '#b197fc', speed: 400, paddle: 108,
                 map: ['.....22.....', '....2112....', '...211112...', '..21111112..', '...211112...', '....2112....', '.....22.....'] },
-            { name: '引爆回路', hint: '命中带菱形标记的爆破砖，震碎周围八格', color: '#ffa94d', speed: 420, paddle: 136,
+            { name: '引爆回路', hint: '命中带菱形标记的爆破砖，震碎周围八格', color: '#ffa94d', speed: 420, paddle: 104,
                 map: ['222222222222', '11*111111*11', '111122221111', '..11*11*11..', '..11111111..', '...211112...'] },
-            { name: '深空阶梯', hint: '砖墙逐层向下延伸，提前调整接球位置', color: '#74c0fc', speed: 440, paddle: 132,
+            { name: '深空阶梯', hint: '砖墙逐层向下延伸，提前调整接球位置', color: '#74c0fc', speed: 440, paddle: 100,
                 map: ['2222....2222', '.222....222.', '..22....22..', '..11111111..', '...11**11...', '...222222...', '....2222....', '.....11.....'] },
-            { name: '流光列阵', hint: '砖阵左右游移，预判空隙再打入上方', color: '#f783ac', speed: 460, paddle: 128, motion: 14,
+            { name: '流光列阵', hint: '砖阵左右游移，预判空隙再打入上方', color: '#f783ac', speed: 460, paddle: 96, motion: 14,
                 map: ['222..22..222', '111..11..111', '.11*1111*11.', '..22222222..', '.111....111.', '222..22..222'] },
-            { name: '装甲堡垒', hint: '三层装甲保护核心，爆破可以加快突破', color: '#ffd43b', speed: 480, paddle: 122,
+            { name: '装甲堡垒', hint: '三层装甲保护核心，爆破可以加快突破', color: '#ffd43b', speed: 480, paddle: 92,
                 map: ['.3333333333.', '.2111111112.', '.21*2222*12.', '.2123333212.', '.21*2222*12.', '.2111111112.', '.2222222222.'] },
-            { name: '跃动星环', hint: '交错星环持续移动，抓住爆破连锁机会', color: '#38d9a9', speed: 500, paddle: 116, motion: 18,
+            { name: '跃动星环', hint: '交错星环持续移动，抓住爆破连锁机会', color: '#38d9a9', speed: 500, paddle: 88, motion: 18,
                 map: ['...222222...', '..22....22..', '.22.*..*.22.', '22..3333..22', '.22.*..*.22.', '..22....22..', '...222222...'] },
-            { name: '赤焰防线', hint: '更快的小球与密集装甲，保持接球节奏', color: '#ff6b6b', speed: 520, paddle: 110, motion: 14,
+            { name: '赤焰防线', hint: '更快的小球与密集装甲，保持接球节奏', color: '#ff6b6b', speed: 520, paddle: 84, motion: 14,
                 map: ['333333333333', '.2*22..22*2.', '..222..222..', '...333333...', '..22*11*22..', '.222....222.', '222......222', '.11......11.'] },
-            { name: '终极矩阵', hint: '击破四层核心，完成十关挑战', color: '#ff87d4', speed: 540, paddle: 104, motion: 18,
+            { name: '终极矩阵', hint: '击破四层核心，完成十关挑战', color: '#ff87d4', speed: 540, paddle: 80, motion: 18,
                 map: ['.3333333333.', '22*222222*22', '.22.3333.22.', '..2.4444.2..', '..2.4**4.2..', '.22.3333.22.', '22*222222*22', '.222....222.'] }
         ];
         const STAGE_COLORS = [["#ff6b8a", "#ffb454", "#ffe066", "#63e6ff", "#b197fc"], ["#69db7c", "#38d9a9", "#a9e34b"], ["#b197fc", "#da77f2", "#74c0fc"], ["#ffa94d", "#ff6b6b", "#ffd43b"], ["#74c0fc", "#63e6ff", "#91a7ff"], ["#f783ac", "#da77f2", "#ffa8a8"], ["#ffd43b", "#ffa94d", "#fff3bf"], ["#38d9a9", "#63e6ff", "#69db7c"], ["#ff6b6b", "#ffa94d", "#ff8787"], ["#ff87d4", "#b197fc", "#63e6ff"]];
@@ -570,20 +554,20 @@
             comboTimer: 0,
             highScore: Number(localStorage.getItem(HIGH_SCORE_KEY) || 0),
             paddle: {
-                x: WIDTH / 2 - 70,
-                y: HEIGHT - 42,
-                w: 140,
+                x: WIDTH / 2 - LEVELS[0].paddle / 2,
+                y: HEIGHT - 100,
+                w: LEVELS[0].paddle,
                 h: 14,
                 speed: 680,
                 dx: 0
             },
             ball: {
                 x: WIDTH / 2,
-                y: HEIGHT - 56,
+                y: HEIGHT - 110,
                 r: 8,
                 vx: 0,
                 vy: 0,
-                speed: 380,
+                speed: LEVELS[0].speed,
                 launched: false,
                 trail: []
             },
@@ -610,90 +594,124 @@
         let frameId = null;
         let lastTs = null;
         let animationTime = 0;
+        const AUDIO_SOURCES = Object.fromEntries([
+            'music', 'launch', 'paddle', 'wall', 'brick-hit', 'brick-break',
+            'explode', 'life-lost', 'game-over', 'win'
+        ].map(name => [name, `assets/breakout-audio/${name}.mp3`]));
+        const COLLISION_SOUNDS = new Set(['paddle', 'wall', 'brick-hit', 'brick-break', 'explode']);
         const audio = {
             enabled: true,
             initialized: false,
-            ctx: null,
-            master: null,
-            sfx: null,
+            engine: null,
+            error: false,
+            generation: 0,
             music: null,
-            musicTimer: null,
-            beat: 0
+            musicPlaying: false,
+            players: new Set(),
+            effects: new Map(),
+            voices: new Map(),
+            lastCollisionAt: -Infinity
         };
 
+        function updateSoundButtons() {
+            soundButtons.forEach(button => {
+                button.textContent = audio.error ? '声音: 重试' : `声音: ${audio.enabled ? '开' : '关'}`;
+                button.setAttribute('aria-pressed', String(audio.enabled));
+            });
+        }
+
+        function reportAudioError() {
+            if (audio.error) return;
+            audio.error = true;
+            pauseAllAudio();
+            updateSoundButtons();
+        }
+
+        function createAudioPlayer(name, loop = false) {
+            // 使用 TapTap 原生接口：短音效用低延迟驱动，长音乐用流式驱动。
+            const player = audio.engine === 'tap'
+                ? window.tap.createInnerAudioContext({ useWebAudioImplement: !loop })
+                : new window.Audio();
+            const generation = audio.generation;
+            audio.players.add(player);
+            const voice = loop ? null : { ready: false, busy: false };
+            if (voice) audio.voices.set(player, voice);
+            const onError = () => {
+                if (generation === audio.generation) reportAudioError();
+            };
+            const onPlay = () => {
+                if (generation !== audio.generation) return;
+                if (!audio.enabled || audio.error || state.paused || state.menu || (loop && !isPlaying())) {
+                    if (voice) resetEffectPlayer(player);
+                    else player.pause();
+                }
+            };
+            const onReady = () => {
+                if (generation === audio.generation && voice) voice.ready = true;
+            };
+            const onEnded = () => {
+                if (generation === audio.generation && voice?.busy) resetEffectPlayer(player);
+            };
+            if (audio.engine === 'tap') {
+                player.onError(onError);
+                player.onPlay(onPlay);
+                if (voice) {
+                    player.onCanplay(onReady);
+                    player.onEnded(onEnded);
+                }
+            } else {
+                player.preload = 'auto';
+                player.addEventListener('error', onError);
+                player.addEventListener('playing', onPlay);
+                if (voice) {
+                    player.addEventListener('canplay', onReady);
+                    player.addEventListener('ended', onEnded);
+                }
+            }
+            player.loop = loop;
+            player.volume = loop ? 0.24 : 0.55;
+            player.src = AUDIO_SOURCES[name];
+            return player;
+        }
+
         function initAudio() {
-            if (audio.initialized) return;
-            const Ctx = window.AudioContext || window.webkitAudioContext;
-            if (!Ctx) {
-                audio.enabled = false;
-                soundButtons.forEach(button => {
-                    button.textContent = '声音: 不支持';
-                    button.disabled = true;
-                    button.setAttribute('aria-pressed', 'false');
+            if (audio.error) return false;
+            if (audio.initialized) return true;
+            if (typeof window.tap?.createInnerAudioContext === 'function') audio.engine = 'tap';
+            else if (typeof window.Audio === 'function') audio.engine = 'browser';
+            else {
+                reportAudioError();
+                return false;
+            }
+            try {
+                audio.music = createAudioPlayer('music', true);
+                // 开始游戏的用户操作中准备全部短音效；碰撞帧不创建或加载资源。
+                for (const name of Object.keys(AUDIO_SOURCES)) {
+                    if (name === 'music') continue;
+                    audio.effects.set(name, {
+                        players: [createAudioPlayer(name), createAudioPlayer(name)],
+                        lastAt: -Infinity
+                    });
+                }
+                audio.initialized = true;
+                return !audio.error;
+            } catch (_) {
+                reportAudioError();
+                return false;
+            }
+        }
+
+        function playAudioPlayer(player) {
+            const generation = audio.generation;
+            try {
+                const pending = player.play();
+                // HTMLAudioElement.play() 返回 Promise；原生音频用 onError 回调。
+                if (pending?.catch) pending.catch(error => {
+                    if (generation === audio.generation && error?.name !== 'AbortError') reportAudioError();
                 });
-                return;
+            } catch (_) {
+                if (generation === audio.generation) reportAudioError();
             }
-            audio.ctx = new Ctx();
-            audio.master = audio.ctx.createGain();
-            audio.sfx = audio.ctx.createGain();
-            audio.music = audio.ctx.createGain();
-            audio.master.gain.value = 0.7;
-            audio.sfx.gain.value = 0.9;
-            audio.music.gain.value = 0.62;
-            audio.sfx.connect(audio.master);
-            audio.music.connect(audio.master);
-            audio.master.connect(audio.ctx.destination);
-            audio.initialized = true;
-        }
-
-        function beep(freq, duration, type = 'square', volume = 0.08, offset = 0, retried = false) {
-            if (!audio.enabled || state.paused || state.menu) return;
-            initAudio();
-            if (!audio.ctx) return;
-            if (audio.ctx.state !== 'running') {
-                if (retried) return;
-                audio.ctx.resume().then(() => {
-                    beep(freq, duration, type, volume, offset, true);
-                }).catch(() => {});
-                return;
-            }
-            const start = audio.ctx.currentTime + offset;
-            const osc = audio.ctx.createOscillator();
-            const gain = audio.ctx.createGain();
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, start);
-            gain.gain.setValueAtTime(0.0001, start);
-            gain.gain.exponentialRampToValueAtTime(volume, start + 0.01);
-            gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-            osc.connect(gain);
-            gain.connect(audio.sfx);
-            osc.start(start);
-            osc.stop(start + duration + 0.02);
-        }
-
-        function musicTone(freq, duration, type = 'triangle', volume = 0.045, offset = 0, retried = false) {
-            if (!audio.enabled || !isPlaying()) return;
-            initAudio();
-            if (!audio.ctx) return;
-            if (audio.ctx.state !== 'running') {
-                if (retried) return;
-                audio.ctx.resume().then(() => {
-                    musicTone(freq, duration, type, volume, offset, true);
-                }).catch(() => {});
-                return;
-            }
-            const start = audio.ctx.currentTime + offset;
-            const osc = audio.ctx.createOscillator();
-            const gain = audio.ctx.createGain();
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, start);
-            gain.gain.setValueAtTime(0.0001, start);
-            gain.gain.exponentialRampToValueAtTime(volume, start + 0.01);
-            gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-            osc.connect(gain);
-            gain.connect(audio.music);
-            osc.start(start);
-            osc.stop(start + duration + 0.03);
         }
 
         function isPlaying() {
@@ -701,94 +719,103 @@
         }
 
         function syncAudio() {
-            if (!audio.ctx) return;
-            if (!audio.enabled || !isPlaying()) {
-                stopMusic();
-                audio.ctx.suspend().catch(() => {});
-                return;
-            }
-            audio.ctx.resume().then(() => {
-                // 用户可能在音频恢复完成前再次暂停。
-                if (audio.enabled && isPlaying()) startMusic();
-                else syncAudio();
-            }).catch(() => {});
+            if (!audio.enabled || !isPlaying()) pauseAllAudio();
+            else if (audio.initialized) startMusic();
         }
 
         function unlockAudio() {
-            initAudio();
-            syncAudio();
+            if (audio.enabled && initAudio()) syncAudio();
         }
 
         function startMusic() {
-            if (!audio.enabled || !isPlaying() || audio.musicTimer) return;
-            const melody = [392, 440, 494, 523, 494, 440, 392, 330];
-            const bass = [131, 147, 165, 175, 165, 147, 131, 110];
-            audio.beat = 0;
-            audio.musicTimer = setInterval(() => {
-                if (!audio.enabled || !audio.ctx || audio.ctx.state !== 'running') return;
-                if (!state.running || state.paused || state.gameOver || state.win) return;
-                const n = melody[audio.beat % melody.length];
-                musicTone(n, 0.16, 'triangle', 0.06);
-                musicTone(bass[audio.beat % bass.length], 0.2, 'sine', 0.05);
-                audio.beat += 1;
-            }, 190);
+            if (!audio.enabled || audio.error || !isPlaying() || audio.musicPlaying || !initAudio()) return;
+            audio.musicPlaying = true;
+            playAudioPlayer(audio.music);
         }
 
         function stopMusic() {
-            if (audio.musicTimer) {
-                clearInterval(audio.musicTimer);
-                audio.musicTimer = null;
+            audio.musicPlaying = false;
+            if (audio.music) {
+                try { audio.music.pause(); } catch (_) {}
             }
         }
 
+        function pauseAllAudio() {
+            stopMusic();
+            for (const player of audio.players) {
+                if (audio.voices.get(player)?.busy) resetEffectPlayer(player);
+            }
+        }
+
+        function resetEffectPlayer(player) {
+            const voice = audio.voices.get(player);
+            if (!voice) return;
+            voice.busy = false;
+            try {
+                // 在结束、暂停等事件中复位，下一次碰撞只需调用 play。
+                if (audio.engine === 'tap') player.stop();
+                else { player.pause(); player.currentTime = 0; }
+            } catch (_) { reportAudioError(); }
+        }
+
+        function destroyAudio() {
+            // 先使旧回调失效，再释放原生实例或浏览器音频资源。
+            audio.generation++;
+            pauseAllAudio();
+            for (const player of audio.players) {
+                try {
+                    if (audio.engine === 'tap') player.destroy();
+                    else { player.removeAttribute('src'); player.load(); }
+                } catch (_) {}
+            }
+            audio.players.clear();
+            audio.effects.clear();
+            audio.voices.clear();
+            audio.lastCollisionAt = -Infinity;
+            audio.music = null;
+            audio.initialized = false;
+            audio.engine = null;
+        }
+
         function setSoundEnabled(enabled) {
+            if (enabled && audio.error) {
+                destroyAudio();
+                audio.error = false;
+            }
             audio.enabled = enabled;
-            soundButtons.forEach(button => {
-                button.textContent = `声音: ${enabled ? '开' : '关'}`;
-                button.setAttribute('aria-pressed', String(enabled));
+            updateSoundButtons();
+            if (enabled) unlockAudio();
+            else pauseAllAudio();
+        }
+
+        function playEffect(name) {
+            if (!audio.enabled || audio.error || state.paused || state.menu || !audio.initialized) return;
+            const effect = audio.effects.get(name);
+            if (!effect) return;
+            const now = performance.now();
+            if (now - effect.lastAt < 35) return;
+            const collision = COLLISION_SOUNDS.has(name);
+            if (collision && now - audio.lastCollisionAt < 40) return;
+            const player = effect.players.find(player => {
+                const voice = audio.voices.get(player);
+                return voice.ready && !voice.busy;
             });
-            unlockAudio();
+            // 不排队、不抢占：未就绪或繁忙时跳过本次声音，保持物理更新顺畅。
+            if (!player) return;
+            effect.lastAt = now;
+            if (collision) audio.lastCollisionAt = now;
+            audio.voices.get(player).busy = true;
+            playAudioPlayer(player);
         }
 
-        function sfxLaunch() {
-            beep(620, 0.06, 'triangle', 0.07);
-            beep(860, 0.08, 'triangle', 0.05, 0.04);
-        }
-
-        function sfxPaddle() {
-            beep(300, 0.04, 'square', 0.06);
-            beep(420, 0.05, 'square', 0.05, 0.02);
-        }
-
-        function sfxWall() {
-            beep(220, 0.03, 'square', 0.04);
-        }
-
-        function sfxBrickHit() {
-            beep(460, 0.035, 'sawtooth', 0.05);
-        }
-
-        function sfxBrickBreak() {
-            beep(520, 0.05, 'square', 0.06);
-            beep(760, 0.07, 'triangle', 0.04, 0.02);
-        }
-
-        function sfxLoseLife() {
-            beep(260, 0.08, 'sine', 0.07);
-            beep(180, 0.13, 'sine', 0.06, 0.08);
-        }
-
-        function sfxGameOver() {
-            beep(320, 0.12, 'square', 0.08);
-            beep(220, 0.18, 'square', 0.07, 0.1);
-            beep(160, 0.22, 'square', 0.06, 0.22);
-        }
-
-        function sfxWin() {
-            beep(523, 0.08, 'triangle', 0.07);
-            beep(659, 0.1, 'triangle', 0.07, 0.08);
-            beep(784, 0.16, 'triangle', 0.06, 0.18);
-        }
+        function sfxLaunch() { playEffect('launch'); }
+        function sfxPaddle() { playEffect('paddle'); }
+        function sfxWall() { playEffect('wall'); }
+        function sfxBrickHit() { playEffect('brick-hit'); }
+        function sfxBrickBreak() { playEffect('brick-break'); }
+        function sfxLoseLife() { playEffect('life-lost'); }
+        function sfxGameOver() { playEffect('game-over'); }
+        function sfxWin() { playEffect('win'); }
 
         function clamp(v, min, max) {
             return Math.max(min, Math.min(max, v));
@@ -983,7 +1010,7 @@
             addEffect(brick.x + brick.w / 2, brick.y, `+${points}`, brick.color, brick.explosive);
             if (brick.explosive) {
                 triggerShake(9, 0.18);
-                beep(110, 0.14, 'sawtooth', 0.05);
+                playEffect('explode');
                 for (const neighbor of state.bricks) {
                     if (neighbor.alive && Math.abs(neighbor.row - brick.row) <= 1 && Math.abs(neighbor.col - brick.col) <= 1) {
                         damageBrick(neighbor, neighbor.x + neighbor.w / 2, neighbor.y + neighbor.h / 2);
@@ -1173,9 +1200,6 @@
 
         function update(dt) {
             if (state.paused || state.menu) return;
-            if (audio.enabled && audio.ctx && audio.ctx.state === 'running' && state.running && !state.paused && !state.gameOver && !state.win && !audio.musicTimer) {
-                startMusic();
-            }
             updateStars(dt);
             updateParticles(dt);
             state.effects = state.effects.filter(effect => {
@@ -1249,7 +1273,7 @@
                 } else if (brick.maxHp > 1) {
                     for (let i = 0; i < brick.maxHp; i += 1) {
                         ctx.fillStyle = i < brick.hp ? '#ffffff' : 'rgba(0,0,0,0.35)';
-                        ctx.fillRect(brick.x + brick.w / 2 - brick.maxHp * 5 + i * 10, brick.y + 9, 6, 5);
+                        ctx.fillRect(brick.x + brick.w / 2 - (brick.maxHp * 7 - 3) / 2 + i * 7, brick.y + 9, 4, 5);
                     }
                 }
             }
@@ -1291,6 +1315,12 @@
 
         function drawPaddle() {
             const p = state.paddle;
+            ctx.fillStyle = 'rgba(99, 230, 255, 0.035)';
+            ctx.fillRect(0, HEIGHT - 72, WIDTH, 72);
+            ctx.fillStyle = '#8eaccb';
+            ctx.font = '18px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('在这里左右滑动 · 控制挡板', WIDTH / 2, HEIGHT - 28);
             const g = ctx.createLinearGradient(p.x, p.y, p.x, p.y + p.h);
             g.addColorStop(0, '#d0f4ff');
             g.addColorStop(1, '#4ea8de');
@@ -1333,22 +1363,20 @@
         function drawOverlay() {
             if (state.transition || (state.levelIntro && state.running)) {
                 const transition = state.transition;
-                const y = transition ? 210 : 345;
+                const y = HEIGHT * 0.56;
                 ctx.fillStyle = 'rgba(6, 12, 28, 0.92)';
-                ctx.fillRect(110, y - 38, WIDTH - 220, 118);
+                ctx.fillRect(24, y - 38, WIDTH - 48, 128);
                 ctx.fillStyle = currentLevel().color;
-                ctx.fillRect(110, y - 38, 3, 118);
+                ctx.fillRect(24, y - 38, 3, 128);
                 ctx.textAlign = 'center';
                 ctx.font = 'bold 28px Arial';
-                ctx.fillText(transition ? `${currentLevel().name} · 已突破` : `第 ${state.level} 关 · ${currentLevel().name}`, WIDTH / 2, y);
+                ctx.fillText(transition ? `${currentLevel().name} · 已突破` : `第 ${state.level} 关 · ${currentLevel().name}`, WIDTH / 2, y, WIDTH - 80);
                 ctx.fillStyle = '#dbe7ff';
                 ctx.font = '17px Arial';
-                ctx.fillText(transition ? `过关 +${transition.bonus} 分${transition.extraLife ? '   生命 +1' : ''}  ·  下一关：${LEVELS[state.level].name}` : currentLevel().hint, WIDTH / 2, y + 30);
-                if (!transition) {
-                    ctx.fillStyle = '#8eaccb';
-                    ctx.font = '15px Arial';
-                    ctx.fillText('点击发球 / 按空格开始', WIDTH / 2, y + 60);
-                }
+                ctx.fillText(transition ? `过关 +${transition.bonus} 分${transition.extraLife ? '   生命 +1' : ''}` : currentLevel().hint, WIDTH / 2, y + 30, WIDTH - 80);
+                ctx.fillStyle = '#8eaccb';
+                ctx.font = '18px Arial';
+                ctx.fillText(transition ? `下一关：${LEVELS[state.level].name}` : '点击下方“发球”开始 · 空格也可发球', WIDTH / 2, y + 62, WIDTH - 80);
                 return;
             }
             if (!state.gameOver && !state.win) return;
@@ -1454,7 +1482,7 @@
                 setStatus('已暂停，按 P 或 Esc 继续');
             } else {
                 closeMenu();
-                setStatus(state.ball.launched ? '继续游戏' : '按空格发球');
+                setStatus(state.ball.launched ? '继续游戏' : '点击下方发球 · 左右滑动控制挡板');
                 unlockAudio();
                 startLoop();
             }
@@ -1471,7 +1499,7 @@
             resetLevel(1, false);
             animationTime = 0;
             closeMenu();
-            setStatus('按空格发球，左右方向键、鼠标或触屏移动挡板');
+            setStatus('点击下方发球 · 在球场下方左右滑动控制挡板');
             pauseBtn.textContent = '暂停';
             render(animationTime);
             unlockAudio();
@@ -1535,6 +1563,7 @@
             activePointerId = e.pointerId;
             canvas.setPointerCapture(e.pointerId);
             movePaddleToPointer(e);
+            if (e.pointerType === 'mouse') launchBall();
             e.preventDefault();
         });
         canvas.addEventListener('pointermove', (e) => {
@@ -1560,7 +1589,7 @@
         pauseBtn.addEventListener('click', togglePause);
         restartBtn.addEventListener('click', restart);
         soundButtons.forEach(button => button.addEventListener('click', () => {
-            setSoundEnabled(!audio.enabled);
+            setSoundEnabled(audio.error ? true : !audio.enabled);
         }));
         leaderboardButtons.forEach(button => button.addEventListener('click', openWeeklyLeaderboard));
         retryScoreButtons.forEach(button => button.addEventListener('click', () => submitFinalScore(true)));
@@ -1580,6 +1609,7 @@
             if (isPlaying()) togglePause();
         }
         window.addEventListener('blur', pauseOnLeave);
+        window.addEventListener('pagehide', destroyAudio);
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) pauseOnLeave();
         });

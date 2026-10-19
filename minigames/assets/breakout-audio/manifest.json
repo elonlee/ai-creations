@@ -1,0 +1,78 @@
+{
+  "license": "CC0-1.0",
+  "files": [
+    {
+      "file": "brick-break.mp3",
+      "seconds": 0.24,
+      "bytes": 3806,
+      "sha256": "72931ac8690d878d2ab2ae08d4c04d80d2afae3f8acda7aa8ce48af947474821"
+    },
+    {
+      "file": "brick-hit.mp3",
+      "seconds": 0.12,
+      "bytes": 2239,
+      "sha256": "85d123007b4a4d72b32daf6494db3b0045121686ac960bae766252f17577851d"
+    },
+    {
+      "file": "explode.mp3",
+      "seconds": 0.45,
+      "bytes": 6314,
+      "sha256": "eb490098fc9c8113e3b41a05bebc03d03d9f7b2ed1b40dbc7321708ed11f554b"
+    },
+    {
+      "file": "game-over.mp3",
+      "seconds": 1.0,
+      "bytes": 12897,
+      "sha256": "9082de3c08e7ab0471701910ebb607a30e350bf1d21a0788c847bc7dcb58cd49"
+    },
+    {
+      "file": "launch.mp3",
+      "seconds": 0.22,
+      "bytes": 3493,
+      "sha256": "bc3c13e3faf0ca095d777157a99418ec67b7dd59515c37c15635a5b4c6bf8506"
+    },
+    {
+      "file": "life-lost.mp3",
+      "seconds": 0.27,
+      "bytes": 4120,
+      "sha256": "4c5bbed8b1e70915188c13fba10a822323f7f401f0f7ade67a1633bc31c5b268"
+    },
+    {
+      "file": "music.mp3",
+      "seconds": 57.6,
+      "bytes": 922479,
+      "sha256": "f98e9ce31e6ea9f16518b8d84753db4bd32a6ace352bf8e3abe3fd4be6284a76"
+    },
+    {
+      "file": "paddle.mp3",
+      "seconds": 0.1,
+      "bytes": 1925,
+      "sha256": "e8bf1608ae2f9340cfe816ad6c0112b56ef36ff89d0b33518a4f5afe6c53e0d2"
+    },
+    {
+      "file": "wall.mp3",
+      "seconds": 0.078,
+      "bytes": 1612,
+      "sha256": "d041c27e00c13476da01d0aa59649599579f376c48b99d3dbda678c109506813"
+    },
+    {
+      "file": "win.mp3",
+      "seconds": 0.5,
+      "bytes": 6941,
+      "sha256": "3c134cd2c1f88e94aa12532b7d44e394cdcfef93572f148d7de41affc2a2dce3"
+    }
+  ],
+  "kenneyFiles": {
+    "launch": "laser2",
+    "paddle": "pepSound1",
+    "wall": "tone1",
+    "brick-hit": "pepSound3",
+    "brick-break": "zap1",
+    "explode": "spaceTrash3",
+    "life-lost": "phaserDown2",
+    "game-over": "lowThreeTone",
+    "win": "powerUp4"
+  },
+  "music": "Plains Stage by MintoDog",
+  "processing": "Kenney OGG: trim, end fade, mono 44.1kHz MP3 96kbps; music: stereo MP3 128kbps"
+}
