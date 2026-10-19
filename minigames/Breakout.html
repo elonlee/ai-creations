@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Breakout - Classic Arcade</title>
     <style>
         :root {
@@ -21,19 +21,27 @@
 
         body {
             margin: 0;
-            min-height: 100vh;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+            overscroll-behavior: none;
             background: radial-gradient(circle at 15% 20%, #1d2a52 0%, var(--bg-1) 45%), var(--bg-1);
             color: var(--text);
             font-family: Arial, sans-serif;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 12px;
+            padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right))
+                max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
         }
 
         #game-shell {
             width: 940px;
             max-width: 100%;
+            height: min(780px, 100%);
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
             background: linear-gradient(160deg, rgba(31, 40, 70, 0.7), rgba(9, 13, 25, 0.95));
             border: 1px solid var(--panel-border);
             box-shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
@@ -67,12 +75,48 @@
             font-size: 13px;
         }
 
+        #game-stage {
+            position: relative;
+            flex: 1;
+            min-height: 0;
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        #result-panel {
+            position: absolute;
+            left: 50%; top: 50%;
+            transform: translate(-50%, -50%);
+            width: min(460px, calc(100% - 16px));
+            max-height: calc(100% - 16px);
+            overflow-y: auto;
+            padding: 20px;
+            border: 1px solid #4b648a;
+            background: linear-gradient(155deg, #192541f5, #0b1020f5);
+            box-shadow: 0 16px 48px #0008;
+            text-align: center;
+        }
+        #result-title { margin: 0; color: var(--danger); font-size: 32px; }
+        #result-summary { margin: 10px 0 16px; color: var(--text); }
+        .result-buttons { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+        .result-buttons button { padding: 8px 4px; }
+        #share-result-btn { background: var(--accent); color: #061423; font-weight: bold; }
+        #share-status { min-height: 18px; margin: 10px 0 0; font-size: 12px; line-height: 1.5; color: var(--muted); }
+        #share-copy { width: 100%; min-height: 54px; margin-top: 8px; background: #0b1020; color: var(--text); border: 1px solid #4b648a; padding: 6px; font: 13px Arial; resize: none; }
+
         #game-canvas {
-            width: 100%;
-            aspect-ratio: 5 / 3;
+            max-width: 100%;
+            max-height: 100%;
+            flex: none;
             background: #070a15;
-            border: 1px solid #2e3757;
+            box-shadow: inset 0 0 0 1px #2e3757;
             display: block;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         #actions {
@@ -97,7 +141,7 @@
 
         #game-menu {
             width: min(440px, calc(100% - 32px));
-            max-height: calc(100dvh - 32px);
+            max-height: calc(100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
             overflow-y: auto;
             padding: clamp(24px, 5vw, 40px);
             border: 1px solid #4b648a;
@@ -117,6 +161,7 @@
         .menu-buttons .primary:hover { background: #a1f1ff; }
         .menu-help { border-top: 1px solid var(--panel-border); margin: 24px 0 0; padding-top: 18px; color: var(--muted); font-size: 13px; line-height: 1.9; }
         .menu-help p { margin: 0; }
+        .leaderboard-status { color: var(--muted); font-size: 13px; line-height: 1.6; margin: 10px 0 0; }
         [hidden] { display: none !important; }
 
         button:focus-visible {
@@ -135,11 +180,82 @@
             min-height: 48px;
             font-size: 18px;
             font-weight: bold;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
-        @media (max-width: 900px) {
-            #hud { grid-template-columns: repeat(3, 1fr); }
-            #mobile-controls { display: grid; }
+        @media (max-width: 1024px), (pointer: coarse) {
+            body {
+                padding: max(4px, env(safe-area-inset-top)) max(4px, env(safe-area-inset-right))
+                    max(4px, env(safe-area-inset-bottom)) max(4px, env(safe-area-inset-left));
+            }
+            #game-shell {
+                height: 100%;
+                padding: 6px;
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) 64px;
+                grid-template-rows: auto auto minmax(0, 1fr) auto;
+                gap: 6px;
+            }
+            #hud {
+                grid-column: 1;
+                grid-row: 1;
+                grid-template-columns: repeat(5, minmax(0, 1fr));
+                gap: 4px;
+                margin: 0;
+                min-width: 0;
+            }
+            .hud-item { min-width: 0; padding: 4px 2px; }
+            .label { font-size: 10px; }
+            .value { display: block; font-size: 16px; overflow: hidden; text-overflow: ellipsis; }
+            #status {
+                grid-column: 1 / -1;
+                grid-row: 2;
+                margin: 0;
+                font-size: 12px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            #game-stage { grid-column: 1 / -1; grid-row: 3; }
+            #actions { grid-column: 2; grid-row: 1; margin: 0; }
+            #actions button:not(#pause-btn) { display: none; }
+            #pause-btn { width: 64px; padding: 6px; }
+            #leaderboard-status { display: none; }
+            #mobile-controls { display: grid; grid-column: 1 / -1; grid-row: 4; margin: 0; }
+            #game-menu { padding: 22px; }
+            #result-panel { padding: 10px; }
+            #result-title { font-size: 23px; }
+            #result-summary { margin: 6px 0 10px; font-size: 13px; }
+            .result-buttons button { font-size: 13px; }
+            #share-status { margin-top: 6px; }
+        }
+
+        @media (max-width: 1024px) and (max-height: 500px) and (orientation: landscape),
+            (pointer: coarse) and (max-height: 500px) and (orientation: landscape) {
+            #game-shell {
+                grid-template-columns: 64px minmax(0, 1fr) 64px;
+                grid-template-rows: 44px minmax(0, 1fr);
+            }
+            #hud { grid-column: 2; grid-row: 1; }
+            #actions { grid-column: 3; grid-row: 1; }
+            #status { display: none; }
+            #game-stage { grid-column: 2; grid-row: 2; }
+            #mobile-controls { display: contents; }
+            #left-btn { grid-column: 1; grid-row: 2; }
+            #right-btn { grid-column: 3; grid-row: 2; }
+            #left-btn, #right-btn { align-self: center; height: 96px; }
+            #launch-mobile-btn { grid-column: 1; grid-row: 1; min-height: 44px; }
+            #game-menu { width: min(620px, calc(100% - 32px)); padding: 16px; }
+            #menu-title { font-size: 28px; margin: 6px 0; }
+            .menu-eyebrow { font-size: 10px; letter-spacing: 2px; }
+            #menu-description { margin-bottom: 12px; font-size: 13px; line-height: 1.5; }
+            .menu-buttons { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+            .menu-buttons button { min-height: 44px; }
+            #menu-primary-btn { grid-column: 1 / -1; }
+            .menu-help { display: none; }
+            #menu-leaderboard-status { font-size: 12px; }
         }
     </style>
 </head>
@@ -153,17 +269,33 @@
             <div class="hud-item"><span class="label">COMBO</span><span class="value combo" id="combo">x1</span></div>
         </div>
         <div id="status">按空格发球，左右方向键移动挡板</div>
-        <canvas id="game-canvas" width="900" height="540" aria-label="Breakout 游戏画布" tabindex="0"></canvas>
+        <div id="game-stage">
+            <canvas id="game-canvas" width="900" height="540" aria-label="Breakout 游戏画布，可拖动移动挡板" tabindex="0"></canvas>
+            <section id="result-panel" aria-labelledby="result-title" hidden>
+                <h2 id="result-title">挑战结束</h2>
+                <p id="result-summary" aria-live="polite"></p>
+                <div class="result-buttons">
+                    <button id="share-result-btn" type="button">分享成绩</button>
+                    <button id="result-restart-btn" type="button">再来一局</button>
+                    <button id="result-home-btn" type="button">主菜单</button>
+                </div>
+                <p id="share-status" role="status">晒出本局成绩，邀请朋友挑战</p>
+                <textarea id="share-copy" aria-label="成绩分享文案，可长按复制" readonly hidden></textarea>
+            </section>
+        </div>
         <div id="actions">
             <button id="launch-btn" type="button">发球 (Space)</button>
-            <button id="pause-btn" type="button">暂停 (P / Esc)</button>
+            <button id="pause-btn" type="button">暂停</button>
             <button id="restart-btn" type="button">重开 (R)</button>
             <button id="sound-btn" type="button" aria-pressed="true">声音: 开</button>
             <button id="main-menu-btn" type="button">主菜单</button>
+            <button id="leaderboard-btn" type="button">每周排行榜</button>
+            <button id="retry-score-btn" type="button" hidden>重试提交成绩</button>
         </div>
+        <p id="leaderboard-status" class="leaderboard-status" role="status">本周最高单局分数 · 每周重置</p>
         <div id="mobile-controls" aria-label="移动端控制">
             <button id="left-btn" type="button" aria-label="左移">◀</button>
-            <button id="launch-mobile-btn" type="button" aria-label="发球">●</button>
+            <button id="launch-mobile-btn" type="button" aria-label="发球">发球</button>
             <button id="right-btn" type="button" aria-label="右移">▶</button>
         </div>
     </div>
@@ -171,13 +303,16 @@
     <dialog id="game-menu" aria-labelledby="menu-title" aria-describedby="menu-description">
         <div class="menu-eyebrow">CLASSIC ARCADE · 01</div>
         <h1 id="menu-title">BREAKOUT</h1>
-        <p id="menu-description">守住挡板，击碎每一块砖。<br>挑战六个关卡，刷新你的最高分。</p>
+        <p id="menu-description">守住挡板，击碎每一块砖。<br>挑战十个主题关卡，刷新你的最高分。</p>
         <div class="menu-buttons">
             <button id="menu-primary-btn" class="primary" type="button" autofocus>开始游戏</button>
             <button id="menu-restart-btn" type="button" hidden>重新开始</button>
             <button id="menu-home-btn" type="button" hidden>返回主菜单（结束本局）</button>
+            <button id="menu-leaderboard-btn" type="button">每周排行榜</button>
+            <button id="menu-retry-score-btn" type="button" hidden>重试提交成绩</button>
             <button id="menu-sound-btn" type="button" aria-pressed="true">声音: 开</button>
         </div>
+        <p id="menu-leaderboard-status" class="leaderboard-status" role="status">本周最高单局分数 · 每周重置</p>
         <div class="menu-help">
             <p>← → / A D / 鼠标 / 触屏移动挡板</p>
             <p>空格发球 · P / Esc 暂停 · R 重开</p>
@@ -187,6 +322,7 @@
     <script>
         const canvas = document.getElementById('game-canvas');
         const ctx = canvas.getContext('2d');
+        const gameStage = document.getElementById('game-stage');
 
         const scoreEl = document.getElementById('score');
         const highScoreEl = document.getElementById('high-score');
@@ -194,6 +330,12 @@
         const levelEl = document.getElementById('level');
         const comboEl = document.getElementById('combo');
         const statusEl = document.getElementById('status');
+        const resultPanel = document.getElementById('result-panel');
+        const resultTitle = document.getElementById('result-title');
+        const resultSummary = document.getElementById('result-summary');
+        const shareResultBtn = document.getElementById('share-result-btn');
+        const shareStatus = document.getElementById('share-status');
+        const shareCopy = document.getElementById('share-copy');
 
         const launchBtn = document.getElementById('launch-btn');
         const pauseBtn = document.getElementById('pause-btn');
@@ -211,17 +353,209 @@
 
         const WIDTH = canvas.width;
         const HEIGHT = canvas.height;
+        function fitCanvas() {
+            // 只缩放显示尺寸，物理坐标保持 900×540，旋屏不会重置本局。
+            const width = Math.min(gameStage.clientWidth, gameStage.clientHeight * WIDTH / HEIGHT);
+            canvas.style.width = `${width}px`;
+            canvas.style.height = `${width * HEIGHT / WIDTH}px`;
+        }
+
+        // 应用 985310 的服务端模板已审核通过（模板 ID 824）。
+        const SHARE_TEMPLATE_ID = 'ST1792394335418E8UEMKVVA';
+        let activeShare = null;
+
+        function resetResultShare() {
+            const previous = activeShare;
+            activeShare = null;
+            if (previous?.listening) {
+                previous.listening = false;
+                try { previous.tap.offShareMessage?.(); } catch (_) { /* 不阻止新一局 */ }
+            }
+            shareResultBtn.disabled = false;
+            shareStatus.textContent = '晒出本局成绩，邀请朋友挑战';
+            shareCopy.hidden = true;
+            shareCopy.value = '';
+        }
+
+        async function shareResult() {
+            if ((!state.gameOver && !state.win) || state.menu || shareResultBtn.disabled) return;
+            resetResultShare();
+            const attempt = { run: runNumber, tap: window.tap, listening: false };
+            activeShare = attempt;
+            const isCurrent = () => activeShare === attempt && runNumber === attempt.run && !state.menu && (state.gameOver || state.win);
+            const message = text => { if (isCurrent()) shareStatus.textContent = text; };
+            const release = () => { if (isCurrent()) shareResultBtn.disabled = false; };
+            const stopListening = () => {
+                if (!attempt.listening || activeShare !== attempt) return;
+                attempt.listening = false;
+                try { attempt.tap.offShareMessage?.(); } catch (_) { /* 分享结果不依赖解绑结果 */ }
+            };
+            const text = `我在《经典打砖块》${state.win ? `通关全部 ${LEVELS.length} 关` : `闯到第 ${state.level}/${LEVELS.length} 关`}，获得 ${state.score} 分！来挑战我的高分！`;
+            const manualCopy = () => {
+                if (!isCurrent()) return;
+                shareCopy.value = text;
+                shareCopy.hidden = false;
+                message('可在下方长按或选中文字复制');
+            };
+            shareResultBtn.disabled = true;
+            message('正在打开分享…');
+            if (typeof attempt.tap?.showShareboard === 'function') {
+                try {
+                    if (typeof attempt.tap.onShareMessage === 'function' && typeof attempt.tap.offShareMessage === 'function') {
+                        attempt.listening = true;
+                        attempt.tap.onShareMessage({
+                            success: () => { attempt.finished = true; message('分享成功，邀请朋友来挑战吧！'); release(); stopListening(); },
+                            fail: () => { attempt.finished = true; message('分享未完成，可再次尝试'); release(); stopListening(); }
+                        });
+                    }
+                    attempt.tap.showShareboard({
+                        templateId: SHARE_TEMPLATE_ID,
+                        // 场景参数只传递本局信息；不用于恢复进度或写入排行榜。
+                        sceneParam: JSON.stringify({ score: state.score, level: state.level, totalLevels: LEVELS.length, cleared: state.win }),
+                        success: () => { if (!attempt.finished) message('分享面板已打开，请选择分享渠道'); release(); },
+                        fail: () => { if (!attempt.finished) message('分享面板打开失败，请重试'); release(); stopListening(); }
+                    });
+                } catch (_) {
+                    message('分享暂不可用，请重试');
+                    release();
+                    stopListening();
+                }
+                return;
+            }
+            const nav = window.navigator;
+            try {
+                if (typeof nav?.share === 'function') {
+                    await nav.share({ title: '经典打砖块 · 挑战我的高分', text });
+                    // 系统分享的完成语义因渠道而异，不宣称对方已收到。
+                    message('已完成系统分享操作');
+                } else if (typeof nav?.clipboard?.writeText === 'function') {
+                    await nav.clipboard.writeText(text);
+                    message('成绩文案已复制，可以粘贴分享给朋友');
+                } else {
+                    manualCopy();
+                }
+            } catch (error) {
+                if (error?.name === 'AbortError') message('已取消分享');
+                else manualCopy();
+            } finally {
+                release();
+            }
+        }
+
         const HIGH_SCORE_KEY = 'breakoutHighScore';
+        // 应用 985310：数值降序，每周 00:00:00 重置，每人保留本周期最高分。
+        const WEEKLY_LEADERBOARD_ID = 'saf3rqj1i105omprpk';
+        const leaderboardButtons = [document.getElementById('leaderboard-btn'), document.getElementById('menu-leaderboard-btn')];
+        const retryScoreButtons = [document.getElementById('retry-score-btn'), document.getElementById('menu-retry-score-btn')];
+        const leaderboardStatusEls = [document.getElementById('leaderboard-status'), document.getElementById('menu-leaderboard-status')];
+        let runNumber = 0;
+        let scoreSubmission = null;
+
+        function setLeaderboardStatus(message, retry = false) {
+            leaderboardStatusEls.forEach(el => { el.textContent = message; });
+            retryScoreButtons.forEach(button => { button.hidden = !retry; });
+        }
+
+        function getLeaderboardManager() {
+            // 普通浏览器没有 TapTap 运行环境，游戏本身仍可正常游玩。
+            try {
+                return window.tap?.getLeaderboardManager?.() || null;
+            } catch (_) {
+                return null;
+            }
+        }
+
+        function submitFinalScore(retry = false) {
+            const score = state.score;
+            if (!Number.isSafeInteger(score) || score <= 0 || runNumber === 0) return;
+            if (scoreSubmission && (!retry || scoreSubmission.status !== 'failed')) return;
+            const manager = getLeaderboardManager();
+            if (typeof manager?.submitScores !== 'function') {
+                setLeaderboardStatus(`本局 ${score} 分；在 TapTap 内游玩可参与周榜。`);
+                return;
+            }
+            const submission = { run: runNumber, score, status: 'pending' };
+            scoreSubmission = submission;
+            setLeaderboardStatus(`正在提交本局 ${score} 分…`);
+            const onFailure = () => {
+                submission.status = 'failed';
+                if (scoreSubmission === submission && runNumber === submission.run) {
+                    setLeaderboardStatus(`本局 ${score} 分提交失败，请在开始下一局前重试。`, true);
+                }
+            };
+            try {
+                manager.submitScores({
+                    scores: [{ leaderboardId: WEEKLY_LEADERBOARD_ID, score }],
+                    callback: {
+                        onSuccess: () => {
+                            submission.status = 'success';
+                            // 上一局的回调不能覆盖新一局的提示。
+                            if (scoreSubmission === submission && runNumber === submission.run) {
+                                setLeaderboardStatus(`已提交本局 ${score} 分，周榜保留本周最高单局分数。`);
+                            }
+                        },
+                        onFailure
+                    }
+                });
+            } catch (_) {
+                onFailure();
+            }
+        }
+
+        function openWeeklyLeaderboard() {
+            const manager = getLeaderboardManager();
+            if (typeof manager?.openLeaderboard !== 'function') {
+                setLeaderboardStatus('请在 TapTap 内打开游戏后查看每周排行榜。');
+                return;
+            }
+            if (isPlaying()) togglePause();
+            const onFailure = () => {
+                setLeaderboardStatus('排行榜暂时无法打开，请稍后重试。', scoreSubmission?.status === 'failed');
+            };
+            try {
+                manager.openLeaderboard({
+                    leaderboardId: WEEKLY_LEADERBOARD_ID,
+                    collection: 'public',
+                    callback: { onSuccess: () => {}, onFailure }
+                });
+            } catch (_) {
+                onFailure();
+            }
+            // 原生面板关闭后保持暂停，由玩家选择继续。
+        }
 
         const BRICK_COLS = 12;
-        const BRICK_ROWS_BASE = 6;
         const BRICK_W = 62;
         const BRICK_H = 22;
         const BRICK_GAP = 8;
         const BRICK_TOP = 72;
         const BRICK_LEFT = (WIDTH - (BRICK_COLS * BRICK_W + (BRICK_COLS - 1) * BRICK_GAP)) / 2;
 
-        const BRICK_PALETTE = ['#ff6b6b', '#ffa94d', '#ffd43b', '#69db7c', '#74c0fc', '#b197fc', '#f783ac'];
+        // 每行 12 格：. 留空，1–4 为耐久，* 为连锁爆破砖。没有不可摧毁砖。
+        const LEVELS = [
+            { name: '霓虹启航', hint: '从挡板两侧击球，寻找反弹角度', color: '#63e6ff', speed: 360, paddle: 148,
+                map: ['111111111111', '111111111111', '.111....111.', '..111..111..', '...111111...'] },
+            { name: '双子之门', hint: '穿过中间通道，从背后拆掉双塔', color: '#69db7c', speed: 380, paddle: 144,
+                map: ['.222....222.', '.111....111.', '.111....111.', '.111....111.', '.111....111.', '11111..11111'] },
+            { name: '棱镜之心', hint: '装甲砖需要多次击中，观察剩余耐久', color: '#b197fc', speed: 400, paddle: 140,
+                map: ['.....22.....', '....2112....', '...211112...', '..21111112..', '...211112...', '....2112....', '.....22.....'] },
+            { name: '引爆回路', hint: '命中带菱形标记的爆破砖，震碎周围八格', color: '#ffa94d', speed: 420, paddle: 136,
+                map: ['222222222222', '11*111111*11', '111122221111', '..11*11*11..', '..11111111..', '...211112...'] },
+            { name: '深空阶梯', hint: '砖墙逐层向下延伸，提前调整接球位置', color: '#74c0fc', speed: 440, paddle: 132,
+                map: ['2222....2222', '.222....222.', '..22....22..', '..11111111..', '...11**11...', '...222222...', '....2222....', '.....11.....'] },
+            { name: '流光列阵', hint: '砖阵左右游移，预判空隙再打入上方', color: '#f783ac', speed: 460, paddle: 128, motion: 14,
+                map: ['222..22..222', '111..11..111', '.11*1111*11.', '..22222222..', '.111....111.', '222..22..222'] },
+            { name: '装甲堡垒', hint: '三层装甲保护核心，爆破可以加快突破', color: '#ffd43b', speed: 480, paddle: 122,
+                map: ['.3333333333.', '.2111111112.', '.21*2222*12.', '.2123333212.', '.21*2222*12.', '.2111111112.', '.2222222222.'] },
+            { name: '跃动星环', hint: '交错星环持续移动，抓住爆破连锁机会', color: '#38d9a9', speed: 500, paddle: 116, motion: 18,
+                map: ['...222222...', '..22....22..', '.22.*..*.22.', '22..3333..22', '.22.*..*.22.', '..22....22..', '...222222...'] },
+            { name: '赤焰防线', hint: '更快的小球与密集装甲，保持接球节奏', color: '#ff6b6b', speed: 520, paddle: 110, motion: 14,
+                map: ['333333333333', '.2*22..22*2.', '..222..222..', '...333333...', '..22*11*22..', '.222....222.', '222......222', '.11......11.'] },
+            { name: '终极矩阵', hint: '击破四层核心，完成十关挑战', color: '#ff87d4', speed: 540, paddle: 104, motion: 18,
+                map: ['.3333333333.', '22*222222*22', '.22.3333.22.', '..2.4444.2..', '..2.4**4.2..', '.22.3333.22.', '22*222222*22', '.222....222.'] }
+        ];
+        const STAGE_COLORS = [["#ff6b8a", "#ffb454", "#ffe066", "#63e6ff", "#b197fc"], ["#69db7c", "#38d9a9", "#a9e34b"], ["#b197fc", "#da77f2", "#74c0fc"], ["#ffa94d", "#ff6b6b", "#ffd43b"], ["#74c0fc", "#63e6ff", "#91a7ff"], ["#f783ac", "#da77f2", "#ffa8a8"], ["#ffd43b", "#ffa94d", "#fff3bf"], ["#38d9a9", "#63e6ff", "#69db7c"], ["#ff6b6b", "#ffa94d", "#ff8787"], ["#ff87d4", "#b197fc", "#63e6ff"]];
+        const currentLevel = () => LEVELS[state.level - 1];
 
         const state = {
             menu: 'main',
@@ -255,6 +589,10 @@
             },
             bricks: [],
             particles: [],
+            effects: [],
+            stageTime: 0,
+            levelIntro: true,
+            transition: null,
             shake: { time: 0, strength: 0 },
             flash: { time: 0, color: '#ffffff' },
             stars: Array.from({ length: 70 }, () => ({
@@ -268,6 +606,7 @@
         const keys = { left: false, right: false };
         let mobileLeft = false;
         let mobileRight = false;
+        let activePointerId = null;
         let frameId = null;
         let lastTs = null;
         let animationTime = 0;
@@ -470,57 +809,75 @@
         }
 
         function createBricks(level) {
-            const rows = BRICK_ROWS_BASE + Math.min(3, level - 1);
+            const config = LEVELS[level - 1];
             const bricks = [];
-            for (let r = 0; r < rows; r += 1) {
-                for (let c = 0; c < BRICK_COLS; c += 1) {
-                    const hp = 1 + ((r + level) % 2);
+            config.map.forEach((row, r) => {
+                [...row].forEach((cell, c) => {
+                    if (cell === '.') return;
+                    const explosive = cell === '*';
+                    const hp = explosive ? 1 : Number(cell);
+                    const x = BRICK_LEFT + c * (BRICK_W + BRICK_GAP);
                     bricks.push({
-                        x: BRICK_LEFT + c * (BRICK_W + BRICK_GAP),
+                        x, baseX: x, row: r, col: c,
                         y: BRICK_TOP + r * (BRICK_H + BRICK_GAP),
-                        w: BRICK_W,
-                        h: BRICK_H,
-                        hp,
-                        maxHp: hp,
-                        alive: true,
-                        color: BRICK_PALETTE[r % BRICK_PALETTE.length]
+                        w: BRICK_W, h: BRICK_H, hp, maxHp: hp,
+                        explosive, hitTime: 0, alive: true,
+                        color: explosive ? '#ffb454' : STAGE_COLORS[level - 1][r % STAGE_COLORS[level - 1].length]
                     });
-                }
-            }
+                });
+            });
             state.bricks = bricks;
         }
 
-        function resetLevel(level = 1, preserveScore = false) {
+        function enterLevel(level) {
             state.level = level;
+            const config = currentLevel();
+            state.paddle.w = config.paddle;
+            state.paddle.x = WIDTH / 2 - config.paddle / 2;
+            state.paddle.dx = 0;
+            state.ball.speed = config.speed;
+            state.stageTime = 0;
+            state.levelIntro = true;
+            state.transition = null;
+            state.combo = 1;
+            state.comboTimer = 0;
+            createBricks(level);
+            resetBall();
+            setStatus(`第 ${level}/${LEVELS.length} 关 · ${config.name} · ${config.hint}`);
+            updateHud();
+        }
+
+        function resetLevel(level = 1, preserveScore = false) {
             if (!preserveScore) {
                 state.score = 0;
                 state.lives = 3;
             }
-            state.combo = 1;
-            state.comboTimer = 0;
             state.running = true;
             state.paused = false;
             state.gameOver = false;
             state.win = false;
             state.particles = [];
+            state.effects = [];
+            resetResultShare();
             state.shake = { time: 0, strength: 0 };
             state.flash = { time: 0, color: '#ffffff' };
-            state.paddle.x = WIDTH / 2 - state.paddle.w / 2;
-            state.paddle.dx = 0;
-            createBricks(state.level);
-            resetBall();
-            updateHud();
+            enterLevel(level);
         }
 
         function launchBall() {
-            if (!isPlaying()) return;
+            if (state.gameOver || state.win) {
+                restart();
+                return;
+            }
+            if (!isPlaying() || state.transition) return;
             unlockAudio();
             if (!state.ball.launched) {
                 const angle = -Math.PI / 2 + (Math.random() * 0.65 - 0.325);
                 state.ball.vx = Math.cos(angle) * state.ball.speed;
                 state.ball.vy = Math.sin(angle) * state.ball.speed;
                 state.ball.launched = true;
-                setStatus('进行中：打碎全部砖块！');
+                state.levelIntro = false;
+                setStatus(`第 ${state.level}/${LEVELS.length} 关 · ${currentLevel().name} · ${currentLevel().hint}`);
                 sfxLaunch();
             }
         }
@@ -529,12 +886,22 @@
             scoreEl.textContent = String(state.score);
             highScoreEl.textContent = String(state.highScore);
             livesEl.textContent = String(state.lives);
-            levelEl.textContent = String(state.level);
+            levelEl.textContent = `${state.level}/${LEVELS.length}`;
             comboEl.textContent = `x${state.combo}`;
+            const finished = state.gameOver || state.win;
+            resultPanel.hidden = !finished || Boolean(state.menu);
+            if (finished) {
+                resultTitle.textContent = state.win ? '十关通关！' : '挑战结束';
+                resultTitle.style.color = state.win ? '#69db7c' : '#ff6b6b';
+                resultSummary.textContent = `${state.score} 分 · ${state.win ? `全部 ${LEVELS.length} 关已突破` : `到达第 ${state.level}/${LEVELS.length} 关`}`;
+            }
+            launchBtn.textContent = finished ? '再来一局' : '发球 (Space)';
+            launchMobileBtn.textContent = finished ? '重开' : '发球';
+            launchMobileBtn.setAttribute('aria-label', finished ? '重新开始' : '发球');
         }
 
-        function addScore(base) {
-            state.score += base * state.combo;
+        function addScore(base, multiplier = state.combo) {
+            state.score += base * multiplier;
             if (state.score > state.highScore) {
                 state.highScore = state.score;
                 localStorage.setItem(HIGH_SCORE_KEY, String(state.highScore));
@@ -560,12 +927,19 @@
                     y: impactY,
                     vx: Math.cos(angle) * speed,
                     vy: Math.sin(angle) * speed,
-                    life: 0.45 + Math.random() * 0.25,
-                    maxLife: 0.45 + Math.random() * 0.25,
+                    life: 0.65,
+                    maxLife: 0.65,
                     size: Math.random() * 3 + 2,
                     color: brick.color
                 });
             }
+            // 连锁爆破也限制粒子数量，避免手机上积累过多绘制工作。
+            if (state.particles.length > 480) state.particles.splice(0, state.particles.length - 480);
+        }
+
+        function addEffect(x, y, text, color, ring = false) {
+            state.effects.push({ x, y, text, color, ring, life: 0.8, maxLife: 0.8 });
+            if (state.effects.length > 40) state.effects.shift();
         }
 
         function loseLife() {
@@ -577,54 +951,95 @@
             if (state.lives <= 0) {
                 state.running = false;
                 state.gameOver = true;
-                setStatus('游戏结束：按 R 重开');
+                setStatus('游戏结束：点击重开或按 R 再来一局');
+                pauseBtn.textContent = '主菜单';
+                updateHud();
+                submitFinalScore();
                 stopMusic();
                 sfxGameOver();
                 return;
             }
+            state.ball.speed = currentLevel().speed;
             resetBall();
-            setStatus('掉球了，按空格继续');
+            setStatus('掉球了，点击发球或按空格继续');
             sfxLoseLife();
         }
 
-        function handleBrickHit(brick, ball) {
+        function damageBrick(brick, impactX, impactY) {
+            if (!brick.alive) return;
             brick.hp -= 1;
-            const cx = clamp(ball.x, brick.x, brick.x + brick.w);
-            const cy = clamp(ball.y, brick.y, brick.y + brick.h);
-            spawnBrickParticles(brick, cx, cy);
-            triggerShake(6, 0.12);
-
-            if (brick.hp <= 0) {
-                brick.alive = false;
-                state.combo = Math.min(8, state.combo + 1);
-                state.comboTimer = 2.2;
-                addScore(12 + state.level * 2);
-                triggerFlash('#63e6ff', 0.08);
-                sfxBrickBreak();
-            } else {
+            brick.hitTime = 0.16;
+            spawnBrickParticles(brick, impactX, impactY);
+            if (brick.hp > 0) {
                 addScore(4);
-                triggerFlash('#ffd43b', 0.06);
-                sfxBrickHit();
+                return;
             }
-
-            if (state.bricks.every((b) => !b.alive)) {
-                state.level += 1;
-                if (state.level > 6) {
-                    state.running = false;
-                    state.win = true;
-                    setStatus('通关！按 R 再来一局');
-                    stopMusic();
-                    sfxWin();
-                } else {
-                    createBricks(state.level);
-                    resetBall();
-                    setStatus(`第 ${state.level} 关，按空格发球`);
-                    beep(700, 0.08, 'triangle', 0.06);
+            // 先标记死亡，再触发邻格，避免爆破环路重复得分。
+            brick.alive = false;
+            state.combo = Math.min(8, state.combo + 1);
+            state.comboTimer = 2.2;
+            const points = (12 + state.level * 2) * state.combo;
+            addScore(12 + state.level * 2);
+            addEffect(brick.x + brick.w / 2, brick.y, `+${points}`, brick.color, brick.explosive);
+            if (brick.explosive) {
+                triggerShake(9, 0.18);
+                beep(110, 0.14, 'sawtooth', 0.05);
+                for (const neighbor of state.bricks) {
+                    if (neighbor.alive && Math.abs(neighbor.row - brick.row) <= 1 && Math.abs(neighbor.col - brick.col) <= 1) {
+                        damageBrick(neighbor, neighbor.x + neighbor.w / 2, neighbor.y + neighbor.h / 2);
+                    }
                 }
             }
         }
 
+        function completeLevel() {
+            const bonus = state.level * 150;
+            // 过关奖励不乘连击；第 3、6、9 关补一条命，上限五条。
+            addScore(bonus, 1);
+            const extraLife = state.level % 3 === 0 && state.lives < 5;
+            if (extraLife) state.lives += 1;
+            resetBall();
+            state.levelIntro = false;
+            updateHud();
+            sfxWin();
+            if (state.level === LEVELS.length) {
+                state.running = false;
+                state.win = true;
+                pauseBtn.textContent = '主菜单';
+                updateHud();
+                setStatus(`十关全部突破！本局 ${state.score} 分`);
+                submitFinalScore();
+                stopMusic();
+            } else {
+                state.transition = { remaining: 1.25, bonus, extraLife };
+                setStatus(`第 ${state.level} 关完成，奖励 ${bonus} 分${extraLife ? '，生命 +1' : ''}`);
+            }
+        }
+
+        function handleBrickHit(brick, ball) {
+            if (!brick.alive || state.transition || state.win) return;
+            damageBrick(brick, clamp(ball.x, brick.x, brick.x + brick.w), clamp(ball.y, brick.y, brick.y + brick.h));
+            triggerShake(4, 0.1);
+            if (brick.alive) {
+                triggerFlash('#ffd43b', 0.04);
+                sfxBrickHit();
+            } else {
+                sfxBrickBreak();
+            }
+            if (state.bricks.every((b) => !b.alive)) completeLevel();
+        }
+
+        function updateBricks(dt) {
+            if (state.ball.launched) state.stageTime += dt;
+            const motion = currentLevel().motion || 0;
+            for (const brick of state.bricks) {
+                brick.hitTime = Math.max(0, brick.hitTime - dt);
+                brick.x = brick.baseX + Math.sin(state.stageTime * 1.1) * motion * (brick.row % 2 ? -1 : 1);
+            }
+        }
+
         function updateBall(dt) {
+            if (state.transition || !state.running) return;
             const ball = state.ball;
             if (!ball.launched) {
                 ball.x = state.paddle.x + state.paddle.w / 2;
@@ -632,10 +1047,12 @@
                 return;
             }
 
-            const steps = Math.max(1, Math.ceil((Math.abs(ball.vx) + Math.abs(ball.vy)) * dt / 32));
+            const steps = Math.max(1, Math.ceil((Math.abs(ball.vx) + Math.abs(ball.vy)) * dt / ball.r));
             const stepDt = dt / steps;
 
             for (let i = 0; i < steps; i += 1) {
+                const previousX = ball.x;
+                const previousY = ball.y;
                 ball.x += ball.vx * stepDt;
                 ball.y += ball.vy * stepDt;
 
@@ -672,7 +1089,7 @@
                     ball.vy > 0
                 ) {
                     const hit = (ball.x - (p.x + p.w / 2)) / (p.w / 2);
-                    const speed = Math.hypot(ball.vx, ball.vy) * 1.02;
+                    const speed = Math.min(currentLevel().speed + 140, Math.hypot(ball.vx, ball.vy) * 1.025);
                     ball.vx = hit * speed * 0.9;
                     ball.vy = -Math.abs(Math.sqrt(Math.max(12000, speed * speed - ball.vx * ball.vx)));
                     ball.y = p.y - ball.r - 0.1;
@@ -696,13 +1113,24 @@
                     const dy = ball.y - cy;
                     if (dx * dx + dy * dy > ball.r * ball.r) continue;
 
-                    if (Math.abs(dx) > Math.abs(dy)) {
-                        ball.vx *= -1;
+                    // 将球推回碰撞面，避免厚装甲在连续子步中被重复扣血。
+                    if (previousY + ball.r <= brick.y) {
+                        ball.y = brick.y - ball.r - 0.1;
+                        ball.vy = -Math.abs(ball.vy);
+                    } else if (previousY - ball.r >= brick.y + brick.h) {
+                        ball.y = brick.y + brick.h + ball.r + 0.1;
+                        ball.vy = Math.abs(ball.vy);
+                    } else if (Math.abs(dx) > Math.abs(dy) || previousX + ball.r <= brick.x || previousX - ball.r >= brick.x + brick.w) {
+                        const left = ball.x < brick.x + brick.w / 2;
+                        ball.x = left ? brick.x - ball.r - 0.1 : brick.x + brick.w + ball.r + 0.1;
+                        ball.vx = (left ? -1 : 1) * Math.abs(ball.vx);
                     } else {
-                        ball.vy *= -1;
+                        const above = ball.y < brick.y + brick.h / 2;
+                        ball.y = above ? brick.y - ball.r - 0.1 : brick.y + brick.h + ball.r + 0.1;
+                        ball.vy = (above ? -1 : 1) * Math.abs(ball.vy);
                     }
-
                     handleBrickHit(brick, ball);
+                    if (!ball.launched || !state.running) return;
                     break;
                 }
             }
@@ -748,16 +1176,23 @@
             if (audio.enabled && audio.ctx && audio.ctx.state === 'running' && state.running && !state.paused && !state.gameOver && !state.win && !audio.musicTimer) {
                 startMusic();
             }
-            if (!state.running) {
-                updateStars(dt);
-                updateParticles(dt);
+            updateStars(dt);
+            updateParticles(dt);
+            state.effects = state.effects.filter(effect => {
+                effect.life -= dt;
+                return effect.life > 0;
+            });
+            state.shake.time = Math.max(0, state.shake.time - dt);
+            state.flash.time = Math.max(0, state.flash.time - dt);
+            if (!state.running) return;
+            if (state.transition) {
+                state.transition.remaining -= dt;
+                if (state.transition.remaining <= 0) enterLevel(state.level + 1);
                 return;
             }
-
-            updateStars(dt);
+            updateBricks(dt);
             updatePaddle(dt);
             updateBall(dt);
-            updateParticles(dt);
 
             if (state.comboTimer > 0) {
                 state.comboTimer -= dt;
@@ -766,8 +1201,6 @@
                 }
             }
 
-            state.shake.time = Math.max(0, state.shake.time - dt);
-            state.flash.time = Math.max(0, state.flash.time - dt);
             updateHud();
         }
 
@@ -798,18 +1231,62 @@
         function drawBricks(t) {
             for (const brick of state.bricks) {
                 if (!brick.alive) continue;
-                const pulse = 0.86 + Math.sin((t * 0.006) + brick.x * 0.02) * 0.12;
-                ctx.fillStyle = brick.color;
-                ctx.globalAlpha = pulse;
+                ctx.fillStyle = brick.hitTime > 0 ? '#ffffff' : brick.color;
+                ctx.globalAlpha = 0.48 + brick.hp / brick.maxHp * 0.4;
                 ctx.fillRect(brick.x, brick.y, brick.w, brick.h);
                 ctx.globalAlpha = 1;
-                if (brick.hp > 1) {
-                    ctx.fillStyle = 'rgba(255,255,255,0.35)';
-                    ctx.fillRect(brick.x + 6, brick.y + 7, brick.w - 12, 4);
-                }
-                ctx.strokeStyle = 'rgba(255,255,255,0.28)';
+                ctx.fillStyle = 'rgba(255,255,255,0.35)';
+                ctx.fillRect(brick.x + 2, brick.y + 2, brick.w - 4, 2);
+                ctx.strokeStyle = brick.color;
                 ctx.strokeRect(brick.x + 0.5, brick.y + 0.5, brick.w - 1, brick.h - 1);
+                if (brick.explosive) {
+                    const cx = brick.x + brick.w / 2, cy = brick.y + brick.h / 2;
+                    ctx.strokeStyle = '#fff4dc';
+                    ctx.beginPath();
+                    ctx.moveTo(cx, cy - 6); ctx.lineTo(cx + 7, cy);
+                    ctx.lineTo(cx, cy + 6); ctx.lineTo(cx - 7, cy);
+                    ctx.closePath(); ctx.stroke();
+                } else if (brick.maxHp > 1) {
+                    for (let i = 0; i < brick.maxHp; i += 1) {
+                        ctx.fillStyle = i < brick.hp ? '#ffffff' : 'rgba(0,0,0,0.35)';
+                        ctx.fillRect(brick.x + brick.w / 2 - brick.maxHp * 5 + i * 10, brick.y + 9, 6, 5);
+                    }
+                }
             }
+        }
+
+        function drawStageInfo() {
+            const config = currentLevel();
+            const remaining = state.bricks.filter(brick => brick.alive).length;
+            ctx.textAlign = 'left';
+            ctx.fillStyle = config.color;
+            ctx.font = 'bold 18px Arial';
+            ctx.fillText(`${String(state.level).padStart(2, '0')} / ${LEVELS.length}   ${config.name}`, 34, 30);
+            ctx.textAlign = 'right';
+            ctx.fillStyle = '#afbdd5';
+            ctx.font = '14px Arial';
+            ctx.fillText(`剩余 ${remaining} / ${state.bricks.length}`, WIDTH - 34, 30);
+            ctx.fillStyle = '#19263d';
+            ctx.fillRect(34, 43, WIDTH - 68, 3);
+            ctx.fillStyle = config.color;
+            ctx.fillRect(34, 43, (WIDTH - 68) * (1 - remaining / state.bricks.length), 3);
+            for (const effect of state.effects) {
+                const progress = 1 - effect.life / effect.maxLife;
+                ctx.globalAlpha = 1 - progress;
+                ctx.fillStyle = effect.color;
+                ctx.font = 'bold 17px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(effect.text, effect.x, effect.y - progress * 36);
+                if (effect.ring) {
+                    ctx.strokeStyle = effect.color;
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.arc(effect.x, effect.y + BRICK_H / 2, 10 + progress * 92, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.lineWidth = 1;
+                }
+            }
+            ctx.globalAlpha = 1;
         }
 
         function drawPaddle() {
@@ -854,31 +1331,32 @@
         }
 
         function drawOverlay() {
+            if (state.transition || (state.levelIntro && state.running)) {
+                const transition = state.transition;
+                const y = transition ? 210 : 345;
+                ctx.fillStyle = 'rgba(6, 12, 28, 0.92)';
+                ctx.fillRect(110, y - 38, WIDTH - 220, 118);
+                ctx.fillStyle = currentLevel().color;
+                ctx.fillRect(110, y - 38, 3, 118);
+                ctx.textAlign = 'center';
+                ctx.font = 'bold 28px Arial';
+                ctx.fillText(transition ? `${currentLevel().name} · 已突破` : `第 ${state.level} 关 · ${currentLevel().name}`, WIDTH / 2, y);
+                ctx.fillStyle = '#dbe7ff';
+                ctx.font = '17px Arial';
+                ctx.fillText(transition ? `过关 +${transition.bonus} 分${transition.extraLife ? '   生命 +1' : ''}  ·  下一关：${LEVELS[state.level].name}` : currentLevel().hint, WIDTH / 2, y + 30);
+                if (!transition) {
+                    ctx.fillStyle = '#8eaccb';
+                    ctx.font = '15px Arial';
+                    ctx.fillText('点击发球 / 按空格开始', WIDTH / 2, y + 60);
+                }
+                return;
+            }
             if (!state.gameOver && !state.win) return;
 
             ctx.fillStyle = 'rgba(0, 0, 0, 0.42)';
             ctx.fillRect(0, 0, WIDTH, HEIGHT);
             ctx.textAlign = 'center';
 
-            if (state.gameOver) {
-                ctx.fillStyle = '#ff6b6b';
-                ctx.font = 'bold 58px Arial';
-                ctx.fillText('GAME OVER', WIDTH / 2, HEIGHT / 2 - 24);
-                ctx.fillStyle = '#ffffff';
-                ctx.font = '22px Arial';
-                ctx.fillText('按 R 或点击重开', WIDTH / 2, HEIGHT / 2 + 18);
-                return;
-            }
-
-            if (state.win) {
-                ctx.fillStyle = '#69db7c';
-                ctx.font = 'bold 58px Arial';
-                ctx.fillText('YOU WIN', WIDTH / 2, HEIGHT / 2 - 24);
-                ctx.fillStyle = '#ffffff';
-                ctx.font = '22px Arial';
-                ctx.fillText('完美通关，按 R 再来一局', WIDTH / 2, HEIGHT / 2 + 18);
-                return;
-            }
         }
 
         function render(t) {
@@ -893,6 +1371,7 @@
             drawPaddle();
             drawBall();
             drawParticles();
+            drawStageInfo();
 
             if (state.flash.time > 0) {
                 ctx.fillStyle = state.flash.color;
@@ -929,12 +1408,18 @@
         }
 
         function clearInput() {
+            if (activePointerId !== null && canvas.hasPointerCapture(activePointerId)) {
+                canvas.releasePointerCapture(activePointerId);
+            }
+            activePointerId = null;
             keys.left = keys.right = mobileLeft = mobileRight = false;
             state.paddle.dx = 0;
         }
 
         function showMenu(kind) {
             state.menu = kind;
+            resultPanel.hidden = true;
+            resetResultShare();
             clearInput();
             stopLoop();
             syncAudio();
@@ -942,7 +1427,7 @@
             menuTitle.textContent = paused ? '暂停中' : 'BREAKOUT';
             menuDescription.textContent = paused
                 ? `第 ${state.level} 关 · 得分 ${state.score} · 剩余 ${state.lives} 条生命。准备好后继续。`
-                : '守住挡板，击碎每一块砖。挑战六个关卡，刷新你的最高分。';
+                : `挑战 ${LEVELS.length} 个主题关卡：装甲、连锁爆破与移动砖阵。每过三关补充一条生命，向每周高分榜发起挑战。`;
             menuPrimaryBtn.textContent = paused ? '继续游戏' : '开始游戏';
             menuRestartBtn.hidden = menuHomeBtn.hidden = !paused;
             pauseBtn.disabled = launchBtn.disabled = restartBtn.disabled = mainMenuBtn.disabled = !paused;
@@ -958,7 +1443,11 @@
         }
 
         function togglePause() {
-            if (!state.running || state.gameOver || state.win) return;
+            if (state.gameOver || state.win) {
+                returnToMainMenu();
+                return;
+            }
+            if (!state.running) return;
             state.paused = !state.paused;
             if (state.paused) {
                 showMenu('pause');
@@ -969,23 +1458,28 @@
                 unlockAudio();
                 startLoop();
             }
-            pauseBtn.textContent = state.paused ? '继续 (P / Esc)' : '暂停 (P / Esc)';
+            pauseBtn.textContent = state.paused ? '继续' : '暂停';
         }
 
         function restart() {
+            submitFinalScore();
+            runNumber += 1;
+            scoreSubmission = null;
+            setLeaderboardStatus('本周最高单局分数 · 每周重置');
             stopLoop();
             clearInput();
             resetLevel(1, false);
             animationTime = 0;
             closeMenu();
             setStatus('按空格发球，左右方向键、鼠标或触屏移动挡板');
-            pauseBtn.textContent = '暂停 (P / Esc)';
+            pauseBtn.textContent = '暂停';
             render(animationTime);
             unlockAudio();
             startLoop();
         }
 
         function returnToMainMenu() {
+            submitFinalScore();
             state.running = false;
             state.paused = false;
             showMenu('main');
@@ -1028,34 +1522,48 @@
             if (key === 'arrowright' || key === 'd') keys.right = false;
         }
 
-        canvas.addEventListener('mousemove', (e) => {
-            if (!isPlaying()) return;
+        function movePaddleToPointer(e) {
             const rect = canvas.getBoundingClientRect();
+            if (!rect.width) return;
             const x = ((e.clientX - rect.left) / rect.width) * WIDTH;
             state.paddle.x = clamp(x - state.paddle.w / 2, 0, WIDTH - state.paddle.w);
             if (!state.ball.launched) resetBall();
-        });
+        }
 
-        canvas.addEventListener('touchmove', (e) => {
-            if (!isPlaying()) return;
-            const touch = e.touches[0];
-            if (!touch) return;
-            const rect = canvas.getBoundingClientRect();
-            const x = ((touch.clientX - rect.left) / rect.width) * WIDTH;
-            state.paddle.x = clamp(x - state.paddle.w / 2, 0, WIDTH - state.paddle.w);
-            if (!state.ball.launched) resetBall();
+        canvas.addEventListener('pointerdown', (e) => {
+            if (!isPlaying() || e.isPrimary === false || (e.pointerType === 'mouse' && e.button !== 0)) return;
+            activePointerId = e.pointerId;
+            canvas.setPointerCapture(e.pointerId);
+            movePaddleToPointer(e);
             e.preventDefault();
-        }, { passive: false });
+        });
+        canvas.addEventListener('pointermove', (e) => {
+            if (!isPlaying()) return;
+            if (e.pointerType === 'mouse' || e.pointerId === activePointerId) movePaddleToPointer(e);
+        });
+        function endCanvasPointer(e) {
+            if (e.pointerId !== activePointerId) return;
+            activePointerId = null;
+            if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
+        }
+        canvas.addEventListener('pointerup', endCanvasPointer);
+        canvas.addEventListener('pointercancel', endCanvasPointer);
+        canvas.addEventListener('lostpointercapture', endCanvasPointer);
 
         document.addEventListener('keydown', onKeyDown);
         document.addEventListener('keyup', onKeyUp);
 
+        shareResultBtn.addEventListener('click', shareResult);
+        document.getElementById('result-restart-btn').addEventListener('click', restart);
+        document.getElementById('result-home-btn').addEventListener('click', returnToMainMenu);
         launchBtn.addEventListener('click', launchBall);
         pauseBtn.addEventListener('click', togglePause);
         restartBtn.addEventListener('click', restart);
         soundButtons.forEach(button => button.addEventListener('click', () => {
             setSoundEnabled(!audio.enabled);
         }));
+        leaderboardButtons.forEach(button => button.addEventListener('click', openWeeklyLeaderboard));
+        retryScoreButtons.forEach(button => button.addEventListener('click', () => submitFinalScore(true)));
         menuPrimaryBtn.addEventListener('click', () => {
             if (state.menu === 'pause') togglePause();
             else restart();
@@ -1081,18 +1589,34 @@
         const launchMobileBtn = document.getElementById('launch-mobile-btn');
 
         function bindHoldButton(button, setter, value) {
-            const onStart = (e) => { if (isPlaying()) setter(value); e.preventDefault(); };
-            const onEnd = (e) => { setter(false); e.preventDefault(); };
+            let heldPointerId = null;
+            const onStart = (e) => {
+                if (!isPlaying() || heldPointerId !== null) return;
+                heldPointerId = e.pointerId;
+                button.setPointerCapture(e.pointerId);
+                setter(value);
+                e.preventDefault();
+            };
+            const onEnd = (e) => {
+                if (e.pointerId !== heldPointerId) return;
+                heldPointerId = null;
+                setter(false);
+                if (button.hasPointerCapture(e.pointerId)) button.releasePointerCapture(e.pointerId);
+            };
             button.addEventListener('pointerdown', onStart);
             button.addEventListener('pointerup', onEnd);
-            button.addEventListener('pointerleave', onEnd);
             button.addEventListener('pointercancel', onEnd);
+            button.addEventListener('lostpointercapture', onEnd);
         }
 
         bindHoldButton(leftBtn, (v) => { mobileLeft = v; }, true);
         bindHoldButton(rightBtn, (v) => { mobileRight = v; }, true);
         launchMobileBtn.addEventListener('click', launchBall);
 
+        const stageObserver = new ResizeObserver(fitCanvas);
+        stageObserver.observe(gameStage);
+        window.addEventListener('resize', fitCanvas);
+        fitCanvas();
         createBricks(1);
         resetBall();
         updateHud();
