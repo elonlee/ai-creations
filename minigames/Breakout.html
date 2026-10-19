@@ -87,10 +87,37 @@
             color: var(--text);
             border: 1px solid #384671;
             padding: 8px 12px;
-            min-height: 40px;
+            min-height: 44px;
             cursor: pointer;
             font-size: 14px;
         }
+
+        button:hover { background: #253354; border-color: var(--accent); }
+        button:disabled { opacity: 0.45; cursor: default; }
+
+        #game-menu {
+            width: min(440px, calc(100% - 32px));
+            max-height: calc(100dvh - 32px);
+            overflow-y: auto;
+            padding: clamp(24px, 5vw, 40px);
+            border: 1px solid #4b648a;
+            background: linear-gradient(155deg, #192541, #0b1020 75%);
+            color: var(--text);
+            box-shadow: 0 0 60px #63e6ff18, 0 24px 80px #0009;
+            text-align: center;
+        }
+
+        #game-menu::backdrop { background: rgba(3, 6, 16, 0.82); }
+        .menu-eyebrow { color: var(--accent); font: 12px 'Courier New', monospace; letter-spacing: 4px; }
+        #menu-title { margin: 14px 0; font-size: clamp(32px, 8vw, 46px); letter-spacing: 3px; }
+        #menu-description { color: var(--muted); line-height: 1.7; margin: 0 0 22px; }
+        .menu-buttons { display: grid; gap: 10px; }
+        .menu-buttons button { min-height: 48px; }
+        .menu-buttons .primary { background: var(--accent); border-color: var(--accent); color: #061423; font-weight: bold; }
+        .menu-buttons .primary:hover { background: #a1f1ff; }
+        .menu-help { border-top: 1px solid var(--panel-border); margin: 24px 0 0; padding-top: 18px; color: var(--muted); font-size: 13px; line-height: 1.9; }
+        .menu-help p { margin: 0; }
+        [hidden] { display: none !important; }
 
         button:focus-visible {
             outline: 2px solid #77b6ff;
@@ -126,12 +153,13 @@
             <div class="hud-item"><span class="label">COMBO</span><span class="value combo" id="combo">x1</span></div>
         </div>
         <div id="status">按空格发球，左右方向键移动挡板</div>
-        <canvas id="game-canvas" width="900" height="540" aria-label="Breakout 游戏画布"></canvas>
+        <canvas id="game-canvas" width="900" height="540" aria-label="Breakout 游戏画布" tabindex="0"></canvas>
         <div id="actions">
             <button id="launch-btn" type="button">发球 (Space)</button>
-            <button id="pause-btn" type="button">暂停 (P)</button>
+            <button id="pause-btn" type="button">暂停 (P / Esc)</button>
             <button id="restart-btn" type="button">重开 (R)</button>
-            <button id="sound-btn" type="button">声音: 开</button>
+            <button id="sound-btn" type="button" aria-pressed="true">声音: 开</button>
+            <button id="main-menu-btn" type="button">主菜单</button>
         </div>
         <div id="mobile-controls" aria-label="移动端控制">
             <button id="left-btn" type="button" aria-label="左移">◀</button>
@@ -139,6 +167,22 @@
             <button id="right-btn" type="button" aria-label="右移">▶</button>
         </div>
     </div>
+
+    <dialog id="game-menu" aria-labelledby="menu-title" aria-describedby="menu-description">
+        <div class="menu-eyebrow">CLASSIC ARCADE · 01</div>
+        <h1 id="menu-title">BREAKOUT</h1>
+        <p id="menu-description">守住挡板，击碎每一块砖。<br>挑战六个关卡，刷新你的最高分。</p>
+        <div class="menu-buttons">
+            <button id="menu-primary-btn" class="primary" type="button" autofocus>开始游戏</button>
+            <button id="menu-restart-btn" type="button" hidden>重新开始</button>
+            <button id="menu-home-btn" type="button" hidden>返回主菜单（结束本局）</button>
+            <button id="menu-sound-btn" type="button" aria-pressed="true">声音: 开</button>
+        </div>
+        <div class="menu-help">
+            <p>← → / A D / 鼠标 / 触屏移动挡板</p>
+            <p>空格发球 · P / Esc 暂停 · R 重开</p>
+        </div>
+    </dialog>
 
     <script>
         const canvas = document.getElementById('game-canvas');
@@ -156,6 +200,15 @@
         const restartBtn = document.getElementById('restart-btn');
         const soundBtn = document.getElementById('sound-btn');
 
+        const menu = document.getElementById('game-menu');
+        const menuTitle = document.getElementById('menu-title');
+        const menuDescription = document.getElementById('menu-description');
+        const menuPrimaryBtn = document.getElementById('menu-primary-btn');
+        const menuRestartBtn = document.getElementById('menu-restart-btn');
+        const menuHomeBtn = document.getElementById('menu-home-btn');
+        const mainMenuBtn = document.getElementById('main-menu-btn');
+        const soundButtons = [soundBtn, document.getElementById('menu-sound-btn')];
+
         const WIDTH = canvas.width;
         const HEIGHT = canvas.height;
         const HIGH_SCORE_KEY = 'breakoutHighScore';
@@ -171,6 +224,7 @@
         const BRICK_PALETTE = ['#ff6b6b', '#ffa94d', '#ffd43b', '#69db7c', '#74c0fc', '#b197fc', '#f783ac'];
 
         const state = {
+            menu: 'main',
             running: false,
             paused: false,
             gameOver: false,
@@ -214,6 +268,9 @@
         const keys = { left: false, right: false };
         let mobileLeft = false;
         let mobileRight = false;
+        let frameId = null;
+        let lastTs = null;
+        let animationTime = 0;
         const audio = {
             enabled: true,
             initialized: false,
@@ -230,8 +287,11 @@
             const Ctx = window.AudioContext || window.webkitAudioContext;
             if (!Ctx) {
                 audio.enabled = false;
-                soundBtn.textContent = '声音: 不支持';
-                soundBtn.disabled = true;
+                soundButtons.forEach(button => {
+                    button.textContent = '声音: 不支持';
+                    button.disabled = true;
+                    button.setAttribute('aria-pressed', 'false');
+                });
                 return;
             }
             audio.ctx = new Ctx();
@@ -248,7 +308,7 @@
         }
 
         function beep(freq, duration, type = 'square', volume = 0.08, offset = 0, retried = false) {
-            if (!audio.enabled) return;
+            if (!audio.enabled || state.paused || state.menu) return;
             initAudio();
             if (!audio.ctx) return;
             if (audio.ctx.state !== 'running') {
@@ -273,7 +333,7 @@
         }
 
         function musicTone(freq, duration, type = 'triangle', volume = 0.045, offset = 0, retried = false) {
-            if (!audio.enabled) return;
+            if (!audio.enabled || !isPlaying()) return;
             initAudio();
             if (!audio.ctx) return;
             if (audio.ctx.state !== 'running') {
@@ -297,21 +357,31 @@
             osc.stop(start + duration + 0.03);
         }
 
-        async function unlockAudio() {
-            initAudio();
+        function isPlaying() {
+            return state.running && !state.paused && !state.menu;
+        }
+
+        function syncAudio() {
             if (!audio.ctx) return;
-            if (audio.ctx.state === 'suspended') {
-                try {
-                    await audio.ctx.resume();
-                } catch (_) {}
+            if (!audio.enabled || !isPlaying()) {
+                stopMusic();
+                audio.ctx.suspend().catch(() => {});
+                return;
             }
-            if (audio.enabled && !audio.musicTimer) {
-                startMusic();
-            }
+            audio.ctx.resume().then(() => {
+                // 用户可能在音频恢复完成前再次暂停。
+                if (audio.enabled && isPlaying()) startMusic();
+                else syncAudio();
+            }).catch(() => {});
+        }
+
+        function unlockAudio() {
+            initAudio();
+            syncAudio();
         }
 
         function startMusic() {
-            if (!audio.enabled || audio.musicTimer) return;
+            if (!audio.enabled || !isPlaying() || audio.musicTimer) return;
             const melody = [392, 440, 494, 523, 494, 440, 392, 330];
             const bass = [131, 147, 165, 175, 165, 147, 131, 110];
             audio.beat = 0;
@@ -334,13 +404,11 @@
 
         function setSoundEnabled(enabled) {
             audio.enabled = enabled;
-            soundBtn.textContent = `声音: ${enabled ? '开' : '关'}`;
-            if (!enabled) {
-                stopMusic();
-                return;
-            }
+            soundButtons.forEach(button => {
+                button.textContent = `声音: ${enabled ? '开' : '关'}`;
+                button.setAttribute('aria-pressed', String(enabled));
+            });
             unlockAudio();
-            startMusic();
         }
 
         function sfxLaunch() {
@@ -434,15 +502,19 @@
             state.paused = false;
             state.gameOver = false;
             state.win = false;
+            state.particles = [];
+            state.shake = { time: 0, strength: 0 };
+            state.flash = { time: 0, color: '#ffffff' };
             state.paddle.x = WIDTH / 2 - state.paddle.w / 2;
+            state.paddle.dx = 0;
             createBricks(state.level);
             resetBall();
             updateHud();
         }
 
         function launchBall() {
+            if (!isPlaying()) return;
             unlockAudio();
-            if (state.gameOver || state.win || state.paused) return;
             if (!state.ball.launched) {
                 const angle = -Math.PI / 2 + (Math.random() * 0.65 - 0.325);
                 state.ball.vx = Math.cos(angle) * state.ball.speed;
@@ -672,10 +744,11 @@
         }
 
         function update(dt) {
+            if (state.paused || state.menu) return;
             if (audio.enabled && audio.ctx && audio.ctx.state === 'running' && state.running && !state.paused && !state.gameOver && !state.win && !audio.musicTimer) {
                 startMusic();
             }
-            if (!state.running || state.paused) {
+            if (!state.running) {
                 updateStars(dt);
                 updateParticles(dt);
                 return;
@@ -781,7 +854,7 @@
         }
 
         function drawOverlay() {
-            if (!state.gameOver && !state.win && state.running && !state.paused) return;
+            if (!state.gameOver && !state.win) return;
 
             ctx.fillStyle = 'rgba(0, 0, 0, 0.42)';
             ctx.fillRect(0, 0, WIDTH, HEIGHT);
@@ -805,27 +878,6 @@
                 ctx.font = '22px Arial';
                 ctx.fillText('完美通关，按 R 再来一局', WIDTH / 2, HEIGHT / 2 + 18);
                 return;
-            }
-
-            if (state.paused) {
-                ctx.fillStyle = '#ffd43b';
-                ctx.font = 'bold 52px Arial';
-                ctx.fillText('PAUSED', WIDTH / 2, HEIGHT / 2 - 12);
-                ctx.fillStyle = '#ffffff';
-                ctx.font = '20px Arial';
-                ctx.fillText('按 P 继续', WIDTH / 2, HEIGHT / 2 + 22);
-                return;
-            }
-
-            if (!state.ball.launched) {
-                ctx.fillStyle = '#63e6ff';
-                ctx.font = 'bold 46px Arial';
-                ctx.fillText('BREAKOUT', WIDTH / 2, HEIGHT / 2 - 30);
-                ctx.fillStyle = '#ffffff';
-                ctx.font = '22px Arial';
-                ctx.fillText('按空格发球', WIDTH / 2, HEIGHT / 2 + 8);
-                ctx.font = '16px Arial';
-                ctx.fillText('方向键移动挡板，P 暂停，R 重开', WIDTH / 2, HEIGHT / 2 + 36);
             }
         }
 
@@ -854,40 +906,108 @@
         }
 
         function gameLoop(ts) {
-            if (!gameLoop.lastTs) gameLoop.lastTs = ts;
-            const dt = Math.min(0.033, (ts - gameLoop.lastTs) / 1000);
-            gameLoop.lastTs = ts;
+            frameId = null;
+            if (state.paused || state.menu) return;
+            const dt = lastTs === null ? 0 : Math.min(0.033, (ts - lastTs) / 1000);
+            lastTs = ts;
+            animationTime += dt * 1000;
+            if (dt > 0) update(dt);
+            render(animationTime);
+            frameId = requestAnimationFrame(gameLoop);
+        }
 
-            update(dt);
-            render(ts);
-            requestAnimationFrame(gameLoop);
+        function startLoop() {
+            if (frameId !== null) return;
+            lastTs = null;
+            frameId = requestAnimationFrame(gameLoop);
+        }
+
+        function stopLoop() {
+            if (frameId !== null) cancelAnimationFrame(frameId);
+            frameId = null;
+            lastTs = null;
+        }
+
+        function clearInput() {
+            keys.left = keys.right = mobileLeft = mobileRight = false;
+            state.paddle.dx = 0;
+        }
+
+        function showMenu(kind) {
+            state.menu = kind;
+            clearInput();
+            stopLoop();
+            syncAudio();
+            const paused = kind === 'pause';
+            menuTitle.textContent = paused ? '暂停中' : 'BREAKOUT';
+            menuDescription.textContent = paused
+                ? `第 ${state.level} 关 · 得分 ${state.score} · 剩余 ${state.lives} 条生命。准备好后继续。`
+                : '守住挡板，击碎每一块砖。挑战六个关卡，刷新你的最高分。';
+            menuPrimaryBtn.textContent = paused ? '继续游戏' : '开始游戏';
+            menuRestartBtn.hidden = menuHomeBtn.hidden = !paused;
+            pauseBtn.disabled = launchBtn.disabled = restartBtn.disabled = mainMenuBtn.disabled = !paused;
+            if (!menu.open) menu.showModal();
+            menuPrimaryBtn.focus();
+        }
+
+        function closeMenu() {
+            state.menu = null;
+            menu.close();
+            pauseBtn.disabled = launchBtn.disabled = restartBtn.disabled = mainMenuBtn.disabled = false;
+            canvas.focus({ preventScroll: true });
         }
 
         function togglePause() {
-            unlockAudio();
             if (!state.running || state.gameOver || state.win) return;
             state.paused = !state.paused;
-            setStatus(state.paused ? '已暂停，按 P 继续' : '继续游戏');
-            pauseBtn.textContent = state.paused ? '继续 (P)' : '暂停 (P)';
             if (state.paused) {
-                stopMusic();
+                showMenu('pause');
+                setStatus('已暂停，按 P 或 Esc 继续');
             } else {
-                startMusic();
+                closeMenu();
+                setStatus(state.ball.launched ? '继续游戏' : '按空格发球');
+                unlockAudio();
+                startLoop();
             }
-            beep(state.paused ? 300 : 520, 0.05, 'sine', 0.05);
+            pauseBtn.textContent = state.paused ? '继续 (P / Esc)' : '暂停 (P / Esc)';
         }
 
         function restart() {
-            unlockAudio();
+            stopLoop();
+            clearInput();
             resetLevel(1, false);
-            setStatus('按空格发球，左右方向键移动挡板');
-            pauseBtn.textContent = '暂停 (P)';
-            beep(480, 0.05, 'triangle', 0.06);
+            animationTime = 0;
+            closeMenu();
+            setStatus('按空格发球，左右方向键、鼠标或触屏移动挡板');
+            pauseBtn.textContent = '暂停 (P / Esc)';
+            render(animationTime);
+            unlockAudio();
+            startLoop();
+        }
+
+        function returnToMainMenu() {
+            state.running = false;
+            state.paused = false;
+            showMenu('main');
+            setStatus('点击“开始游戏”开启新的一局');
         }
 
         function onKeyDown(e) {
-            unlockAudio();
             const key = e.key.toLowerCase();
+            if (state.menu === 'main') return;
+            if (key === 'p' || key === 'escape') {
+                e.preventDefault();
+                if (!e.repeat) togglePause();
+                return;
+            }
+            if (key === 'r') {
+                e.preventDefault();
+                if (!e.repeat) restart();
+                return;
+            }
+            if (!isPlaying()) return;
+            // 保留按钮原生的空格/回车激活行为。
+            if (e.target instanceof HTMLButtonElement) return;
             if (key === 'arrowleft' || key === 'a') {
                 keys.left = true;
                 e.preventDefault();
@@ -900,14 +1020,6 @@
                 launchBall();
                 e.preventDefault();
             }
-            if (key === 'p') {
-                togglePause();
-                e.preventDefault();
-            }
-            if (key === 'r') {
-                restart();
-                e.preventDefault();
-            }
         }
 
         function onKeyUp(e) {
@@ -917,6 +1029,7 @@
         }
 
         canvas.addEventListener('mousemove', (e) => {
+            if (!isPlaying()) return;
             const rect = canvas.getBoundingClientRect();
             const x = ((e.clientX - rect.left) / rect.width) * WIDTH;
             state.paddle.x = clamp(x - state.paddle.w / 2, 0, WIDTH - state.paddle.w);
@@ -924,6 +1037,7 @@
         });
 
         canvas.addEventListener('touchmove', (e) => {
+            if (!isPlaying()) return;
             const touch = e.touches[0];
             if (!touch) return;
             const rect = canvas.getBoundingClientRect();
@@ -939,12 +1053,27 @@
         launchBtn.addEventListener('click', launchBall);
         pauseBtn.addEventListener('click', togglePause);
         restartBtn.addEventListener('click', restart);
-        soundBtn.addEventListener('click', async () => {
+        soundButtons.forEach(button => button.addEventListener('click', () => {
             setSoundEnabled(!audio.enabled);
-            if (audio.enabled) {
-                await unlockAudio();
-                beep(880, 0.07, 'triangle', 0.07);
-            }
+        }));
+        menuPrimaryBtn.addEventListener('click', () => {
+            if (state.menu === 'pause') togglePause();
+            else restart();
+        });
+        menuRestartBtn.addEventListener('click', restart);
+        menuHomeBtn.addEventListener('click', returnToMainMenu);
+        mainMenuBtn.addEventListener('click', returnToMainMenu);
+        menu.addEventListener('cancel', (e) => {
+            e.preventDefault();
+            if (state.menu === 'pause') togglePause();
+        });
+        function pauseOnLeave() {
+            clearInput();
+            if (isPlaying()) togglePause();
+        }
+        window.addEventListener('blur', pauseOnLeave);
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) pauseOnLeave();
         });
 
         const leftBtn = document.getElementById('left-btn');
@@ -952,7 +1081,7 @@
         const launchMobileBtn = document.getElementById('launch-mobile-btn');
 
         function bindHoldButton(button, setter, value) {
-            const onStart = (e) => { setter(value); e.preventDefault(); };
+            const onStart = (e) => { if (isPlaying()) setter(value); e.preventDefault(); };
             const onEnd = (e) => { setter(false); e.preventDefault(); };
             button.addEventListener('pointerdown', onStart);
             button.addEventListener('pointerup', onEnd);
@@ -964,10 +1093,11 @@
         bindHoldButton(rightBtn, (v) => { mobileRight = v; }, true);
         launchMobileBtn.addEventListener('click', launchBall);
 
-        resetLevel(1, false);
-        setStatus('按空格发球，左右方向键移动挡板（若无声先点“声音: 开”）');
-        soundBtn.textContent = '声音: 开';
-        requestAnimationFrame(gameLoop);
+        createBricks(1);
+        resetBall();
+        updateHud();
+        render(animationTime);
+        returnToMainMenu();
     </script>
 </body>
 </html>

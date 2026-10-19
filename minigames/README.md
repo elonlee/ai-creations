@@ -75,20 +75,26 @@ A classic space shooter game inspired by the original Galaxian arcade game.
 - R: Restart
 
 ### 3. Breakout
-经典打砖块玩法，带粒子、闪屏、抖动等反馈效果，并内置音效与背景音乐（可开关）。
+经典打砖块玩法，包含六个关卡、主菜单和暂停菜单。游戏内置碰撞、碎砖、掉命、通关音效和循环背景音乐。声音使用 Web Audio API（浏览器提供的音频接口）实时合成，不需要外部音频文件。
 
-**How to Play:**
-1. Open `Breakout.html` in your web browser
-2. Use arrow keys (or A/D) to move the paddle
-3. Press Space to launch ball
-4. Clear all bricks to pass level, avoid losing all lives
+使用现代浏览器直接打开本目录的 `Breakout.html`，点击主菜单中的“开始游戏”，再按空格发球。清空所有砖块即可进入下一关，生命耗尽则结束。
 
-**Controls:**
-- Arrow Left / Arrow Right / A / D: Move paddle
-- Space: Launch ball
-- P: Pause/Resume
-- R: Restart
-- 声音按钮: 开/关 音效与音乐
+**操作方式：**
+
+- 左右方向键 / A、D / 鼠标 / 触屏：移动挡板；手机也可使用底部方向按钮。
+- 空格 / 发球按钮：发球。
+- P / Esc / 暂停按钮：打开暂停菜单或继续游戏。
+- R / 重开按钮：从第一关重新开始。
+- 暂停菜单：继续游戏、重新开始，或返回主菜单并结束本局；再次开始会重置分数、生命和关卡，最高分保留。
+- 声音按钮：统一开启或关闭音效和音乐。浏览器需要在点击开始等用户操作后才能播放音频。
+
+暂停时停止动画循环、球与挡板移动、背景、粒子和计时，同时暂停音频。切换标签页或窗口失去焦点时也会自动暂停，返回后需要手动继续。
+
+在仓库根目录运行以下命令，预期暂停、恢复、返回主菜单和重开回归测试全部通过：
+
+```sh
+node --test minigames/tests/breakout.test.mjs
+```
 
 ### 4. Tetris
 经典俄罗斯方块玩法，含幽灵方块、行消除闪烁、锁定粒子等表现增强，并内置音效与背景音乐（可开关）。
