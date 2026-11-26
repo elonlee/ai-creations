@@ -1,65 +1,1498 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="light">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f6f5f0">
-  <meta name="description" content="一些借助 AI 制作的可玩、可读、可探索的小作品。">
+  <meta name="theme-color" content="#f4f1ea">
+  <meta name="description" content="一些借助 AI 制作的可玩、可读、可探索的小作品：涵盖 Three.js 三维空间、水墨古琴长卷、WebGL 雨夜手记、经典街机与 Godot 像素武侠。">
   <title>AI 小作品 · 灵感实验室</title>
   <link rel="stylesheet" href="./gallery.css">
 </head>
 <body>
+  <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">
+    <defs>
+      <radialGradient id="sun-glow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fff8e3" stop-opacity="1"/><stop offset="55%" stop-color="#f7d594" stop-opacity=".85"/><stop offset="100%" stop-color="#e58d4e" stop-opacity="0"/></radialGradient>
+      <linearGradient id="space-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#05080f"/><stop offset="100%" stop-color="#111826"/></linearGradient>
+      <linearGradient id="garden-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f2f5ee"/><stop offset="100%" stop-color="#dde6da"/></linearGradient>
+      <linearGradient id="room-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f4efe5"/><stop offset="100%" stop-color="#e2d9c9"/></linearGradient>
+      <linearGradient id="miri-wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f4eee4"/><stop offset="100%" stop-color="#e4d9c8"/></linearGradient>
+      <linearGradient id="harvest-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#eef4e7"/><stop offset="100%" stop-color="#d8e5d0"/></linearGradient>
+      <linearGradient id="tide-sky" x2="0" y2="1"><stop offset="0%" stop-color="#224455"/><stop offset=".48" stop-color="#d78e6e"/><stop offset="1" stop-color="#f2d6b3"/></linearGradient>
+      <linearGradient id="castle-sky" x2="0" y2="1"><stop offset="0%" stop-color="#13162b"/><stop offset=".6" stop-color="#3e2747"/><stop offset="1" stop-color="#8b5d6f"/></linearGradient>
+      <linearGradient id="space" x2="0" y2="1"><stop offset="0%" stop-color="#070a18"/><stop offset="1" stop-color="#1d1b38"/></linearGradient>
+      <linearGradient id="felt-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#1a5c4a"/><stop offset="100%" stop-color="#0e3a2e"/></linearGradient>
+      <pattern id="tiny-grid" width="34" height="34" patternUnits="userSpaceOnUse"><path d="M34 0H0V34" fill="none" stroke="#fff" stroke-opacity=".08"/></pattern>
+      <pattern id="pixel-grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="#8df0c4" stroke-opacity=".08"/></pattern>
+    </defs>
+    <symbol id="solar-system" viewBox="0 0 600 420">
+      <rect width="600" height="420" fill="url(#space-bg)"/>
+      <g fill="none" stroke="#ffffff" stroke-opacity=".18" stroke-dasharray="4 6"><ellipse cx="316" cy="204" rx="135" ry="52" transform="rotate(-21 316 204)"/><ellipse cx="316" cy="204" rx="205" ry="86" transform="rotate(-21 316 204)"/><ellipse cx="316" cy="204" rx="280" ry="125" transform="rotate(-21 316 204)"/></g>
+      <ellipse cx="316" cy="204" rx="236" ry="96" transform="rotate(17 316 204)" fill="none" stroke="#a6c6d4" stroke-opacity=".16"/>
+      <g fill="#fff"><circle cx="52" cy="54" r="1.6" opacity=".85"/><circle cx="122" cy="108" r="1" opacity=".5"/><circle cx="542" cy="68" r="1.8" opacity=".9"/><circle cx="496" cy="336" r="1.2" opacity=".6"/><circle cx="64" cy="338" r="1.6" opacity=".8"/><circle cx="204" cy="40" r="1.2" opacity=".6"/><circle cx="428" cy="378" r="1.5" opacity=".75"/></g>
+      <circle cx="316" cy="204" r="108" fill="url(#sun-glow)" opacity=".5"/><circle cx="316" cy="204" r="56" fill="#fff3d6"/><circle cx="298" cy="184" r="15" fill="#ffffff" opacity=".55"/>
+      <circle cx="110" cy="168" r="24" fill="#689ec2"/><path d="M98 152c11 8 23 16 27 28M93 173c9-5 19-4 28 2" fill="none" stroke="#e9f4ec" stroke-opacity=".65" stroke-width="3.5" stroke-linecap="round"/><circle cx="144" cy="144" r="5" fill="#d9dedb"/>
+      <circle cx="458" cy="122" r="15" fill="#d07b5d"/><circle cx="508" cy="296" r="29" fill="#cbb792"/><ellipse cx="508" cy="296" rx="52" ry="13" transform="rotate(-22 508 296)" fill="none" stroke="#f0e2c6" stroke-width="5"/><ellipse cx="508" cy="296" rx="43" ry="10" transform="rotate(-22 508 296)" fill="none" stroke="#a69270" stroke-width="2"/>
+      <text x="64" y="381" fill="#e1e5dc" font-family="monospace" font-size="13" letter-spacing="4">SOLAR SYSTEM · 10 BODIES</text>
+    </symbol>
+    <symbol id="garden" viewBox="0 0 600 420">
+      <rect width="600" height="420" fill="url(#garden-sky)"/><circle cx="460" cy="78" r="32" fill="#f7deb0" opacity=".88"/><path d="M0 282q148-45 292 8t308-26v156H0Z" fill="#cad8c5"/><path d="M0 322q150-24 264 26t336-35v107H0Z" fill="#b7cdb9"/>
+      <rect x="86" y="130" width="428" height="16" fill="#526259"/><rect x="96" y="146" width="408" height="122" fill="#f7f5ee" stroke="#dcd8cb" stroke-width="3"/><circle cx="182" cy="208" r="36" fill="#cad8c7" stroke="#5c6c62" stroke-width="6"/><circle cx="182" cy="208" r="26" fill="#dfeae0"/>
+      <ellipse cx="332" cy="332" rx="198" ry="54" fill="#8cb1aa"/><ellipse cx="332" cy="335" rx="164" ry="34" fill="#aad0c9"/><ellipse cx="268" cy="335" rx="18" ry="6" fill="#6b9f7e"/><ellipse cx="366" cy="342" rx="22" ry="7" fill="#6b9f7e"/><circle cx="272" cy="331" r="5" fill="#f2a2a8"/><path d="M210 352q122-36 226 11" fill="none" stroke="#ebe6d5" stroke-width="10" stroke-linecap="round"/>
+      <path d="M180 236 292 178l124 60-118 55Z" fill="#e9d8b5"/><path d="M168 220 290 156l138 66-20 21-116-54-110 51Z" fill="#4f6458"/><path d="M192 241v75m210-73v66m-114-110v90" stroke="#6a5241" stroke-width="15"/><path d="M200 292h192" stroke="#a67754" stroke-width="10"/>
+      <path d="M62 325V155m0 78c-66-8-44-108 0-100 48-18 68 70 0 100Zm472 72V140m0 95c-70-8-58-110 0-110 58-4 72 99 0 110Z" fill="#679377" stroke="#4f6d58" stroke-width="5"/><path d="M52 162q56 18 82 68M538 148q-62 14-94 56" fill="none" stroke="#8ab090" stroke-width="6" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="second-room" viewBox="0 0 600 420">
+      <rect width="600" height="420" fill="url(#room-bg)"/><ellipse cx="312" cy="356" rx="220" ry="38" fill="#cbbda7" opacity=".4"/><path d="M78 195 325 73l222 113-249 136Z" fill="#d8bf9f" stroke="#b69d80" stroke-width="6"/><path d="M78 195v76l220 120v-69Zm220 127v69l249-138v-67Z" fill="#b99376"/><path d="M86 195 326 77l208 109-237 129Z" fill="#f1e4cd"/>
+      <path d="M305 95v128l-117 59M305 223l115 59" stroke="#bba98c" stroke-width="9" fill="none"/><path d="M186 143v76l91 49v-79" fill="#e5d7be" stroke="#baa78d" stroke-width="5"/><path d="M186 143 275 99l93 46-91 44Z" fill="#faf2e1" stroke="#baa78d" stroke-width="5"/>
+      <path d="M347 180 416 146l77 38-70 37Z" fill="#77a299"/><path d="M347 180v42l76 37v-38l70-37v40l-70 35" fill="#587c76"/><path d="M353 184 419 151l67 34-64 32Z" fill="#a8cac0"/>
+      <path d="M111 211 176 178l70 35-64 33Z" fill="#c39276"/><path d="M112 211v40l70 36v-41l64-33v39l-64 35" fill="#9c715b"/><path d="M118 210 176 181l63 32-57 29Z" fill="#f6e1d0"/>
+      <path d="m352 274 47-25 48 24-49 27Z" fill="#e4ba82"/><circle cx="399" cy="269" r="12" fill="#fff0c9"/><path d="M482 140v-48m0 51c-30-9-35-38-17-51 2-27 39-36 51-10 32 1 31 43-3 51Z" fill="#779a76" stroke="#5f8266" stroke-width="4"/>
+      <text x="34" y="392" fill="#796b59" font-family="sans-serif" font-size="13" font-weight="700" letter-spacing="3">73 M² · THREE PLANS</text>
+    </symbol>
+    <symbol id="simulated-days" viewBox="0 0 600 420">
+      <rect width="600" height="420" fill="#e4dac9"/><path d="M0 0h600v292H0" fill="url(#miri-wall)"/><path d="M0 292h600v128H0" fill="#cabca5"/><path d="M342 66h174v174H342Z" fill="#fae7c2" stroke="#988c79" stroke-width="11"/><path d="M429 66v174M342 153h174" stroke="#b6a995" stroke-width="7"/><circle cx="436" cy="108" r="30" fill="#f3c98a"/><path d="M350 202q62-52 158-18v50H350Z" fill="#b4c6aa"/>
+      <rect x="78" y="88" width="110" height="132" rx="10" fill="#fff9ef" stroke="#c3b49d" stroke-width="5"/><path d="M98 188c18-32 34-36 50-10l24-28v44H98Z" fill="#9a86ab" opacity=".65"/><path d="M80 238h252v95H80Z" fill="#9a86a8"/><path d="M61 250h290v82H61Z" fill="#b4a3bb"/><path d="M61 322h290v22H61Z" fill="#83708e"/><path d="M80 346v28m249-28v28" stroke="#6d596e" stroke-width="12"/>
+      <rect x="93" y="217" width="91" height="63" rx="12" fill="#e7d3b7"/><rect x="236" y="218" width="91" height="63" rx="12" fill="#dec8ae"/><ellipse cx="433" cy="337" rx="92" ry="24" fill="#b8a58c"/><path d="M383 306h96l-13 35h-68Z" fill="#aa7e62"/><path d="M396 306v-35m70 35v-35" stroke="#9e735a" stroke-width="10"/><circle cx="432" cy="296" r="14" fill="#fff5e0"/><path d="M531 345V227m0 74c-36-18-41-60-13-70 9-34 53-29 60 1 33 14 21 58-47 69Z" fill="#779a72" stroke="#5f8264" stroke-width="5"/><path d="M515 345h32l-5 32h-22Z" fill="#b98169"/>
+    </symbol>
+    <symbol id="little-harvest" viewBox="0 0 600 420">
+      <rect width="600" height="420" fill="url(#harvest-bg)"/><rect x="132" y="28" width="336" height="364" rx="28" fill="#fffdf6" stroke="#dedbd0" stroke-width="5"/><circle cx="300" cy="196" r="112" fill="#fae3de"/>
+      <path d="M298 140c-35-23-86-3-91 43-5 54 36 112 73 107 13-2 21-8 34-7 15 1 24 7 37 5 38-6 74-64 64-113-10-43-60-58-95-36-9 6-13 6-22 1Z" fill="#d97264" stroke="#5c6853" stroke-width="5" stroke-linejoin="round"/><path d="M306 136c18-34 46-39 69-25-14 24-39 35-69 34Z" fill="#89ad76" stroke="#5c6853" stroke-width="4"/><path d="M300 141c0-20 5-32 16-44M231 184c-5 15-5 31 0 44" fill="none" stroke="#5c6853" stroke-width="5" stroke-linecap="round"/>
+      <text x="300" y="346" text-anchor="middle" fill="#2d4938" font-family="Georgia,serif" font-size="24" font-weight="700">Apple · 苹果</text><text x="300" y="370" text-anchor="middle" fill="#829285" font-family="sans-serif" font-size="11" letter-spacing="3">36 FLASHCARDS</text>
+    </symbol>
+    <symbol id="tideline" viewBox="0 0 600 420">
+      <rect width="600" height="420" fill="url(#tide-sky)"/><circle cx="378" cy="154" r="88" fill="#ffe4b8" opacity=".28"/><circle cx="378" cy="154" r="56" fill="#ffdfaa"/>
+      <path d="M0 241q91-21 174 1t181-4 245 7v175H0Z" fill="#4f7a85"/><path d="M0 280q112-23 214 2t203-4 183 8v134H0Z" fill="#2f5b6a"/><path d="M0 327q76-17 174 7t203-7 223 11v82H0Z" fill="#1e4453"/><path d="M0 372q102-18 213 3t213-3 174 8v40H0Z" fill="#12313e"/>
+      <path d="M243 255q105 9 225-7m-200 43q112 12 262-2M50 340q133-12 235 7" fill="none" stroke="#f7dabf" stroke-opacity=".62" stroke-width="3" stroke-linecap="round"/><path d="m108 168 13 6 13-6m25-22 10 4 10-4" fill="none" stroke="#2c4e56" stroke-width="3" stroke-linecap="round"/><text x="38" y="54" fill="#f7e8d8" fill-opacity=".8" font-family="sans-serif" font-size="12" letter-spacing="4">FOUR CHAPTERS · CANVAS</text>
+    </symbol>
+    <symbol id="solitaire" viewBox="0 0 600 420">
+      <rect width="600" height="420" fill="url(#felt-grad)"/><rect x="24" y="24" width="552" height="372" rx="22" fill="none" stroke="#e4dfae" stroke-opacity=".28" stroke-width="2.5"/>
+      <g transform="translate(106 86) rotate(-14 90 120)"><rect width="184" height="249" rx="14" fill="#f8f5ea" stroke="#d5ceb8" stroke-width="2"/><text x="22" y="45" fill="#b43c3c" font-family="Georgia,serif" font-size="35" font-weight="700">A</text><text x="92" y="158" fill="#c34345" font-family="Georgia,serif" font-size="88" text-anchor="middle">♥</text></g>
+      <g transform="translate(248 64) rotate(8 90 120)"><rect width="184" height="249" rx="14" fill="#fffdf6" stroke="#d5ceb8" stroke-width="2"/><text x="22" y="45" fill="#233032" font-family="Georgia,serif" font-size="35" font-weight="700">K</text><text x="92" y="158" fill="#233032" font-family="Georgia,serif" font-size="88" text-anchor="middle">♠</text></g>
+      <circle cx="491" cy="316" r="14" fill="#ebc774"/><circle cx="517" cy="333" r="14" fill="#ebc774"/>
+    </symbol>
+    <symbol id="galaxian" viewBox="0 0 600 420">
+      <rect width="600" height="420" fill="url(#space)"/><g fill="#f4f1da" opacity=".75"><circle cx="57" cy="50" r="2"/><circle cx="209" cy="39" r="1.4"/><circle cx="511" cy="75" r="2.2"/><circle cx="423" cy="142" r="1.4"/><circle cx="90" cy="286" r="1.5"/><circle cx="539" cy="305" r="2"/></g>
+      <g fill="#e47892"><path d="M124 94h14v14h-14zm14 14h56v14h-56zm-14 14h84v42h-14v-14h-14v14h-28v-14h-14v14h-14zm70-14h14v14h-14Z"/><path d="M256 72h14v14h-14zm14 14h56v14h-56zm-14 14h84v42h-14v-14h-14v14h-28v-14h-14v14h-14zm70-14h14v14h-14Z" fill="#f3c56b"/><path d="M388 94h14v14h-14zm14 14h56v14h-56zm-14 14h84v42h-14v-14h-14v14h-28v-14h-14v14h-14zm70-14h14v14h-14Z"/></g>
+      <path d="M280 309h40v-31h20v41h35v28H225v-28h35v-41h20Z" fill="#82d2c7"/><rect x="294" y="210" width="11" height="52" rx="5" fill="#ffe19e"/><circle cx="299" cy="190" r="6" fill="#ffe19e"/><path d="M0 381h600" stroke="#5b5985" stroke-width="3"/>
+    </symbol>
+    <symbol id="snake" viewBox="0 0 600 420">
+      <rect width="600" height="420" fill="#13332c"/><rect width="600" height="420" fill="url(#pixel-grid)"/><path d="M98 104h70v35h70v35h70v35h70v70h-70v35h-70" fill="none" stroke="#9be07d" stroke-width="30" stroke-linejoin="round" stroke-linecap="round"/><path d="M233 312h-35v-30" fill="none" stroke="#6ec09a" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="385" cy="277" r="22" fill="#b4ec86"/><circle cx="391" cy="271" r="4.5" fill="#18382f"/><path d="M385 296v14m0-14 12 8" stroke="#f0a894" stroke-width="4" stroke-linecap="round"/><circle cx="477" cy="136" r="22" fill="#eb7f68"/><path d="M477 113q3-17 15-21" fill="none" stroke="#a6db84" stroke-width="5" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="tetris" viewBox="0 0 600 420">
+      <rect width="600" height="420" fill="#111932"/><rect x="179" y="24" width="242" height="374" fill="#091022" stroke="#506490" stroke-width="5"/><rect x="179" y="24" width="242" height="374" fill="url(#tiny-grid)"/>
+      <g fill="#64d8cf"><rect x="238" y="246" width="38" height="38" rx="4"/><rect x="280" y="246" width="38" height="38" rx="4"/><rect x="322" y="246" width="38" height="38" rx="4"/><rect x="364" y="246" width="38" height="38" rx="4"/></g>
+      <g fill="#f0c869"><rect x="196" y="288" width="38" height="38" rx="4"/><rect x="238" y="288" width="38" height="38" rx="4"/><rect x="196" y="330" width="38" height="38" rx="4"/><rect x="238" y="330" width="38" height="38" rx="4"/></g>
+      <g fill="#cf8bd3"><rect x="280" y="288" width="38" height="38" rx="4"/><rect x="322" y="288" width="38" height="38" rx="4"/><rect x="364" y="288" width="38" height="38" rx="4"/><rect x="322" y="330" width="38" height="38" rx="4"/></g>
+      <g fill="#e68277"><rect x="280" y="330" width="38" height="38" rx="4"/><rect x="364" y="330" width="38" height="38" rx="4"/></g>
+      <g fill="none" stroke="#64d8cf" stroke-opacity=".35" stroke-width="2" stroke-dasharray="4 4"><rect x="238" y="132" width="38" height="38" rx="4"/><rect x="280" y="132" width="38" height="38" rx="4"/><rect x="322" y="132" width="38" height="38" rx="4"/></g>
+      <circle cx="102" cy="221" r="34" fill="#1d2b4c" stroke="#6d86ae" stroke-width="4"/><path d="M91 221h22m-11-11v22" stroke="#9ec4e6" stroke-width="5" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="castle" viewBox="0 0 600 420">
+      <rect width="600" height="420" fill="url(#castle-sky)"/><circle cx="435" cy="100" r="78" fill="#f7e2c8" opacity=".18"/><circle cx="435" cy="100" r="56" fill="#f4dcc1"/><path d="M0 280q130-98 267-9t333-44v193H0" fill="#463a56"/><path d="M0 339q146-34 263 16t337-31v96H0" fill="#23263a"/>
+      <path d="M131 322V170h43v-32h29v32h43v152m0-53V107h46v-34h34v34h46v166m0 49V151h42v-29h29v29h41v171Z" fill="#191d2f"/><path d="M116 170h145l-17-24H132Zm114-63h159l-16-25H247Zm129 44h144l-17-25H376Z" fill="#191d2f"/><path d="M287 420V267q19-25 39 0v153" fill="#ad6b78"/><rect x="180" y="218" width="18" height="37" fill="#f0b68e"/><rect x="398" y="216" width="18" height="37" fill="#f0b68e"/><path d="M84 420v-47h18v-36h22v83m359 0v-42h19v-40h20v82" fill="#131827"/>
+    </symbol>
+  </svg>
+  <a class="skip-link" href="#works">跳到作品列表</a>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="wordmark" href="./" aria-label="AI 小作品首页">
+        <span class="wordmark-icon" aria-hidden="true">A<span>✳</span></span>
+        <span>AI 小作品<small>SMALL EXPERIMENTS</small></span>
+      </a>
+
+      <nav class="header-nav" aria-label="页面导航">
+        <a href="#spotlight">精选聚焦</a>
+        <a href="#works">作品一览</a>
+        <a href="#about">探索路线</a>
+      </nav>
+
+      <div class="header-actions">
+        <button type="button" class="pill-btn" id="random-pick" title="随机挑选一个作品查看档案 (R)">✦ 手气不错</button>
+        <button type="button" class="pill-btn" id="theme-toggle" aria-pressed="false" title="切换日光/夜游展厅 (T)">☾ 夜游</button>
+        <span class="header-count">17 个小实验 <span aria-hidden="true">↗</span></span>
+      </div>
+    </div>
+  </header>
+
   <div class="site-shell">
-    <header class="site-header">
-      <a class="wordmark" href="./" aria-label="AI 小作品首页"><span class="wordmark-icon" aria-hidden="true">A<span>✳</span></span><span>AI 小作品<small>SMALL EXPERIMENTS</small></span></a>
-      <nav aria-label="页面导航"><a href="#works">作品</a><a href="#about">关于</a></nav>
-      <span class="header-count">17 个小实验 <span aria-hidden="true">↗</span></span>
-    </header>
+    <div class="protocol-banner" id="protocol-banner" hidden>
+      <div>
+        <strong>本地运行提示：</strong>检测到当前通过 <code>file://</code> 打开。部分使用 ES Modules、WebGL 贴图或 Godot WebAssembly 的作品需要本地 HTTP 服务才能正常加载，请在仓库根目录执行 <code>python3 -m http.server 8767</code>。
+      </div>
+      <button type="button" class="pill-btn" id="banner-copy">复制命令</button>
+    </div>
 
     <main>
-      <section class="hero" aria-labelledby="hero-title">
-        <div class="hero-copy"><span class="kicker"><span class="kicker-line"></span> A COLLECTION OF LITTLE IDEAS</span><h1 id="hero-title">把灵感，做成<br><em>可以玩的东西。</em></h1><p>在这里收藏一些借助 AI 完成的小作品。有的适合探索，有的适合慢慢读，也有的只是想让你玩上一会儿。</p><a class="hero-link" href="#works">开始逛逛 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h13m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a></div>
-        <div class="hero-aside" aria-hidden="true"><span class="orbit orbit-one"></span><span class="orbit orbit-two"></span><span class="hero-spark spark-one">✳</span><span class="hero-spark spark-two">✳</span><div class="hero-note"><span>随手做，认真玩。</span><b>17 <small>PROJECTS</small></b></div></div>
+      <section class="hero" id="spotlight" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <span class="kicker"><span class="kicker-line"></span> CURATED INTERACTIVE LAB · 2026</span>
+          <h1 id="hero-title">把灵感，做成<br><em>可以玩的东西。</em></h1>
+          <p class="hero-lead">这里收藏了借助 AI 打造的 17 个静态实验：从 Three.js 星际与园林、水墨古琴长卷、WebGL 2 雨夜玻璃，到 Godot 4 像素武侠与经典街机重制——全部可在浏览器里直接点开探索。</p>
+
+          <div class="hero-metrics" aria-label="实验室概览">
+            <div class="metric-card">
+              <strong>17 <small>PROJECTS</small></strong>
+              <span>独立可玩入口</span>
+            </div>
+            <div class="metric-card">
+              <strong>5 <small>GENRES</small></strong>
+              <span>跨维度创作主题</span>
+            </div>
+            <div class="metric-card">
+              <strong>0 <small>BACKEND</small></strong>
+              <span>纯本地静态直开</span>
+            </div>
+          </div>
+
+          <div class="hero-cta">
+            <a class="cta-primary" href="#works">浏览全部作品 <span aria-hidden="true">↓</span></a>
+            <button type="button" class="cta-secondary" id="hero-random">随机抽一个体验 ✦</button>
+          </div>
+        </div>
+
+        <aside class="spotlight-stage" aria-label="精选作品展台">
+          <div class="spotlight-topbar">
+            <span class="spotlight-badge"><span class="spotlight-dot" aria-hidden="true"></span> SPOTLIGHT · 镇馆聚焦</span>
+            <div class="spotlight-controls">
+              <span class="spotlight-index" id="spotlight-counter">01 / 06</span>
+              <button type="button" class="icon-circle-btn" id="spotlight-prev" aria-label="上一个精选作品">←</button>
+              <button type="button" class="icon-circle-btn" id="spotlight-next" aria-label="下一个精选作品">→</button>
+            </div>
+          </div>
+
+          <div class="spotlight-viewport">
+            <div class="spotlight-media" id="spotlight-media"></div>
+            <div class="spotlight-scrim" aria-hidden="true"></div>
+            <div class="spotlight-overlay-tags">
+              <span class="spotlight-chip" id="spotlight-tech">Godot 4.7.2 · WebAssembly</span>
+              <span class="spotlight-chip" id="spotlight-number">NO. 17</span>
+            </div>
+          </div>
+
+          <div class="spotlight-caption">
+            <span class="spotlight-cat" id="spotlight-cat">像素武侠 · 探索与回合战斗</span>
+            <h2 id="spotlight-title">碎岳 · 同行</h2>
+            <p id="spotlight-desc">与云川、青蘅漫步青溪渡口，前往野林并肩作战。</p>
+          </div>
+
+          <div class="spotlight-footer">
+            <span class="spotlight-hint" id="spotlight-hint">WASD / 点击寻路 · F6 切换地图 · 1–5 出招</span>
+            <div class="spotlight-actions">
+              <button type="button" class="pill-btn" id="spotlight-dossier">档案与预览</button>
+              <a class="spotlight-launch" id="spotlight-launch" href="./godot-test/web/">立即进入 <span aria-hidden="true">↗</span></a>
+            </div>
+          </div>
+
+          <div class="spotlight-tabs" id="spotlight-tabs" role="tablist" aria-label="切换精选作品"></div>
+        </aside>
       </section>
 
       <section class="works" id="works" aria-labelledby="works-title">
-        <div class="section-heading"><div><span class="kicker"><span class="kicker-line"></span> SELECTED WORKS</span><h2 id="works-title">作品一览<span class="period">.</span></h2></div><p>点开一张卡片，走进一个小世界。<br>所有作品都可以直接在浏览器中打开。</p></div>
-        <div class="work-flow">
-          <a class="work-card" href="./solar-system/" aria-label="打开太阳系交互网站"><span class="thumb thumb-tall thumb-dark"><svg viewBox="0 0 600 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><use href="./gallery-art.svg#solar-system" width="600" height="420"/></svg><span class="thumb-number">01 / 17</span></span><div class="card-body"><span class="card-type">交互探索 · 3D</span><div class="card-title"><h3>太阳系交互网站</h3><span aria-hidden="true">↗</span></div><span class="card-description">从太阳出发，观察行星与月球。</span></div></a>
+        <div class="section-heading">
+          <div>
+            <span class="kicker"><span class="kicker-line"></span> SELECTED WORKS</span>
+            <h2 id="works-title">作品一览<span class="period">.</span></h2>
+          </div>
+          <p>点击卡片直接进入作品，或点右下角「档案 / 预览」<br>查看快捷键、创作细节并在当前页内试玩。</p>
+        </div>
 
-          <a class="work-card" href="./jiangnan-garden/" aria-label="打开江南园林小景"><span class="thumb thumb-standard"><svg viewBox="0 0 600 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><use href="./gallery-art.svg#garden" width="600" height="420"/></svg><span class="thumb-number">02 / 17</span></span><div class="card-body"><span class="card-type">漫游 · 3D</span><div class="card-title"><h3>江南园林小景</h3><span aria-hidden="true">↗</span></div><span class="card-description">在一方体素园林里，换个角度看江南。</span></div></a>
+        <div class="control-dock" aria-label="作品筛选与视图工具栏">
+          <div class="filter-tabs" role="group" aria-label="按主题分类筛选">
+            <button type="button" class="filter-btn active" data-filter="all" aria-pressed="true">全部 <span>17</span></button>
+            <button type="button" class="filter-btn" data-filter="3d" aria-pressed="false">3D 与空间 <span>4</span></button>
+            <button type="button" class="filter-btn" data-filter="narrative" aria-pressed="false">叙事与氛围 <span>3</span></button>
+            <button type="button" class="filter-btn" data-filter="wuxia" aria-pressed="false">像素武侠 <span>2</span></button>
+            <button type="button" class="filter-btn" data-filter="arcade" aria-pressed="false">街机益智 <span>6</span></button>
+            <button type="button" class="filter-btn" data-filter="audio-edu" aria-pressed="false">音乐与启蒙 <span>2</span></button>
+          </div>
 
-          <a class="work-card" href="./second-room/" aria-label="打开第二间房"><span class="thumb thumb-wide"><svg viewBox="0 0 600 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><use href="./gallery-art.svg#second-room" width="600" height="420"/></svg><span class="thumb-number">03 / 17</span></span><div class="card-body"><span class="card-type">空间设计 · 3D</span><div class="card-title"><h3>第二间房</h3><span aria-hidden="true">↗</span></div><span class="card-description">73㎡ 小家，试试三种不同的布置方案。</span></div></a>
+          <div class="dock-right">
+            <label class="search-box">
+              <span class="search-icon" aria-hidden="true">⌕</span>
+              <input type="search" id="search-input" placeholder="搜索作品、Three.js、Godot…" aria-label="搜索作品">
+              <span class="search-kbd" id="search-kbd" aria-hidden="true">/</span>
+              <button type="button" class="search-clear" id="search-clear" aria-label="清空搜索" hidden>×</button>
+            </label>
 
-          <a class="work-card" href="./ink-scroll-book/" aria-label="打开山水有归处"><span class="thumb thumb-tall"><img src="./ink-scroll-book/assets/mountains.jpg" alt="" width="1536" height="1024" loading="lazy" decoding="async"><span class="thumb-number">04 / 17</span></span><div class="card-body"><span class="card-type">滚动阅读 · 水墨</span><div class="card-title"><h3>山水有归处</h3><span aria-hidden="true">↗</span></div><span class="card-description">跟着六段山水故事，缓缓读完一卷。</span></div></a>
+            <div class="view-toggle" role="group" aria-label="切换排列视图">
+              <button type="button" class="view-btn active" id="view-grid" aria-pressed="true">画廊网格</button>
+              <button type="button" class="view-btn" id="view-list" aria-pressed="false">索引清单</button>
+            </div>
+          </div>
+        </div>
 
-          <a class="work-card" href="./simulated-days/" aria-label="打开模拟时光"><span class="thumb thumb-standard"><svg viewBox="0 0 600 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><use href="./gallery-art.svg#simulated-days" width="600" height="420"/></svg><span class="thumb-number">05 / 17</span></span><div class="card-body"><span class="card-type">生活模拟 · 3D</span><div class="card-title"><h3>模拟时光</h3><span aria-hidden="true">↗</span></div><span class="card-description">陪 Miri 做饭、画画，打理紫蓝巷的日常。</span></div></a>
+        <div class="results-meta">
+          <span id="results-count" role="status" aria-live="polite">共 17 个作品 · 按编号顺序陈列</span>
+          <button type="button" class="reset-link" id="reset-filters" hidden>重置筛选条件</button>
+        </div>
 
-          <a class="work-card" href="./rain-window/" aria-label="打开雨窗手记"><span class="thumb thumb-wide thumb-dark"><img src="./rain-window/assets/village.jpg" alt="" width="1672" height="941" loading="lazy" decoding="async"><span class="thumb-number">06 / 17</span></span><div class="card-body"><span class="card-type">氛围记录 · 雨声</span><div class="card-title"><h3>雨窗手记</h3><span aria-hidden="true">↗</span></div><span class="card-description">在雨夜的窗前，写下今天想记住的事。</span></div></a>
+        <div class="work-flow" id="work-flow">
+          <article class="work-slot" data-id="solar-system" data-category="3d" data-search="太阳系 3D Three.js NASA 星图 行星 月球 宇宙 8K">
+            <a class="work-card" href="./solar-system/" aria-label="打开太阳系交互网站">
+              <span class="thumb thumb-dark">
+                <svg viewBox="0 0 600 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><use href="#solar-system" width="600" height="420"/></svg>
+                <span class="thumb-number">01 / 17</span>
+                <span class="thumb-tech">Three.js · 8K 星图</span>
+              </span>
+              <div class="card-body">
+                <span class="card-type">交互探索 · 3D</span>
+                <div class="card-title"><h3>太阳系交互网站</h3><span aria-hidden="true">↗</span></div>
+                <span class="card-description">从太阳出发，观察十个天体的公转自转与地表细节。</span>
+              </div>
+            </a>
+            <div class="card-footer">
+              <span class="card-hint">键盘 1–0 直达天体 · O 总览</span>
+              <button type="button" class="card-preview-btn" data-open-dossier="solar-system">档案 / 预览</button>
+            </div>
+          </article>
 
-          <a class="work-card" href="./little-harvest/" aria-label="打开小小丰收"><span class="thumb thumb-standard"><svg viewBox="0 0 600 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><use href="./gallery-art.svg#little-harvest" width="600" height="420"/></svg><span class="thumb-number">07 / 17</span></span><div class="card-body"><span class="card-type">亲子认知 · 英文启蒙</span><div class="card-title"><h3>小小丰收</h3><span aria-hidden="true">↗</span></div><span class="card-description">36 张手绘果蔬闪卡，一起看图听英文。</span></div></a>
+          <article class="work-slot" data-id="jiangnan-garden" data-category="3d" data-search="江南园林 体素 3D Three.js 月洞门 莲池 石桥 竹林 亭台">
+            <a class="work-card" href="./jiangnan-garden/" aria-label="打开江南园林小景">
+              <span class="thumb">
+                <svg viewBox="0 0 600 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><use href="#garden" width="600" height="420"/></svg>
+                <span class="thumb-number">02 / 17</span>
+                <span class="thumb-tech">Three.js · 体素</span>
+              </span>
+              <div class="card-body">
+                <span class="card-type">漫游 · 3D</span>
+                <div class="card-title"><h3>江南园林小景</h3><span aria-hidden="true">↗</span></div>
+                <span class="card-description">在一方粉墙黛瓦的体素园林里，换个角度看江南。</span>
+              </div>
+            </a>
+            <div class="card-footer">
+              <span class="card-hint">七组视角按钮 · 左/右键拖拽</span>
+              <button type="button" class="card-preview-btn" data-open-dossier="jiangnan-garden">档案 / 预览</button>
+            </div>
+          </article>
 
-          <a class="work-card" href="./tideline/" aria-label="打开潮汐之间"><span class="thumb thumb-tall thumb-dark"><svg viewBox="0 0 600 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><use href="./gallery-art.svg#tideline" width="600" height="420"/></svg><span class="thumb-number">08 / 17</span></span><div class="card-body"><span class="card-type">滚动叙事 · 海景</span><div class="card-title"><h3>潮汐之间</h3><span aria-hidden="true">↗</span></div><span class="card-description">跟随海与光，走过启程到归来的四幕。</span></div></a>
+          <article class="work-slot" data-id="second-room" data-category="3d" data-search="第二间房 家装 空间设计 73平米 3D Three.js Blender GLB 漫游">
+            <a class="work-card" href="./second-room/" aria-label="打开第二间房">
+              <span class="thumb">
+                <svg viewBox="0 0 600 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><use href="#second-room" width="600" height="420"/></svg>
+                <span class="thumb-number">03 / 17</span>
+                <span class="thumb-tech">Three.js · Blender GLB</span>
+              </span>
+              <div class="card-body">
+                <span class="card-type">空间设计 · 3D</span>
+                <div class="card-title"><h3>第二间房</h3><span aria-hidden="true">↗</span></div>
+                <span class="card-description">73㎡ 小家，一键切换三种生活方案与昼夜日照。</span>
+              </div>
+            </a>
+            <div class="card-footer">
+              <span class="card-hint">四种剖视/漫游 · 32 件 GLB 家具</span>
+              <button type="button" class="card-preview-btn" data-open-dossier="second-room">档案 / 预览</button>
+            </div>
+          </article>
 
-          <a class="work-card" href="./minigames/Solitaire.html" aria-label="打开纸牌接龙"><span class="thumb thumb-wide thumb-dark"><svg viewBox="0 0 600 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><use href="./gallery-art.svg#solitaire" width="600" height="420"/></svg><span class="thumb-number">09 / 17</span></span><div class="card-body"><span class="card-type">小游戏 · 纸牌</span><div class="card-title"><h3>纸牌接龙</h3><span aria-hidden="true">↗</span></div><span class="card-description">翻牌、整理花色，完成一局接龙。</span></div></a>
+          <article class="work-slot" data-id="ink-scroll-book" data-category="narrative" data-search="山水有归处 水墨 长卷 电子书 滚动阅读 古琴 阳关三叠 醉渔唱晚">
+            <a class="work-card" href="./ink-scroll-book/" aria-label="打开山水有归处">
+              <span class="thumb">
+                <img src="./ink-scroll-book/assets/mountains.jpg" alt="" width="1536" height="1024" loading="lazy" decoding="async">
+                <span class="thumb-number">04 / 17</span>
+                <span class="thumb-tech">水墨长卷 · 古琴实录</span>
+              </span>
+              <div class="card-body">
+                <span class="card-type">滚动阅读 · 水墨</span>
+                <div class="card-title"><h3>山水有归处</h3><span aria-hidden="true">↗</span></div>
+                <span class="card-description">跟着六段山水故事缓缓读完一卷，可伴古琴清音。</span>
+              </div>
+            </a>
+            <div class="card-footer">
+              <span class="card-hint">六幕卷目跳转 · 朱红进度线</span>
+              <button type="button" class="card-preview-btn" data-open-dossier="ink-scroll-book">档案 / 预览</button>
+            </div>
+          </article>
 
-          <a class="work-card" href="./minigames/Galaxian.html" aria-label="打开太空射击"><span class="thumb thumb-standard thumb-dark"><svg viewBox="0 0 600 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><use href="./gallery-art.svg#galaxian" width="600" height="420"/></svg><span class="thumb-number">10 / 17</span></span><div class="card-body"><span class="card-type">小游戏 · 街机</span><div class="card-title"><h3>太空射击</h3><span aria-hidden="true">↗</span></div><span class="card-description">驾驶像素战机，迎接一波波敌人。</span></div></a>
+          <article class="work-slot" data-id="simulated-days" data-category="3d" data-search="模拟时光 Miri 紫蓝巷 生活模拟 3D Three.js 家具 存档">
+            <a class="work-card" href="./simulated-days/" aria-label="打开模拟时光">
+              <span class="thumb">
+                <svg viewBox="0 0 600 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><use href="#simulated-days" width="600" height="420"/></svg>
+                <span class="thumb-number">05 / 17</span>
+                <span class="thumb-tech">Three.js · 生活模拟</span>
+              </span>
+              <div class="card-body">
+                <span class="card-type">生活模拟 · 3D</span>
+                <div class="card-title"><h3>模拟时光</h3><span aria-hidden="true">↗</span></div>
+                <span class="card-description">陪 Miri 做饭、画画、摆家具，打理紫蓝巷的日常。</span>
+              </div>
+            </a>
+            <div class="card-footer">
+              <span class="card-hint">生活/建造/社区 · 自动存档</span>
+              <button type="button" class="card-preview-btn" data-open-dossier="simulated-days">档案 / 预览</button>
+            </div>
+          </article>
 
-          <a class="work-card" href="./minigames/Snake.html" aria-label="打开贪吃蛇"><span class="thumb thumb-tall thumb-dark"><svg viewBox="0 0 600 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><use href="./gallery-art.svg#snake" width="600" height="420"/></svg><span class="thumb-number">11 / 17</span></span><div class="card-body"><span class="card-type">小游戏 · 经典</span><div class="card-title"><h3>贪吃蛇</h3><span aria-hidden="true">↗</span></div><span class="card-description">沿着网格前进，记得给自己留条路。</span></div></a>
+          <article class="work-slot" data-id="rain-window" data-category="narrative" data-search="雨窗手记 雨声 雷声 WebGL 玻璃水滴 日记 沉浸 写作">
+            <a class="work-card" href="./rain-window/" aria-label="打开雨窗手记">
+              <span class="thumb thumb-dark">
+                <img src="./rain-window/assets/village.jpg" alt="" width="1672" height="941" loading="lazy" decoding="async">
+                <span class="thumb-number">06 / 17</span>
+                <span class="thumb-tech">WebGL 2 · 雨滴着色器</span>
+              </span>
+              <div class="card-body">
+                <span class="card-type">氛围记录 · 雨声</span>
+                <div class="card-title"><h3>雨窗手记</h3><span aria-hidden="true">↗</span></div>
+                <span class="card-description">在雨夜的窗前，写下今天想记住的事，听风听雨。</span>
+              </div>
+            </a>
+            <div class="card-footer">
+              <span class="card-hint">四处夜景 · H 沉浸 · P 面板</span>
+              <button type="button" class="card-preview-btn" data-open-dossier="rain-window">档案 / 预览</button>
+            </div>
+          </article>
 
-          <a class="work-card" href="./minigames/Breakout.html" aria-label="打开打砖块"><span class="thumb thumb-wide thumb-dark"><svg viewBox="0 0 600 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><use href="./gallery-art.svg#breakout" width="600" height="420"/></svg><span class="thumb-number">12 / 17</span></span><div class="card-body"><span class="card-type">小游戏 · 街机</span><div class="card-title"><h3>打砖块</h3><span aria-hidden="true">↗</span></div><span class="card-description">接住弹球，敲碎整面彩色砖墙。</span></div></a>
+          <article class="work-slot" data-id="little-harvest" data-category="audio-edu" data-search="小小丰收 果蔬 闪卡 英文 启蒙 亲子 发音 SVG 语音合成">
+            <a class="work-card" href="./little-harvest/" aria-label="打开小小丰收">
+              <span class="thumb">
+                <svg viewBox="0 0 600 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><use href="#little-harvest" width="600" height="420"/></svg>
+                <span class="thumb-number">07 / 17</span>
+                <span class="thumb-tech">原创 SVG · 语音朗读</span>
+              </span>
+              <div class="card-body">
+                <span class="card-type">亲子认知 · 英文启蒙</span>
+                <div class="card-title"><h3>小小丰收</h3><span aria-hidden="true">↗</span></div>
+                <span class="card-description">36 张手绘果蔬闪卡，一起看图、滑动与听英文发音。</span>
+              </div>
+            </a>
+            <div class="card-footer">
+              <span class="card-hint">水果蔬菜分类 · 滑动与语音</span>
+              <button type="button" class="card-preview-btn" data-open-dossier="little-harvest">档案 / 预览</button>
+            </div>
+          </article>
 
-          <a class="work-card" href="./minigames/Tetris.html" aria-label="打开俄罗斯方块"><span class="thumb thumb-standard thumb-dark"><svg viewBox="0 0 600 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><use href="./gallery-art.svg#tetris" width="600" height="420"/></svg><span class="thumb-number">13 / 17</span></span><div class="card-body"><span class="card-type">小游戏 · 经典</span><div class="card-title"><h3>俄罗斯方块</h3><span aria-hidden="true">↗</span></div><span class="card-description">旋转和摆放方块，等一次漂亮的消行。</span></div></a>
+          <article class="work-slot" data-id="tideline" data-category="narrative" data-search="潮汐之间 海景 Canvas 滚动叙事 四幕 启程 归来">
+            <a class="work-card" href="./tideline/" aria-label="打开潮汐之间">
+              <span class="thumb thumb-dark">
+                <svg viewBox="0 0 600 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><use href="#tideline" width="600" height="420"/></svg>
+                <span class="thumb-number">08 / 17</span>
+                <span class="thumb-tech">Canvas 2D · 实时海景</span>
+              </span>
+              <div class="card-body">
+                <span class="card-type">滚动叙事 · 海景</span>
+                <div class="card-title"><h3>潮汐之间</h3><span aria-hidden="true">↗</span></div>
+                <span class="card-description">跟随海与光，走过从启程到归来的四幕动态潮汐。</span>
+              </div>
+            </a>
+            <div class="card-footer">
+              <span class="card-hint">三层波浪实时渐变 · 章节直达</span>
+              <button type="button" class="card-preview-btn" data-open-dossier="tideline">档案 / 预览</button>
+            </div>
+          </article>
 
-          <a class="work-card" href="./minigames/Castlevania.html" aria-label="打开横版动作 Demo"><span class="thumb thumb-tall thumb-dark"><svg viewBox="0 0 600 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><use href="./gallery-art.svg#castle" width="600" height="420"/></svg><span class="thumb-number">14 / 17</span></span><div class="card-body"><span class="card-type">小游戏 · 横版动作</span><div class="card-title"><h3>横版动作 Demo</h3><span aria-hidden="true">↗</span></div><span class="card-description">穿过像素城堡，体验复古横版冒险。</span></div></a>
-          <a class="work-card" href="./cat-music-demo/" aria-label="打开 Cat Music 静态播放器"><span class="thumb thumb-wide"><img src="./cat-music-demo/thumbnail.svg" alt="" width="600" height="420" loading="lazy" decoding="async"><span class="thumb-number">15 / 17</span></span><div class="card-body"><span class="card-type">音乐播放器 · 静态演示</span><div class="card-title"><h3>Cat Music</h3><span aria-hidden="true">↗</span></div><span class="card-description">浏览示例专辑，试听两首开放授权录音。</span></div></a>
-          <a class="work-card" href="./changfeng-zhuan-godot/web/" aria-label="打开长风传 Godot 版"><span class="thumb thumb-wide thumb-dark"><img src="./changfeng-zhuan-godot/thumbnail.webp" alt="" width="640" height="360" loading="lazy" decoding="async"><span class="thumb-number">16 / 17</span></span><div class="card-body"><span class="card-type">像素武侠 · Godot 4</span><div class="card-title"><h3>长风传 · Godot 版</h3><span aria-hidden="true">↗</span></div><span class="card-description">用 Godot 4 重访乌篷渡，体验完整的第一章。</span></div></a>
-          <a class="work-card" href="./godot-test/web/" aria-label="打开碎岳同行 Web 版"><span class="thumb thumb-wide thumb-dark"><img src="./godot-test/thumbnail.png" alt="" width="1280" height="800" loading="lazy" decoding="async"><span class="thumb-number">17 / 17</span></span><div class="card-body"><span class="card-type">像素武侠 · 探索与回合战斗</span><div class="card-title"><h3>碎岳 · 同行</h3><span aria-hidden="true">↗</span></div><span class="card-description">与云川、青蘅漫步青溪渡口，前往野林并肩作战。</span></div></a>
+          <article class="work-slot" data-id="solitaire" data-category="arcade" data-search="纸牌接龙 Solitaire 扑克 拖拽 撤销 提示 经典">
+            <a class="work-card" href="./minigames/Solitaire.html" aria-label="打开纸牌接龙">
+              <span class="thumb thumb-dark">
+                <svg viewBox="0 0 600 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><use href="#solitaire" width="600" height="420"/></svg>
+                <span class="thumb-number">09 / 17</span>
+                <span class="thumb-tech">HTML5 · 单文件</span>
+              </span>
+              <div class="card-body">
+                <span class="card-type">小游戏 · 纸牌</span>
+                <div class="card-title"><h3>纸牌接龙</h3><span aria-hidden="true">↗</span></div>
+                <span class="card-description">翻牌、整理花色，支持 1/3 张发牌与无限撤销。</span>
+              </div>
+            </a>
+            <div class="card-footer">
+              <span class="card-hint">拖拽 / 双击归位 · Z 撤销 · H 提示</span>
+              <button type="button" class="card-preview-btn" data-open-dossier="solitaire">档案 / 预览</button>
+            </div>
+          </article>
+
+          <article class="work-slot" data-id="galaxian" data-category="arcade" data-search="太空射击 Galaxian 小蜜蜂 FC 街机 像素 8-bit 射击">
+            <a class="work-card" href="./minigames/Galaxian.html" aria-label="打开太空射击">
+              <span class="thumb thumb-dark">
+                <svg viewBox="0 0 600 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><use href="#galaxian" width="600" height="420"/></svg>
+                <span class="thumb-number">10 / 17</span>
+                <span class="thumb-tech">Canvas · 8-bit 音效</span>
+              </span>
+              <div class="card-body">
+                <span class="card-type">小游戏 · 街机</span>
+                <div class="card-title"><h3>太空射击</h3><span aria-hidden="true">↗</span></div>
+                <span class="card-description">驾驶像素战机，迎击 50 敌机编队与俯冲弹幕。</span>
+              </div>
+            </a>
+            <div class="card-footer">
+              <span class="card-hint">方向键移动 · Space 射击</span>
+              <button type="button" class="card-preview-btn" data-open-dossier="galaxian">档案 / 预览</button>
+            </div>
+          </article>
+
+          <article class="work-slot" data-id="snake" data-category="arcade" data-search="贪吃蛇 Snake 经典 网格 WASD">
+            <a class="work-card" href="./minigames/Snake.html" aria-label="打开贪吃蛇">
+              <span class="thumb thumb-dark">
+                <svg viewBox="0 0 600 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><use href="#snake" width="600" height="420"/></svg>
+                <span class="thumb-number">11 / 17</span>
+                <span class="thumb-tech">Canvas · 极简复古</span>
+              </span>
+              <div class="card-body">
+                <span class="card-type">小游戏 · 经典</span>
+                <div class="card-title"><h3>贪吃蛇</h3><span aria-hidden="true">↗</span></div>
+                <span class="card-description">沿着网格不断前进与成长，记得给自己留条路。</span>
+              </div>
+            </a>
+            <div class="card-footer">
+              <span class="card-hint">WASD / 方向键 · P 暂停 · R 重开</span>
+              <button type="button" class="card-preview-btn" data-open-dossier="snake">档案 / 预览</button>
+            </div>
+          </article>
+
+          <article class="work-slot" data-id="breakout" data-category="arcade" data-search="打砖块 Breakout 街机 十关 竖屏 MP3 音效 TapTap 触屏">
+            <a class="work-card" href="./minigames/Breakout.html" aria-label="打开打砖块">
+              <span class="thumb thumb-dark">
+                <img src="./minigames/assets/breakout-cover-920x430.png" alt="" width="920" height="430" loading="lazy" decoding="async">
+                <span class="thumb-number">12 / 17</span>
+                <span class="thumb-tech">10 关卡 · MP3 配乐</span>
+              </span>
+              <div class="card-body">
+                <span class="card-type">小游戏 · 街机</span>
+                <div class="card-title"><h3>打砖块</h3><span aria-hidden="true">↗</span></div>
+                <span class="card-description">10 个霓虹关卡与爆破连锁，适配手机竖屏滑动操控。</span>
+              </div>
+            </a>
+            <div class="card-footer">
+              <span class="card-hint">触屏拖动 / A D · Space 发球</span>
+              <button type="button" class="card-preview-btn" data-open-dossier="breakout">档案 / 预览</button>
+            </div>
+          </article>
+
+          <article class="work-slot" data-id="tetris" data-category="arcade" data-search="俄罗斯方块 Tetris 经典 幽灵方块 音效 消行">
+            <a class="work-card" href="./minigames/Tetris.html" aria-label="打开俄罗斯方块">
+              <span class="thumb thumb-dark">
+                <svg viewBox="0 0 600 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><use href="#tetris" width="600" height="420"/></svg>
+                <span class="thumb-number">13 / 17</span>
+                <span class="thumb-tech">Canvas · 幽灵落点</span>
+              </span>
+              <div class="card-body">
+                <span class="card-type">小游戏 · 经典</span>
+                <div class="card-title"><h3>俄罗斯方块</h3><span aria-hidden="true">↗</span></div>
+                <span class="card-description">霓虹配色搭配幽灵预览、双旋控制与消行粒子。</span>
+              </div>
+            </a>
+            <div class="card-footer">
+              <span class="card-hint">W/X/Z 旋转 · Space 硬降</span>
+              <button type="button" class="card-preview-btn" data-open-dossier="tetris">档案 / 预览</button>
+            </div>
+          </article>
+
+          <article class="work-slot" data-id="castlevania" data-category="arcade" data-search="横版动作 Castlevania 恶魔城 城堡 Boss 平台跳跃 像素">
+            <a class="work-card" href="./minigames/Castlevania.html" aria-label="打开横版动作 Demo">
+              <span class="thumb thumb-dark">
+                <svg viewBox="0 0 600 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><use href="#castle" width="600" height="420"/></svg>
+                <span class="thumb-number">14 / 17</span>
+                <span class="thumb-tech">H5 动作 · Boss 战</span>
+              </span>
+              <div class="card-body">
+                <span class="card-type">小游戏 · 横版动作</span>
+                <div class="card-title"><h3>横版动作 Demo</h3><span aria-hidden="true">↗</span></div>
+                <span class="card-description">穿过月夜像素城堡，跳跃迎敌并挑战关底 Boss。</span>
+              </div>
+            </a>
+            <div class="card-footer">
+              <span class="card-hint">A/D 移动 · K 跳跃 · J 攻击</span>
+              <button type="button" class="card-preview-btn" data-open-dossier="castlevania">档案 / 预览</button>
+            </div>
+          </article>
+
+          <article class="work-slot" data-id="cat-music" data-category="audio-edu" data-search="Cat Music 音乐播放器 专辑 频谱 波形 Web Audio CC0 钢琴">
+            <a class="work-card" href="./cat-music-demo/" aria-label="打开 Cat Music 静态播放器">
+              <span class="thumb">
+                <img src="./cat-music-demo/thumbnail.svg" alt="" width="600" height="420" loading="lazy" decoding="async">
+                <span class="thumb-number">15 / 17</span>
+                <span class="thumb-tech">Web Audio · 频谱波形</span>
+              </span>
+              <div class="card-body">
+                <span class="card-type">音乐播放器 · 静态演示</span>
+                <div class="card-title"><h3>Cat Music</h3><span aria-hidden="true">↗</span></div>
+                <span class="card-description">浏览示例专辑资料库，试听开放授权录音与实时频谱。</span>
+              </div>
+            </a>
+            <div class="card-footer">
+              <span class="card-hint">6 种视觉特效 · 深色切换</span>
+              <button type="button" class="card-preview-btn" data-open-dossier="cat-music">档案 / 预览</button>
+            </div>
+          </article>
+
+          <article class="work-slot" data-id="changfeng" data-category="wuxia" data-search="长风传 Godot 像素武侠 RPG 乌篷渡 回合制 陆寒江">
+            <a class="work-card" href="./changfeng-zhuan-godot/web/" aria-label="打开长风传 Godot 版">
+              <span class="thumb thumb-dark">
+                <img src="./changfeng-zhuan-godot/thumbnail.webp" alt="" width="640" height="360" loading="lazy" decoding="async">
+                <span class="thumb-number">16 / 17</span>
+                <span class="thumb-tech">Godot 4 · ~42 MB</span>
+              </span>
+              <div class="card-body">
+                <span class="card-type">像素武侠 · Godot 4</span>
+                <div class="card-title"><h3>长风传 · Godot 版</h3><span aria-hidden="true">↗</span></div>
+                <span class="card-description">重访乌篷渡与荒山驿道，体验第一章剧情与回合对决。</span>
+              </div>
+            </a>
+            <div class="card-footer">
+              <span class="card-hint">WASD 移动 · E 交谈 · Q 检剑</span>
+              <button type="button" class="card-preview-btn" data-open-dossier="changfeng">档案 / 预览</button>
+            </div>
+          </article>
+
+          <article class="work-slot" data-id="suiyue" data-category="wuxia" data-search="碎岳 同行 Godot 像素武侠 青溪渡口 云川 青蘅 回合战斗">
+            <a class="work-card" href="./godot-test/web/" aria-label="打开碎岳同行 Web 版">
+              <span class="thumb thumb-dark">
+                <img src="./godot-test/thumbnail.png" alt="" width="1280" height="800" loading="lazy" decoding="async">
+                <span class="thumb-number">17 / 17</span>
+                <span class="thumb-tech">Godot 4.7.2 · ~58 MB</span>
+              </span>
+              <div class="card-body">
+                <span class="card-type">像素武侠 · 探索与回合战斗</span>
+                <div class="card-title"><h3>碎岳 · 同行</h3><span aria-hidden="true">↗</span></div>
+                <span class="card-description">与云川、青蘅漫步青溪渡口，前往青岚野林并肩作战。</span>
+              </div>
+            </a>
+            <div class="card-footer">
+              <span class="card-hint">八方向/点地寻路 · F6 切地图</span>
+              <button type="button" class="card-preview-btn" data-open-dossier="suiyue">档案 / 预览</button>
+            </div>
+          </article>
+        </div>
+
+        <div class="empty-state" id="empty-state" hidden>
+          <h3>没有找到匹配的作品</h3>
+          <p>试试更换关键词（如 Three.js、Godot、水墨、街机），或重置全部分类筛选。</p>
+          <button type="button" class="pill-btn is-accent" id="empty-reset">查看全部 17 个作品</button>
+        </div>
+      </section>
+
+      <section class="curated-about" id="about" aria-labelledby="about-title">
+        <div class="section-heading">
+          <div>
+            <span class="kicker"><span class="kicker-line"></span> EXPLORATION TRACKS</span>
+            <h2 id="about-title">按兴致逛逛<span class="period">.</span></h2>
+          </div>
+          <p>不知道先点哪一个？可以从下面五条线索开始，<br>或者在根目录启动本地服务以解锁全部体验。</p>
+        </div>
+
+        <div class="tracks-grid">
+          <button type="button" class="track-card" data-jump-filter="3d">
+            <div>
+              <small>TRACK 01</small>
+              <strong>三维与空间实验</strong>
+              <p>太阳系、江南园林、73㎡ 家装方案与紫蓝巷慢生活。</p>
+            </div>
+            <span>筛选 4 个作品 →</span>
+          </button>
+          <button type="button" class="track-card" data-jump-filter="narrative">
+            <div>
+              <small>TRACK 02</small>
+              <strong>水墨、雨声与潮汐</strong>
+              <p>适合放慢节奏，伴着古琴与雨点读一卷书或写几行字。</p>
+            </div>
+            <span>筛选 3 个作品 →</span>
+          </button>
+          <button type="button" class="track-card" data-jump-filter="wuxia">
+            <div>
+              <small>TRACK 03</small>
+              <strong>像素江湖同行</strong>
+              <p>用 Godot 4 构建的渡口、野林、剧情抉择与回合交锋。</p>
+            </div>
+            <span>筛选 2 个作品 →</span>
+          </button>
+          <button type="button" class="track-card" data-jump-filter="arcade">
+            <div>
+              <small>TRACK 04</small>
+              <strong>经典街机与纸牌</strong>
+              <p>打开即玩的 6 款 H5 小游戏：接龙、弹球、方块与古堡冒险。</p>
+            </div>
+            <span>筛选 6 个作品 →</span>
+          </button>
+          <button type="button" class="track-card" data-jump-filter="audio-edu">
+            <div>
+              <small>TRACK 05</small>
+              <strong>声音、唱片与启蒙</strong>
+              <p>36 张英语语音果蔬闪卡，以及带实时频谱的静态播放器。</p>
+            </div>
+            <span>筛选 2 个作品 →</span>
+          </button>
+        </div>
+
+        <div class="lab-notes-grid">
+          <div class="note-box">
+            <h3>本地运行说明</h3>
+            <p>绝大多数 3D 与 Godot 作品使用了 ES Modules、GLB 模型或 WebAssembly 解压流，建议在仓库根目录启动轻量静态服务器再访问 <code>http://localhost:8767/</code>。</p>
+            <div class="cmd-row">
+              <code>python3 -m http.server 8767</code>
+              <button type="button" class="pill-btn" id="copy-cmd">复制命令</button>
+            </div>
+          </div>
+
+          <div class="note-box">
+            <h3>首页快捷键</h3>
+            <p>无需鼠标也能轻松翻阅全部展品与打开详情预览。</p>
+            <div class="shortcut-chips">
+              <span class="shortcut-chip"><kbd>/</kbd> 搜索作品</span>
+              <span class="shortcut-chip"><kbd>1</kbd>–<kbd>6</kbd> 切换分类</span>
+              <span class="shortcut-chip"><kbd>R</kbd> 随机看一个</span>
+              <span class="shortcut-chip"><kbd>T</kbd> 日光 / 夜游</span>
+              <span class="shortcut-chip"><kbd>Esc</kbd> 关闭预览</span>
+            </div>
+          </div>
         </div>
       </section>
     </main>
 
-    <footer id="about" class="site-footer"><div><b>AI 小作品</b><p>借助 AI 做些小东西，边做边学。</p></div><a href="#hero-title">回到顶部 ↑</a><small>个人学习与测试作品集</small></footer>
+    <footer class="site-footer">
+      <div>
+        <b>AI 小作品 · 灵感实验室</b>
+        <p>借助 AI 边做边学，把零碎想法做成浏览器里能点开的小东西。</p>
+      </div>
+      <a href="#hero-title">回到顶部 ↑</a>
+      <small>个人学习与测试作品集 · 纯本地静态呈现</small>
+    </footer>
   </div>
+
+  <!-- ── Project Dossier & Inline Preview Modal ── -->
+  <div class="modal-backdrop" id="dossier-modal" hidden>
+    <div class="dossier-dialog" role="dialog" aria-modal="true" aria-labelledby="dossier-title">
+      <div class="dossier-head">
+        <div>
+          <div class="dossier-head-meta">
+            <span class="dossier-num" id="dossier-num">01 / 17</span>
+            <span class="dossier-cat" id="dossier-cat">交互探索 · 3D</span>
+          </div>
+          <h2 id="dossier-title">作品标题</h2>
+        </div>
+        <button type="button" class="icon-circle-btn" id="dossier-close" aria-label="关闭档案弹窗">×</button>
+      </div>
+
+      <div class="dossier-body">
+        <div class="dossier-stage">
+          <div class="stage-toolbar">
+            <div class="view-toggle" role="group" aria-label="预览模式">
+              <button type="button" class="view-btn active" id="mode-cover" aria-pressed="true">封面速览</button>
+              <button type="button" class="view-btn" id="mode-live" aria-pressed="false">▶ 实时试玩</button>
+            </div>
+            <div class="view-toggle" id="viewport-toggle" role="group" aria-label="视口尺寸" hidden>
+              <button type="button" class="view-btn active" id="vp-desktop" aria-pressed="true">桌面视口</button>
+              <button type="button" class="view-btn" id="vp-mobile" aria-pressed="false">手机 390px</button>
+              <button type="button" class="view-btn" id="vp-reload" title="重新加载实时预览">↻ 重载</button>
+            </div>
+          </div>
+
+          <div class="stage-frame-wrap" id="stage-frame-wrap">
+            <div class="stage-cover" id="stage-cover">
+              <div id="stage-art" style="width:100%;height:100%"></div>
+              <div class="stage-cover-overlay">
+                <span id="stage-overlay-tip">点击右侧按钮即可直接在弹窗内试玩，或新标签页全屏打开。</span>
+                <button type="button" class="pill-btn is-accent" id="stage-start-live">▶ 在此加载实时预览</button>
+              </div>
+            </div>
+            <iframe class="stage-iframe" id="stage-iframe" title="作品实时预览" hidden></iframe>
+          </div>
+        </div>
+
+        <div class="dossier-info">
+          <p class="dossier-desc" id="dossier-desc"></p>
+
+          <div class="info-block">
+            <h3>亮点与内容</h3>
+            <ul class="highlight-list" id="dossier-highlights"></ul>
+          </div>
+
+          <div class="info-block">
+            <h3>操作与快捷键</h3>
+            <div class="controls-box" id="dossier-controls"></div>
+          </div>
+
+          <div class="info-block">
+            <h3>技术构成</h3>
+            <div class="tag-row" id="dossier-tech"></div>
+          </div>
+
+          <div class="runtime-note" id="dossier-note"></div>
+        </div>
+      </div>
+
+      <div class="dossier-foot">
+        <div class="dossier-nav-group">
+          <button type="button" class="pill-btn" id="dossier-prev">← 上一个</button>
+          <button type="button" class="pill-btn" id="dossier-next">下一个 →</button>
+        </div>
+        <a class="cta-primary" id="dossier-launch" href="./solar-system/">新窗口打开完整体验 <span aria-hidden="true">↗</span></a>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      const PROJECTS = [
+        {
+          id: 'solar-system',
+          num: '01 / 17',
+          href: './solar-system/',
+          category: '3d',
+          type: '交互探索 · 3D',
+          title: '太阳系交互网站',
+          desc: '纯静态 Three.js 宇宙观测站：从太阳出发，逐一查看八大行星与月球的自转、公转、轨道与表面纹理。',
+          highlights: [
+            'Three.js 0.186.1 实时渲染十个天体与轨道线，带月面像素风开场',
+            '采用 NASA Visible Earth 与 Solar System Scope 高清星图（最高 8K）',
+            '支持独立开关地球云层、大气辉光、夜间城市灯光与时间倍速'
+          ],
+          controls: '← / → 切换天体 · ↑ / ↓ 推拉镜头 · 空格暂停 · 1–0 直达十个天体 · O 总览 · D 详情 · S 设置',
+          tech: ['Three.js 0.186', 'NASA 8K 贴图', 'ES Modules', 'Press Start 2P'],
+          note: '使用本地 ES 模块与高清贴图，需通过本地 HTTP 服务打开；尺寸与轨道经展示性调整。',
+          svg: 'solar-system',
+          thumbHint: '键盘 1–0 直达天体 · 8K 星图'
+        },
+        {
+          id: 'jiangnan-garden',
+          num: '02 / 17',
+          href: './jiangnan-garden/',
+          category: '3d',
+          type: '漫游 · 3D',
+          title: '江南园林小景',
+          desc: '一座可自由旋转与缩放的体素风格江南古典院落：粉墙黛瓦、月洞门、莲池石桥、竹林桃花与假山亭台相映成趣。',
+          highlights: [
+            '由 JavaScript 程序生成全套体素园林几何体，无需外部模型',
+            '开启柔和环境光、定向光阴影与实例化地面花草，光影层次细腻',
+            '左侧内置七项视角控制按钮，一键左/右转 15° 或归正 90°'
+          ],
+          controls: '左键拖拽旋转俯仰 · 右键拖拽平移 · 滚轮缩放 · 左侧按钮 15° 旋转 / 归正 90° / 回到正面',
+          tech: ['Three.js 0.158', '体素建筑', '实例化渲染', '单文件静态'],
+          note: '单文件即可打开（需支持 WebGL 的现代浏览器）。',
+          svg: 'garden',
+          thumbHint: '左/右键自由探索 · 七组视角按钮'
+        },
+        {
+          id: 'second-room',
+          num: '03 / 17',
+          href: './second-room/',
+          category: '3d',
+          type: '空间设计 · 3D',
+          title: '第二间房',
+          desc: '在一套 73㎡ 两室一厅中探索“第二间房”的三种生活可能：居家工作、朋友留宿或留给未来，并切换整屋光照与观察视角。',
+          highlights: [
+            '32 件家具经几何建模并用 Blender 5.2.2 倒角导出为低面数 GLB',
+            '立体剖视、正交俯视、1.35m 剖切与第一人称室内部落漫游',
+            '顶部时间滑杆动态模拟上午、下午与夜晚灯光（夜间自动亮灯）'
+          ],
+          controls: '点击房间查看面积与清单 · 拖动时间滑杆调光影 · 漫游视角 WASD 行走 + 鼠标转向 + 点击门扇开合',
+          tech: ['Three.js 0.186', 'Blender 5.2.2 GLB', 'Canvas 程序纹理', '第一人称碰撞'],
+          note: '需通过本地 HTTP 服务访问，以加载 GLB 模型与 ES 模块。',
+          svg: 'second-room',
+          thumbHint: '三种家居方案 · 32 件 GLB 模型'
+        },
+        {
+          id: 'ink-scroll-book',
+          num: '04 / 17',
+          href: './ink-scroll-book/',
+          category: 'narrative',
+          type: '滚动阅读 · 水墨',
+          title: '山水有归处',
+          desc: '一部可在浏览器里缓缓展开的水墨长卷电子书，随“入卷、听雨、过桥、寻山、归舟、跋”六幕行文流转。',
+          highlights: [
+            '六段原创山水叙事与水墨画卷，顶部/侧边朱红细线指示阅读进度',
+            '右侧卷目可随时跳转章节，窄屏设备自动切换为底部导航',
+            '左下角支持开启两段古琴实录（《阳关三叠》《醉渔唱晚》）'
+          ],
+          controls: '上下滚动阅读 · 点击卷目快速跳转 · 左下角开启或切换古琴配乐',
+          tech: ['水墨长卷排版', 'CC BY-SA 古琴录音', '响应式卷目'],
+          note: '音频默认静音等待手动开启；全素材本地存储，无需联网。',
+          img: './ink-scroll-book/assets/mountains.jpg',
+          thumbHint: '六幕水墨故事 · 双曲古琴实录'
+        },
+        {
+          id: 'simulated-days',
+          num: '05 / 17',
+          href: './simulated-days/',
+          category: '3d',
+          type: '生活模拟 · 3D',
+          title: '模拟时光',
+          desc: '陪年轻创作者 Miri 住在原创街区“紫蓝巷”，在 3D 小屋里做饭、画画、布置家具并和三位邻居聊天。',
+          highlights: [
+            '融合生活模式（五项状态与技能成长）、建造模式（5×5 网格摆放）与社区地图',
+            '每天更新三个“微小日常”目标，操作推进时间并实时记录近期动态',
+            '进度自动写入 localStorage，刷新页面即可继续紫蓝巷的生活'
+          ],
+          controls: '点击小厨房/画桌/床等家具互动 · 拖动鼠标旋转视角 · 滚轮或右下角按钮缩放',
+          tech: ['Three.js', '生活模拟', '5×5 建造网格', 'LocalStorage 存档'],
+          note: '复用本地 Three.js 资源，需从仓库根目录经本地 HTTP 服务打开。',
+          svg: 'simulated-days',
+          thumbHint: '生活 / 建造 / 社区 · 自动存档'
+        },
+        {
+          id: 'rain-window',
+          num: '06 / 17',
+          href: './rain-window/',
+          category: 'narrative',
+          type: '氛围记录 · 雨声',
+          title: '雨窗手记',
+          desc: '写给雨夜的纯前端日常记录空间：窗外水滴随物理效果折射并扫开细珠，伴着可调雨雷声静静书写。',
+          highlights: [
+            'WebGL 2 着色器实时模拟弧形水珠折射、色散与动态扫开细珠效果',
+            '内置东京夜景、港湾、梯田、乡村夜路四处场景，支持上传自定义背景',
+            '循环轻雨与雷声（CC0 / 公有领域音频）+ 多篇手记本地自动保存'
+          ],
+          controls: '中央直接输入文字 · P 开关控制面板 · H 进入沉浸模式 · Esc 退出沉浸 · 点击“开启雨声”',
+          tech: ['WebGL 2 Shader', 'Canvas 2D 回退', 'Web Audio 雨雷声', 'LocalStorage'],
+          note: '需通过本地 HTTP 服务打开，手记与设置仅保存在当前浏览器。',
+          img: './rain-window/assets/village.jpg',
+          thumbHint: 'WebGL 2 雨滴折射 · 沉浸书写'
+        },
+        {
+          id: 'little-harvest',
+          num: '07 / 17',
+          href: './little-harvest/',
+          category: 'audio-edu',
+          type: '亲子认知 · 英文启蒙',
+          title: '小小丰收',
+          desc: '面向亲子共读与英文启蒙的静态闪卡：收录 36 张原创手绘 SVG 果蔬插画，支持滑动翻页与英语单词朗读。',
+          highlights: [
+            '18 种水果 + 18 种蔬菜，全部由原创矢量插画精致绘制',
+            '调用浏览器 SpeechSynthesis API 一键朗读对应英文单词',
+            '底部完整果蔬图鉴支持直接跳选，兼顾触屏左右滑动与键盘操作'
+          ],
+          controls: '← / → 方向键或左右滑动切卡 · 顶部筛选全部/水果/蔬菜 · 点击“听发音”朗读',
+          tech: ['36 张原创 SVG', 'SpeechSynthesis', 'ES Modules', '触控手势'],
+          note: '需通过本地 HTTP 服务打开，英文发音音色取决于设备系统语音库。',
+          svg: 'little-harvest',
+          thumbHint: '36 张手绘闪卡 · 英文发音'
+        },
+        {
+          id: 'tideline',
+          num: '08 / 17',
+          href: './tideline/',
+          category: 'narrative',
+          type: '滚动叙事 · 海景',
+          title: '潮汐之间',
+          desc: '全屏 Canvas 实时绘制天空、日轮与三层海浪，跟随向下滚动走过“启程、遇光、入海、归来”四幕旅程。',
+          highlights: [
+            '海面色彩、太阳方位、潮位高度与波浪强度随滚动进度连续插值过渡',
+            '保留清晰语义化 HTML 文字与章节导航，支持键盘直达四幕',
+            '尊重系统“减少动态效果”偏好，暂停连续动画同时保留滚动切幕'
+          ],
+          controls: '向下滚动体验四幕过渡 · 点击右侧 01–04 章节导航快速直达',
+          tech: ['Canvas 2D', '滚动插值引擎', '无障碍支持', '零外部请求'],
+          note: '纯本地运行，无外部字体或图片依赖，适合宽屏与手机阅览。',
+          svg: 'tideline',
+          thumbHint: '四幕实时海景 · 滚动过渡'
+        },
+        {
+          id: 'solitaire',
+          num: '09 / 17',
+          href: './minigames/Solitaire.html',
+          category: 'arcade',
+          type: '小游戏 · 纸牌',
+          title: '纸牌接龙',
+          desc: '经典克朗代克（Klondike）纸牌接龙：丝滑绿绒桌面体验，支持翻 1 张 / 3 张模式、无限撤销、智能提示与自动收牌。',
+          highlights: [
+            '同时支持鼠标拖拽移牌、点击选牌移动以及双击自动归位至花色堆',
+            '提供无限步数历史撤销、可走步提示与通关瀑布收牌动画',
+            '内置计时与计分系统，桌面与触屏自适应布局'
+          ],
+          controls: '拖拽/点击移牌 · 双击自动归位 · Space 抽牌 · Z 撤销 · H 提示 · N 新局',
+          tech: ['HTML5', 'CSS3', '单文件即玩'],
+          note: '纯前端单文件实现，无需服务器也可直接打开游玩。',
+          svg: 'solitaire',
+          thumbHint: '翻 1/3 张模式 · 无限撤销'
+        },
+        {
+          id: 'galaxian',
+          num: '10 / 17',
+          href: './minigames/Galaxian.html',
+          category: 'arcade',
+          type: '小游戏 · 街机',
+          title: '太空射击',
+          desc: '致敬 FC 经典的小蜜蜂太空射击街机：迎接 50 架敌机编队的俯冲攻击，享受 8-bit 电子音效与粒子爆炸。',
+          highlights: [
+            '50 敌机编队与经典俯冲攻击 AI，普通/俯冲敌人差异计分',
+            '包含爆炸粒子、动态卷轴星空与 3 条生命护心指示',
+            '内置 8-bit 合成音效开关与 localStorage 本地最高分记录'
+          ],
+          controls: '← / → 左右移动战机 · Space 发射激光 · 页面上方可开关 8-bit 音效',
+          tech: ['HTML5 Canvas', 'Web Audio 8-bit', 'LocalStorage 高分'],
+          note: '单文件复古街机游戏，点击“Start Game”即可开局。',
+          svg: 'galaxian',
+          thumbHint: '50 敌机编队 · 8-bit 电子音'
+        },
+        {
+          id: 'snake',
+          num: '11 / 17',
+          href: './minigames/Snake.html',
+          category: 'arcade',
+          type: '小游戏 · 经典',
+          title: '贪吃蛇',
+          desc: '经典网格贪吃蛇：顺滑的转向响应、渐进食物计分、碰撞判定与快捷键暂停重开。',
+          highlights: [
+            '清爽高对比网格画布，精准防反向误触的键盘输入处理',
+            '实时得分反馈，支持随玩随停与一秒重开',
+            '轻量纯单文件 HTML，加载零延迟'
+          ],
+          controls: '方向键 / WASD 移动 · P 暂停或继续 · R 结束后重开',
+          tech: ['HTML5 Canvas', '单文件即玩'],
+          note: '直接点开即可上手。',
+          svg: 'snake',
+          thumbHint: 'WASD / 方向键 · P 暂停'
+        },
+        {
+          id: 'breakout',
+          num: '12 / 17',
+          href: './minigames/Breakout.html',
+          category: 'arcade',
+          type: '小游戏 · 街机',
+          title: '打砖块',
+          desc: '540×900 竖屏霓虹打砖块：十个独立设计关卡、装甲砖与橙色菱形连锁爆破，配合完整 MP3 事件音效与循环背景音乐。',
+          highlights: [
+            '10 大主题关卡（霓虹启航至终极矩阵），包含移动砖阵、装甲与连锁引爆',
+            '专为手机竖屏优化的底部滑动控板区域，桌面端支持鼠标/键盘同步操控',
+            '集成 9 种 CC0 事件音效与约 57.6 秒循环 BGM，暂停自动冻结物理与声音'
+          ],
+          controls: 'A / D / 左右方向键 / 鼠标 / 底部滑区移动挡板 · Space / 点击发球 · P / Esc 暂停 · R 重开',
+          tech: ['Canvas 竖屏', '10 主题关卡', 'MP3 音频池', '触控适配'],
+          note: '需保留 minigames/assets/breakout-audio/ 目录以播放完整 MP3 音效与配乐。',
+          img: './minigames/assets/breakout-cover-920x430.png',
+          thumbHint: '10 大关卡 · 手机竖屏触控'
+        },
+        {
+          id: 'tetris',
+          num: '13 / 17',
+          href: './minigames/Tetris.html',
+          category: 'arcade',
+          type: '小游戏 · 经典',
+          title: '俄罗斯方块',
+          desc: '霓虹深空风格俄罗斯方块：配备幽灵落点虚影、消行闪烁动画、方块锁定粒子与内置合成配乐。',
+          highlights: [
+            '自带幽灵落点预览，方便高难度快速盲放与硬降连消',
+            '同时支持顺时针与逆时针双旋控制（W/X/↑ 与 Z）',
+            '消行闪白、锁定粒子与可随时开关的背景音乐音效'
+          ],
+          controls: '← / → (A / D) 移动 · ↑ / W / X 顺时针旋转 · Z 逆时针 · ↓ / S 软降 · Space 硬降 · P 暂停',
+          tech: ['HTML5 Canvas', 'Web Audio API', '霓虹粒子特效'],
+          note: '纯单文件 HTML5 街机作品。',
+          svg: 'tetris',
+          thumbHint: '幽灵预览 · 双旋 + 硬降'
+        },
+        {
+          id: 'castlevania',
+          num: '14 / 17',
+          href: './minigames/Castlevania.html',
+          category: 'arcade',
+          type: '小游戏 · 横版动作',
+          title: '横版动作 Demo',
+          desc: '致敬恶魔城风格的横版平台动作试玩：像素古堡、近战挥击、敌人巡逻 AI、Boss 战与通关大门。',
+          highlights: [
+            '包含平台跳跃、近战攻击判定、敌人 AI 与关底 Boss 对决',
+            '使用 Kenney New Platformer Pack (CC0) 精灵图集，含通关胜利结算',
+            '同时支持键盘快捷键与屏幕虚拟触控按键'
+          ],
+          controls: 'Enter 开始 · A / D 或方向键移动 · K / ↑ / Space 跳跃 · J 攻击 · P 暂停 · M 静音 · R 重开',
+          tech: ['HTML5 Canvas', 'Kenney CC0 素材', '触屏兼容'],
+          note: '依赖 minigames/assets/kenney_new_platformer_pack/ 目录资源。',
+          svg: 'castle',
+          thumbHint: '平台跳跃 · Boss 对决'
+        },
+        {
+          id: 'cat-music',
+          num: '15 / 17',
+          href: './cat-music-demo/',
+          category: 'audio-edu',
+          type: '音乐播放器 · 静态演示',
+          title: 'Cat Music',
+          desc: '改写自 gamdl-player 前端的纯静态音乐播放器演示：包含专辑网格、右侧滑窗详情、专辑大图与 6 种实时音频可视化特效。',
+          highlights: [
+            '内置 4 张专辑与 12 首曲目界面，其中“开放录音选集”含两首可播 CC0 钢琴曲',
+            '基于 Web Audio API 提供“实时频谱”“实时波形”等 6 种大图视觉特效',
+            '支持实时搜索筛选、收藏夹持久化与浅色/深色模式一键切换'
+          ],
+          controls: '双击可试听歌曲播放 · 点击小封面进入大图与特效切换 · Esc 关闭详情侧栏',
+          tech: ['Web Audio API', 'ES Modules', '实时频谱分析', 'LocalStorage'],
+          note: '需通过本地 HTTP 服务打开；示例曲目仅作界面展示，开放录音可完整播放。',
+          img: './cat-music-demo/thumbnail.svg',
+          thumbHint: '真实音频试听 · 6 种可视化特效'
+        },
+        {
+          id: 'changfeng',
+          num: '16 / 17',
+          href: './changfeng-zhuan-godot/web/',
+          category: 'wuxia',
+          type: '像素武侠 · Godot 4',
+          title: '长风传 · Godot 版',
+          desc: '使用 Godot 4 与 GDScript 制作的像素武侠 RPG 第一章：从序幕出发，重访乌篷渡与荒山驿道，体验对话抉择与回合对决。',
+          highlights: [
+            '完整第一章剧情流程：乌篷渡、荒山驿道随机遭遇与程砚 Boss 战',
+            '包含出剑、破招（消耗内力）、守势、服药、退走五种回合战斗指令',
+            '通过浏览器原生 DecompressionStream 在本地解压 .wasm.gz / .pck.gz，无需服务端压缩头'
+          ],
+          controls: 'WASD / 方向键移动 · E / Space / Enter 调查交谈 · Q 检查剑柄 · M 开关声音 · 战斗点击指令',
+          tech: ['Godot 4', 'GDScript', 'DecompressionStream', '1280×720'],
+          note: '首次加载引擎与资源包约 42 MB，需通过本地 HTTP 服务打开并稍候加载条完成。',
+          img: './changfeng-zhuan-godot/thumbnail.webp',
+          heavyBytes: '约 42 MB',
+          thumbHint: '第一章完整流程 · 回合对决'
+        },
+        {
+          id: 'suiyue',
+          num: '17 / 17',
+          href: './godot-test/web/',
+          category: 'wuxia',
+          type: '像素武侠 · 探索与回合战斗',
+          title: '碎岳 · 同行',
+          desc: 'Godot 4.7.2 Web 构建作品：操控云川与青蘅在青溪渡口与青岚野林间自由切换地图，支持八方向行走、点地寻路与双人回合战斗。',
+          highlights: [
+            '青溪渡口与青岚野林双场景无缝往返切换，完整保留队伍与道具状态',
+            '支持八方向键盘移动与鼠标点击地面自动寻路，内置随机遇敌开关',
+            '双人小队回合制战斗、行囊系统、调息点恢复及子集化 Noto Sans CJK 字体'
+          ],
+          controls: 'WASD / 方向键行走 · 点击地面自动寻路 · F6 切换地图 · B 行囊 · E 调息 · 战斗 Q/E 选队友 · Tab 换目标 · 1–5 出招',
+          tech: ['Godot 4.7.2', 'WebAssembly (wasm-opt)', '双人队伍', '自动寻路'],
+          note: '首次加载引擎与资源约 58 MB，建议桌面浏览器配合本地 HTTP 服务体验。',
+          img: './godot-test/thumbnail.png',
+          heavyBytes: '约 58 MB',
+          thumbHint: '双地图探索 · 双人回合制'
+        }
+      ];
+
+      const SPOTLIGHT_IDS = ['suiyue', 'changfeng', 'solar-system', 'rain-window', 'ink-scroll-book', 'breakout'];
+      const PROJECT_MAP = Object.fromEntries(PROJECTS.map((p, idx) => [p.id, { ...p, index: idx }]));
+
+      // Elements
+      const rootEl = document.documentElement;
+      const themeToggleBtn = document.getElementById('theme-toggle');
+      const protocolBanner = document.getElementById('protocol-banner');
+      const toastEl = document.getElementById('toast');
+
+      const spotlightMedia = document.getElementById('spotlight-media');
+      const spotlightCounter = document.getElementById('spotlight-counter');
+      const spotlightTech = document.getElementById('spotlight-tech');
+      const spotlightNumber = document.getElementById('spotlight-number');
+      const spotlightCat = document.getElementById('spotlight-cat');
+      const spotlightTitle = document.getElementById('spotlight-title');
+      const spotlightDesc = document.getElementById('spotlight-desc');
+      const spotlightHint = document.getElementById('spotlight-hint');
+      const spotlightLaunch = document.getElementById('spotlight-launch');
+      const spotlightDossierBtn = document.getElementById('spotlight-dossier');
+      const spotlightTabsEl = document.getElementById('spotlight-tabs');
+      const spotlightStageEl = document.querySelector('.spotlight-stage');
+
+      const filterBtns = [...document.querySelectorAll('.filter-btn')];
+      const searchInput = document.getElementById('search-input');
+      const searchClear = document.getElementById('search-clear');
+      const searchKbd = document.getElementById('search-kbd');
+      const workFlow = document.getElementById('work-flow');
+      const workSlots = [...document.querySelectorAll('.work-slot')];
+      const resultsCount = document.getElementById('results-count');
+      const resetFiltersBtn = document.getElementById('reset-filters');
+      const emptyState = document.getElementById('empty-state');
+      const viewGridBtn = document.getElementById('view-grid');
+      const viewListBtn = document.getElementById('view-list');
+
+      // Modal Elements
+      const modalBackdrop = document.getElementById('dossier-modal');
+      const dossierCloseBtn = document.getElementById('dossier-close');
+      const dossierNum = document.getElementById('dossier-num');
+      const dossierCat = document.getElementById('dossier-cat');
+      const dossierTitle = document.getElementById('dossier-title');
+      const dossierDesc = document.getElementById('dossier-desc');
+      const dossierHighlights = document.getElementById('dossier-highlights');
+      const dossierControls = document.getElementById('dossier-controls');
+      const dossierTech = document.getElementById('dossier-tech');
+      const dossierNote = document.getElementById('dossier-note');
+      const dossierLaunch = document.getElementById('dossier-launch');
+      const dossierPrevBtn = document.getElementById('dossier-prev');
+      const dossierNextBtn = document.getElementById('dossier-next');
+
+      const modeCoverBtn = document.getElementById('mode-cover');
+      const modeLiveBtn = document.getElementById('mode-live');
+      const viewportToggle = document.getElementById('viewport-toggle');
+      const vpDesktopBtn = document.getElementById('vp-desktop');
+      const vpMobileBtn = document.getElementById('vp-mobile');
+      const vpReloadBtn = document.getElementById('vp-reload');
+      const stageCover = document.getElementById('stage-cover');
+      const stageArt = document.getElementById('stage-art');
+      const stageOverlayTip = document.getElementById('stage-overlay-tip');
+      const stageStartLiveBtn = document.getElementById('stage-start-live');
+      const stageIframe = document.getElementById('stage-iframe');
+
+      let activeFilter = 'all';
+      let searchQuery = '';
+      let spotlightPos = 0;
+      let spotlightTimer = null;
+      let currentModalIdx = 0;
+      let lastFocusedEl = null;
+
+      // ── Helpers ──
+      let toastTimer = null;
+      function showToast(msg) {
+        toastEl.textContent = msg;
+        toastEl.classList.add('is-visible');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toastEl.classList.remove('is-visible'), 2200);
+      }
+
+      function renderArtwork(project, container) {
+        container.innerHTML = '';
+        if (project.img) {
+          const img = document.createElement('img');
+          img.src = project.img;
+          img.alt = project.title;
+          container.appendChild(img);
+        } else {
+          const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+          svg.setAttribute('viewBox', '0 0 600 420');
+          svg.setAttribute('preserveAspectRatio', 'xMidYMid slice');
+          svg.setAttribute('aria-hidden', 'true');
+          const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+          use.setAttribute('href', `#${project.svg}`);
+          use.setAttribute('width', '600');
+          use.setAttribute('height', '420');
+          svg.appendChild(use);
+          container.appendChild(svg);
+        }
+      }
+
+      // ── Theme Toggle ──
+      function applyTheme(theme) {
+        rootEl.setAttribute('data-theme', theme);
+        const isDark = theme === 'dark';
+        themeToggleBtn.setAttribute('aria-pressed', String(isDark));
+        themeToggleBtn.textContent = isDark ? '☀ 日光' : '☾ 夜游';
+        const metaTheme = document.querySelector('meta[name="theme-color"]');
+        if (metaTheme) metaTheme.setAttribute('content', isDark ? '#0c1116' : '#f4f1ea');
+        try { localStorage.setItem('ai-creations-theme', theme); } catch {}
+      }
+
+      let savedTheme = 'light';
+      try {
+        const stored = localStorage.getItem('ai-creations-theme');
+        if (stored === 'dark' || stored === 'light') savedTheme = stored;
+      } catch {}
+      applyTheme(savedTheme);
+
+      themeToggleBtn.addEventListener('click', () => {
+        const next = rootEl.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        applyTheme(next);
+        showToast(next === 'dark' ? '已切换至夜游展厅模式' : '已切换至日光画廊模式');
+      });
+
+      // ── File Protocol Notice & Copy Command ──
+      if (window.location.protocol === 'file:') {
+        protocolBanner.hidden = false;
+      }
+
+      function copyServerCmd() {
+        const cmd = 'python3 -m http.server 8767';
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(cmd).then(() => showToast('已复制启动命令: ' + cmd)).catch(() => showToast('请手动复制: ' + cmd));
+        } else {
+          showToast('启动命令: ' + cmd);
+        }
+      }
+
+      document.getElementById('copy-cmd').addEventListener('click', copyServerCmd);
+      document.getElementById('banner-copy').addEventListener('click', copyServerCmd);
+
+      // ── Spotlight Stage ──
+      function renderSpotlightTabs() {
+        spotlightTabsEl.innerHTML = '';
+        SPOTLIGHT_IDS.forEach((id, i) => {
+          const p = PROJECT_MAP[id];
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'spotlight-tab' + (i === spotlightPos ? ' active' : '');
+          btn.setAttribute('role', 'tab');
+          btn.setAttribute('aria-selected', String(i === spotlightPos));
+          btn.textContent = p.title.replace(' · Godot 版', '').replace('交互网站', '');
+          btn.addEventListener('click', () => setSpotlight(i, true));
+          spotlightTabsEl.appendChild(btn);
+        });
+      }
+
+      function setSpotlight(index, manual = false) {
+        spotlightPos = (index + SPOTLIGHT_IDS.length) % SPOTLIGHT_IDS.length;
+        const p = PROJECT_MAP[SPOTLIGHT_IDS[spotlightPos]];
+        renderArtwork(p, spotlightMedia);
+        spotlightCounter.textContent = `${String(spotlightPos + 1).padStart(2, '0')} / ${String(SPOTLIGHT_IDS.length).padStart(2, '0')}`;
+        spotlightTech.textContent = p.tech.slice(0, 2).join(' · ');
+        spotlightNumber.textContent = `NO. ${p.num.slice(0, 2)}`;
+        spotlightCat.textContent = p.type;
+        spotlightTitle.textContent = p.title;
+        spotlightDesc.textContent = p.desc;
+        spotlightHint.textContent = p.thumbHint;
+        spotlightLaunch.href = p.href;
+        spotlightDossierBtn.dataset.id = p.id;
+        renderSpotlightTabs();
+        if (manual) restartSpotlightTimer();
+      }
+
+      function restartSpotlightTimer() {
+        clearInterval(spotlightTimer);
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        spotlightTimer = setInterval(() => setSpotlight(spotlightPos + 1, false), 6500);
+      }
+
+      document.getElementById('spotlight-prev').addEventListener('click', () => setSpotlight(spotlightPos - 1, true));
+      document.getElementById('spotlight-next').addEventListener('click', () => setSpotlight(spotlightPos + 1, true));
+      spotlightDossierBtn.addEventListener('click', () => openModalById(spotlightDossierBtn.dataset.id));
+
+      spotlightStageEl.addEventListener('mouseenter', () => clearInterval(spotlightTimer));
+      spotlightStageEl.addEventListener('mouseleave', restartSpotlightTimer);
+
+      setSpotlight(0, false);
+      restartSpotlightTimer();
+
+      // ── Filter, Search & Layout View ──
+      function applyFilters() {
+        const q = searchQuery.trim().toLowerCase();
+        let visibleCount = 0;
+
+        workSlots.forEach(slot => {
+          const cat = slot.dataset.category;
+          const haystack = (slot.dataset.search + ' ' + slot.textContent).toLowerCase();
+          const catMatch = activeFilter === 'all' || cat === activeFilter;
+          const queryMatch = !q || haystack.includes(q);
+          const show = catMatch && queryMatch;
+          slot.hidden = !show;
+          if (show) visibleCount++;
+        });
+
+        const isFiltered = activeFilter !== 'all' || Boolean(q);
+        resetFiltersBtn.hidden = !isFiltered;
+        emptyState.hidden = visibleCount > 0;
+        workFlow.hidden = visibleCount === 0;
+
+        if (!isFiltered) {
+          resultsCount.textContent = `共 ${PROJECTS.length} 个作品 · 按编号顺序陈列`;
+        } else {
+          resultsCount.textContent = `筛选结果：显示 ${visibleCount} / ${PROJECTS.length} 个作品`;
+        }
+      }
+
+      function setCategoryFilter(filter) {
+        activeFilter = filter;
+        filterBtns.forEach(btn => {
+          const active = btn.dataset.filter === filter;
+          btn.classList.toggle('active', active);
+          btn.setAttribute('aria-pressed', String(active));
+        });
+        applyFilters();
+      }
+
+      filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => setCategoryFilter(btn.dataset.filter));
+      });
+
+      searchInput.addEventListener('input', () => {
+        searchQuery = searchInput.value;
+        const hasVal = searchQuery.length > 0;
+        searchClear.hidden = !hasVal;
+        searchKbd.hidden = hasVal;
+        applyFilters();
+      });
+
+      searchClear.addEventListener('click', () => {
+        searchInput.value = '';
+        searchQuery = '';
+        searchClear.hidden = true;
+        searchKbd.hidden = false;
+        applyFilters();
+        searchInput.focus();
+      });
+
+      function resetAllFilters() {
+        searchInput.value = '';
+        searchQuery = '';
+        searchClear.hidden = true;
+        searchKbd.hidden = false;
+        setCategoryFilter('all');
+      }
+
+      resetFiltersBtn.addEventListener('click', resetAllFilters);
+      document.getElementById('empty-reset').addEventListener('click', resetAllFilters);
+
+      // View mode toggle
+      function setViewMode(mode) {
+        const isList = mode === 'list';
+        workFlow.classList.toggle('is-list', isList);
+        viewGridBtn.classList.toggle('active', !isList);
+        viewListBtn.classList.toggle('active', isList);
+        viewGridBtn.setAttribute('aria-pressed', String(!isList));
+        viewListBtn.setAttribute('aria-pressed', String(isList));
+        try { localStorage.setItem('ai-creations-view', mode); } catch {}
+      }
+
+      viewGridBtn.addEventListener('click', () => setViewMode('grid'));
+      viewListBtn.addEventListener('click', () => setViewMode('list'));
+      try {
+        if (localStorage.getItem('ai-creations-view') === 'list') setViewMode('list');
+      } catch {}
+
+      // Curated Tracks jump
+      document.querySelectorAll('[data-jump-filter]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          setCategoryFilter(btn.dataset.jumpFilter);
+          document.getElementById('works').scrollIntoView({ behavior: 'smooth' });
+        });
+      });
+
+      // ── Random Pick ──
+      function pickRandomProject() {
+        const visibleIds = workSlots.filter(s => !s.hidden).map(s => s.dataset.id);
+        const pool = visibleIds.length > 0 ? visibleIds : PROJECTS.map(p => p.id);
+        const id = pool[Math.floor(Math.random() * pool.length)];
+        openModalById(id);
+      }
+
+      document.getElementById('random-pick').addEventListener('click', pickRandomProject);
+      document.getElementById('hero-random').addEventListener('click', pickRandomProject);
+
+      // ── Project Dossier Modal & Live Preview ──
+      function setStageMode(mode) {
+        const p = PROJECTS[currentModalIdx];
+        const isLive = mode === 'live';
+        modeCoverBtn.classList.toggle('active', !isLive);
+        modeLiveBtn.classList.toggle('active', isLive);
+        modeCoverBtn.setAttribute('aria-pressed', String(!isLive));
+        modeLiveBtn.setAttribute('aria-pressed', String(isLive));
+        viewportToggle.hidden = !isLive;
+        stageCover.hidden = isLive;
+        stageIframe.hidden = !isLive;
+
+        if (isLive) {
+          if (stageIframe.getAttribute('src') !== p.href) {
+            stageIframe.src = p.href;
+          }
+        } else {
+          stageIframe.removeAttribute('src');
+        }
+      }
+
+      function setViewportSize(size) {
+        const isMobile = size === 'mobile';
+        stageIframe.classList.toggle('is-mobile', isMobile);
+        vpDesktopBtn.classList.toggle('active', !isMobile);
+        vpMobileBtn.classList.toggle('active', isMobile);
+        vpDesktopBtn.setAttribute('aria-pressed', String(!isMobile));
+        vpMobileBtn.setAttribute('aria-pressed', String(isMobile));
+      }
+
+      function populateModal(index) {
+        currentModalIdx = (index + PROJECTS.length) % PROJECTS.length;
+        const p = PROJECTS[currentModalIdx];
+
+        dossierNum.textContent = p.num;
+        dossierCat.textContent = p.type;
+        dossierTitle.textContent = p.title;
+        dossierDesc.textContent = p.desc;
+
+        dossierHighlights.innerHTML = '';
+        p.highlights.forEach(item => {
+          const li = document.createElement('li');
+          li.textContent = item;
+          dossierHighlights.appendChild(li);
+        });
+
+        dossierControls.textContent = p.controls;
+
+        dossierTech.innerHTML = '';
+        p.tech.forEach(t => {
+          const span = document.createElement('span');
+          span.className = 'info-tag';
+          span.textContent = t;
+          dossierTech.appendChild(span);
+        });
+
+        dossierNote.textContent = '运行说明：' + p.note;
+        dossierLaunch.href = p.href;
+
+        renderArtwork(p, stageArt);
+        stageOverlayTip.textContent = p.heavyBytes
+          ? `提示：本项目为 Godot WebAssembly 构建（${p.heavyBytes}），建议新窗口打开或按需加载预览。`
+          : '点击按钮可在窗口内嵌预览（Esc 可随时退出）。';
+
+        setViewportSize('desktop');
+        setStageMode('cover');
+      }
+
+      function openModalById(id) {
+        const entry = PROJECT_MAP[id];
+        if (!entry) return;
+        lastFocusedEl = document.activeElement;
+        populateModal(entry.index);
+        modalBackdrop.hidden = false;
+        document.body.classList.add('modal-open');
+        dossierCloseBtn.focus();
+      }
+
+      function closeModal() {
+        if (modalBackdrop.hidden) return;
+        setStageMode('cover');
+        modalBackdrop.hidden = true;
+        document.body.classList.remove('modal-open');
+        if (lastFocusedEl && typeof lastFocusedEl.focus === 'function') {
+          lastFocusedEl.focus();
+        }
+      }
+
+      document.querySelectorAll('[data-open-dossier]').forEach(btn => {
+        btn.addEventListener('click', () => openModalById(btn.dataset.openDossier));
+      });
+
+      dossierCloseBtn.addEventListener('click', closeModal);
+      modalBackdrop.addEventListener('click', e => {
+        if (e.target === modalBackdrop) closeModal();
+      });
+
+      dossierPrevBtn.addEventListener('click', () => populateModal(currentModalIdx - 1));
+      dossierNextBtn.addEventListener('click', () => populateModal(currentModalIdx + 1));
+
+      modeCoverBtn.addEventListener('click', () => setStageMode('cover'));
+      modeLiveBtn.addEventListener('click', () => setStageMode('live'));
+      stageStartLiveBtn.addEventListener('click', () => setStageMode('live'));
+      vpDesktopBtn.addEventListener('click', () => setViewportSize('desktop'));
+      vpMobileBtn.addEventListener('click', () => setViewportSize('mobile'));
+      vpReloadBtn.addEventListener('click', () => {
+        const p = PROJECTS[currentModalIdx];
+        stageIframe.removeAttribute('src');
+        requestAnimationFrame(() => { stageIframe.src = p.href; });
+      });
+
+      // ── Global Keyboard Shortcuts ──
+      document.addEventListener('keydown', e => {
+        const tag = document.activeElement && document.activeElement.tagName;
+        const isTyping = tag === 'INPUT' || tag === 'TEXTAREA';
+
+        if (e.key === 'Escape') {
+          if (!modalBackdrop.hidden) {
+            closeModal();
+            return;
+          }
+          if (isTyping) {
+            searchInput.blur();
+          }
+          return;
+        }
+
+        if (!modalBackdrop.hidden) {
+          if (e.key === 'ArrowLeft') populateModal(currentModalIdx - 1);
+          if (e.key === 'ArrowRight') populateModal(currentModalIdx + 1);
+          return;
+        }
+
+        if (isTyping) return;
+
+        if (e.key === '/') {
+          e.preventDefault();
+          searchInput.focus();
+          searchInput.select();
+        } else if (e.key.toLowerCase() === 't') {
+          themeToggleBtn.click();
+        } else if (e.key.toLowerCase() === 'r') {
+          pickRandomProject();
+        } else if (['1', '2', '3', '4', '5', '6'].includes(e.key)) {
+          const targetBtn = filterBtns[Number(e.key) - 1];
+          if (targetBtn) targetBtn.click();
+        }
+      });
+    })();
+  </script>
 </body>
 </html>
