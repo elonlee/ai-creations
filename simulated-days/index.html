@@ -49,9 +49,10 @@
 
       <section class="main-stage" aria-label="游戏场景">
         <div id="room-view" class="room-view">
-          <div class="scene-topline"><span class="location-pill"><span class="live-dot"></span> 紫蓝巷小屋 <small>HOME, SWEET HOME</small></span><span class="weather-pill"><svg><use href="#i-sun"/></svg> 晴日窗光</span></div>
+          <div class="scene-topline"><span class="location-pill"><span class="live-dot"></span> 紫蓝巷小屋 <small>HOME, SWEET HOME</small></span><span class="weather-pill"><svg><use href="#i-sun"/></svg> <span id="weather-text">晴日晨光</span></span></div>
           <canvas id="room-canvas" aria-label="可旋转、缩放并点击家具的三维房间"></canvas>
           <div id="hotspots" class="hotspots" aria-label="房间互动点"></div>
+          <div id="miri-status" class="miri-status" role="status" aria-live="polite" hidden><span class="miri-status-dot" aria-hidden="true"></span><span id="miri-status-text"></span></div>
           <div id="room-message" class="room-message">拖动旋转房间，滚轮缩放。点击家具，与 Miri 一起生活。</div>
           <div class="scene-controls" aria-label="房间视角控制"><button id="rotate-left" aria-label="向左旋转房间" title="向左旋转"><svg><use href="#i-rotate"/></svg></button><button id="reset-view" aria-label="重置房间视角" title="重置视角">◎</button><button id="rotate-right" aria-label="向右旋转房间" title="向右旋转"><svg class="flip"><use href="#i-rotate"/></svg></button><span class="control-separator"></span><button id="zoom-in" aria-label="放大房间" title="放大"><svg><use href="#i-plus"/></svg></button><button id="zoom-out" aria-label="缩小房间" title="缩小"><svg><use href="#i-minus"/></svg></button></div>
           <div class="scene-index">07 / VIOLET LANE</div>

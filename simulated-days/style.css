@@ -410,7 +410,17 @@ small {
   border-radius:25px;
   overflow:hidden;
   box-shadow:0 12px 45px #8b739012;
-  background:radial-gradient(circle at 60% 27%,#fff7e9 0,#f3edf0 45%,#e9e5ef 100%)
+  background:radial-gradient(circle at 60% 27%,#fff7e9 0,#f3edf0 45%,#e9e5ef 100%);
+  transition:background .6s ease
+}
+.room-view[data-period="dusk"] {
+  background:radial-gradient(circle at 60% 27%,#ffe4c8 0,#eddbe6 48%,#d8cfe4 100%)
+}
+.room-view[data-period="night"] {
+  background:radial-gradient(circle at 60% 27%,#3d3955 0,#2d2940 52%,#211e30 100%)
+}
+.room-view[data-period="night"] .scene-index {
+  color:#afa6bd
 }
 .room-view:before {
   content:'';
@@ -589,17 +599,61 @@ small {
   background:#a992bd;
   color:#fff
 }
+.miri-status {
+  position:absolute;
+  transform:translate(-50%,-100%);
+  z-index:4;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:5px 11px 5px 8px;
+  border-radius:999px;
+  background:#51465be8;
+  border:1px solid #fff9;
+  color:#fffdf9;
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.02em;
+  white-space:nowrap;
+  pointer-events:none;
+  box-shadow:0 8px 20px #3f324a38;
+  backdrop-filter:blur(8px)
+}
+.miri-status[hidden] {
+  display:none
+}
+.miri-status-dot {
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:#f7d991;
+  box-shadow:0 0 0 3px #f7d99133;
+  animation:miri-pulse 1.3s ease-in-out infinite
+}
+@keyframes miri-pulse {
+  0%,100% { transform:scale(.85); opacity:.75 }
+  50% { transform:scale(1.15); opacity:1 }
+}
+.map-pin.pulse {
+  animation:pin-cheer .65s ease
+}
+@keyframes pin-cheer {
+  0% { transform:scale(1) }
+  45% { transform:translateY(-6px) scale(1.06) }
+  100% { transform:scale(1) }
+}
 .interaction-card,.placement-card {
   position:absolute;
-  bottom:67px;
-  left:20px;
-  z-index:5;
-  width:min(310px,calc(100% - 40px));
-  background:#fffdf9f2;
-  border:1px solid #fff;
-  border-radius:17px;
-  box-shadow:0 15px 35px #51405335;
-  padding:16px;
+  top:0;
+  left:0;
+  bottom:auto;
+  z-index:6;
+  width:min(268px,calc(100% - 24px));
+  background:#fffdf9f5;
+  border:1px solid #ece3f0;
+  border-radius:15px;
+  box-shadow:0 15px 35px #51405330;
+  padding:13px 14px;
   backdrop-filter:blur(18px)
 }
 .interaction-card[hidden],.placement-card[hidden] {
@@ -613,8 +667,8 @@ small {
 }
 .interaction-card h3,.placement-card h3 {
   font-family:Georgia,'Noto Serif SC',serif;
-  font-size:20px;
-  margin:5px 0 4px
+  font-size:17px;
+  margin:4px 0 4px
 }
 .interaction-card p,.placement-card p {
   font-size:11px;
@@ -632,9 +686,47 @@ small {
   border-radius:10px;
   background:#81699a;
   color:#fff;
-  padding:9px 11px;
+  padding:8px 11px;
   font-size:11px;
-  font-weight:700
+  font-weight:700;
+  display:inline-flex;
+  align-items:center;
+  gap:7px
+}
+.action-buttons button .action-tag {
+  font-size:9px;
+  font-weight:700;
+  padding:2px 6px;
+  border-radius:999px;
+  background:#ffffff2b;
+  color:#fffdf7
+}
+.action-buttons button.done-today,.action-buttons button:disabled {
+  background:#ede8ef;
+  color:#8f8598;
+  cursor:default
+}
+.action-buttons button:disabled .action-tag {
+  background:#ded5e3;
+  color:#786a84
+}
+.interaction-card .card-note {
+  margin:10px 0 0;
+  font-size:10px;
+  color:#9c8ea6
+}
+.neighbor-gift {
+  margin-top:8px;
+  font-size:10px;
+  color:#7e6b8e;
+  background:#f4eef7;
+  border-radius:8px;
+  padding:5px 8px
+}
+.neighbor-item button:disabled {
+  background:#f1edf3;
+  color:#9d92a5;
+  cursor:default
 }
 .action-buttons button.secondary {
   background:#eee6f1;
@@ -1383,8 +1475,8 @@ small {
     left:12px
   }
   .interaction-card,.placement-card {
-    bottom:50px;
-    left:10px
+    width:min(248px,calc(100% - 20px));
+    padding:12px
   }
   .community-view {
     padding:16px

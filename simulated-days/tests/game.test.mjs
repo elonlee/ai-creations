@@ -7,20 +7,39 @@ import {
   moveFurniture,
   loadState,
   saveState,
+  getActionAvailability,
 } from '../game.mjs';
 
-test('做饭消耗时间和食材费，同时改善饥饿并完成一次性日常目标', () => {
+test('做早午餐每天限一次，做好后桌上有餐盒且可点击吃掉，也可跨天消失', () => {
   const initial = createInitialState();
-  const first = performAction(initial, 'cook');
-  assert.equal(first.ok, true);
-  assert.ok(first.state.needs.hunger > initial.needs.hunger);
-  assert.ok(first.state.money < initial.money);
-  assert.ok(first.state.minute > initial.minute);
-  assert.equal(first.state.goals.cook, true);
-  const second = performAction(first.state, 'cook');
-  assert.equal(second.ok, true);
-  assert.equal(second.state.money - first.state.money, -12);
+  // 桌上还没做饭时不能吃
+  assert.equal(performAction(initial, 'eat').ok, false);
+
+  const cooked = performAction(initial, 'cook');
+  assert.equal(cooked.ok, true);
+  assert.equal(cooked.state.scene.meal, 'ready');
+  assert.ok(cooked.state.money < initial.money);
+  assert.ok(cooked.state.minute > initial.minute);
+  assert.equal(cooked.state.goals.cook, true);
   assert.equal(initial.goals.cook, false);
+
+  // 同一天不能第二次做早午餐
+  const secondCook = performAction(cooked.state, 'cook');
+  assert.equal(secondCook.ok, false);
+  assert.equal(secondCook.state, cooked.state);
+
+  // 点击餐盒吃掉：饥饿明显恢复且餐食消失
+  const eaten = performAction(cooked.state, 'eat');
+  assert.equal(eaten.ok, true);
+  assert.ok(eaten.state.needs.hunger > cooked.state.needs.hunger);
+  assert.equal(eaten.state.scene.meal, null);
+  assert.equal(performAction(eaten.state, 'eat').ok, false);
+
+  // 如果做了餐食没有吃直接睡到第二天，餐食也会消失且第二天可以重新下厨
+  const nextMorning = performAction(cooked.state, 'sleep');
+  assert.equal(nextMorning.state.day, 2);
+  assert.equal(nextMorning.state.scene.meal, null);
+  assert.equal(performAction(nextMorning.state, 'cook').ok, true);
 });
 
 test('创作获得收入与技能经验，邻居互动提升关系', () => {
@@ -78,4 +97,78 @@ test('存档恢复全部游戏状态，损坏存档回到初始状态', () => {
   assert.deepEqual(loadState(storage), state);
   data.set('simulated-days-v1', '{bad json');
   assert.deepEqual(loadState(storage), createInitialState());
+});
+
+test('每日限一次的动作在同一天内不可重复，可重复动作更新场景状态，睡到清晨重置新一天', () => {
+  let state = createInitialState();
+
+  // 第一次画画成功并在桌面留下画作状态
+  const p1 = performAction(state, 'paint');
+  assert.equal(p1.ok, true);
+  assert.equal(p1.state.scene.painting, true);
+  assert.equal(getActionAvailability(p1.state, 'paint').doneToday, true);
+
+  // 当天第二次画画被限制
+  const p2 = performAction(p1.state, 'paint');
+  assert.equal(p2.ok, false);
+  assert.equal(p2.state, p1.state);
+
+  // 洗澡与泡茶当天限一次，同时更新场景状态
+  const s1 = performAction(p1.state, 'shower');
+  assert.equal(s1.ok, true);
+  assert.equal(s1.state.scene.showered, true);
+  assert.equal(performAction(s1.state, 'shower').ok, false);
+
+  const t1 = performAction(s1.state, 'tea');
+  assert.equal(t1.ok, true);
+  assert.equal(t1.state.scene.tea, true);
+  assert.equal(performAction(t1.state, 'tea').ok, false);
+
+  // 做早午餐当天限一次并摆上桌，看书可重复
+  const c1 = performAction(t1.state, 'cook');
+  assert.equal(c1.state.scene.meal, 'ready');
+  assert.equal(performAction(c1.state, 'cook').ok, false);
+
+  const r1 = performAction(c1.state, 'read');
+  assert.equal(r1.ok, true);
+  assert.equal(r1.state.scene.bookOut, true);
+
+  // 每位邻居每天限聊一次，并留下小屋纪念品
+  const chatNora1 = performAction(r1.state, 'chat', 'nora');
+  assert.equal(chatNora1.ok, true);
+  assert.equal(chatNora1.state.scene.souvenirs.nora, true);
+  assert.equal(performAction(chatNora1.state, 'chat', 'nora').ok, false);
+  const chatJun = performAction(chatNora1.state, 'chat', 'jun');
+  assert.equal(chatJun.ok, true);
+  assert.equal(chatJun.state.scene.souvenirs.jun, true);
+
+  // 睡到明天清晨会推进到第 2 天 08:00 并重置每日次数与当日桌面状态
+  const morning = performAction(chatJun.state, 'sleep');
+  assert.equal(morning.ok, true);
+  assert.equal(morning.state.day, 2);
+  assert.equal(morning.state.minute, 8 * 60);
+  assert.equal(morning.state.scene.meal, null);
+  assert.equal(morning.state.scene.painting, false);
+  assert.equal(morning.state.scene.tea, false);
+  assert.equal(morning.state.scene.showered, false);
+  assert.deepEqual(morning.state.scene.souvenirs, {});
+  assert.equal(getActionAvailability(morning.state, 'cook').allowed, true);
+  assert.equal(getActionAvailability(morning.state, 'paint').allowed, true);
+  assert.equal(getActionAvailability(morning.state, 'chat', 'nora').allowed, true);
+});
+
+test('旧版存档缺少 daily/scene 或使用旧数字 meal 字段时可无缝兼容', () => {
+  const legacy = createInitialState();
+  delete legacy.daily;
+  delete legacy.scene;
+  const data = new Map([['simulated-days-v1', JSON.stringify(legacy)]]);
+  const storage = { getItem: key => data.get(key) ?? null, setItem: (key, value) => data.set(key, value) };
+  const loaded = loadState(storage);
+  assert.equal(loaded.scene.meal, null);
+  assert.deepEqual(loaded.daily.actions, {});
+  assert.equal(performAction(loaded, 'cook').state.scene.meal, 'ready');
+
+  const legacyNumericMeal = { ...createInitialState(), scene: { meal: 1 } };
+  data.set('simulated-days-v1', JSON.stringify(legacyNumericMeal));
+  assert.equal(loadState(storage).scene.meal, 'ready');
 });
