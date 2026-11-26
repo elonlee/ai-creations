@@ -625,44 +625,165 @@ function createMiri() {
   miri = group(roomGroup, -.2, 0, .2);
   miri.userData.miri = true;
   const poseGroup = group(miri, 0, 0, 0);
-  const skin = new THREE.MeshStandardMaterial({ color: 0xeabb9e, roughness: .85 });
-  const hair = new THREE.MeshStandardMaterial({ color: 0x443645, roughness: .9 });
-  const blush = new THREE.MeshStandardMaterial({ color: 0xdf9b98, roughness: .9 });
 
-  const leftLegPivot = group(poseGroup, -.15, .67, 0);
-  addCylinder(leftLegPivot, materials.oakDark, .19, .14, .62, 0, -.31, 0);
-  addBox(leftLegPivot, materials.cream, .19, .1, .26, 0, -.62, .04);
+  const skin = new THREE.MeshStandardMaterial({ color: 0xf3cab4, roughness: .78 });
+  const hair = new THREE.MeshStandardMaterial({ color: 0x423548, roughness: .72 });
+  const hairSheen = new THREE.MeshStandardMaterial({ color: 0x57475e, roughness: .62 });
+  const sweater = new THREE.MeshStandardMaterial({ color: 0xdfafa4, roughness: .84 });
+  const pinafore = new THREE.MeshStandardMaterial({ color: 0x9d83b1, roughness: .85 });
+  const tights = new THREE.MeshStandardMaterial({ color: 0x7a5e50, roughness: .88 });
+  const bootMat = new THREE.MeshStandardMaterial({ color: 0xf7eee0, roughness: .78 });
+  const soleMat = new THREE.MeshStandardMaterial({ color: 0x8d6956, roughness: .9 });
+  const blush = new THREE.MeshStandardMaterial({ color: 0xe69c99, roughness: .85 });
+  const lipMat = new THREE.MeshStandardMaterial({ color: 0xc27778, roughness: .75 });
+  const eyeWhite = new THREE.MeshBasicMaterial({ color: 0xfffdf9 });
 
-  const rightLegPivot = group(poseGroup, .15, .67, 0);
-  addCylinder(rightLegPivot, materials.oakDark, .19, .14, .62, 0, -.31, 0);
-  addBox(rightLegPivot, materials.cream, .19, .1, .26, 0, -.62, .04);
+  const addCapsule = (parent, mat, radius, length, x = 0, y = 0, z = 0) => {
+    const mesh = new THREE.Mesh(new THREE.CapsuleGeometry(radius, length, 8, 16), mat);
+    mesh.position.set(x, y, z);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    parent.add(mesh);
+    return mesh;
+  };
 
+  // Sculpted legs, sock cuffs & rounded boots.
+  const buildLeg = xPos => {
+    const legPivot = group(poseGroup, xPos, .67, 0);
+    addCapsule(legPivot, tights, .105, .36, 0, -.26, 0);
+    addCylinder(legPivot, materials.cream, .108, .102, .08, 0, -.49, 0, 18);
+    const boot = addCapsule(legPivot, bootMat, .092, .085, 0, -.58, .035);
+    boot.rotation.x = Math.PI / 2;
+    const sole = addCapsule(legPivot, soleMat, .094, .09, 0, -.625, .035);
+    sole.rotation.x = Math.PI / 2;
+    sole.scale.set(1.02, 1, .45);
+    return legPivot;
+  };
+  const leftLegPivot = buildLeg(-.135);
+  const rightLegPivot = buildLeg(.135);
+
+  // Sculpted tunic dress & Peter-Pan collar.
   const torsoPivot = group(poseGroup, 0, .67, 0);
-  addCylinder(torsoPivot, materials.pink, .38, .33, .73, 0, .35, 0);
-  addCylinder(torsoPivot, materials.cream, .21, .27, .08, 0, .69, 0);
+  const dressProfile = [
+    new THREE.Vector2(0, .01),
+    new THREE.Vector2(.34, .02),
+    new THREE.Vector2(.31, .14),
+    new THREE.Vector2(.25, .34),
+    new THREE.Vector2(.27, .55),
+    new THREE.Vector2(.21, .65),
+    new THREE.Vector2(.11, .70),
+    new THREE.Vector2(0, .70),
+  ];
+  const dressMesh = new THREE.Mesh(new THREE.LatheGeometry(dressProfile, 26), sweater);
+  dressMesh.castShadow = true;
+  dressMesh.receiveShadow = true;
+  torsoPivot.add(dressMesh);
 
-  const headPivot = group(torsoPivot, 0, .72, 0);
-  addSphere(headPivot, skin, .34, 0, .27, 0);
-  addSphere(headPivot, hair, .36, 0, .47, -.05);
-  addBox(headPivot, hair, .72, .29, .28, 0, .39, -.19);
-  addSphere(headPivot, hair, .17, -.31, .17, -.12);
-  addSphere(headPivot, hair, .17, .31, .17, -.12);
-  const leftEye = addSphere(headPivot, materials.ink, .027, -.12, .26, .3);
-  const rightEye = addSphere(headPivot, materials.ink, .027, .12, .26, .3);
-  addSphere(headPivot, blush, .045, -.19, .19, .26);
-  addSphere(headPivot, blush, .045, .19, .19, .26);
-  addSphere(headPivot, materials.pink, .042, 0, .12, .32);
+  // Lavender hem trim, pocket detail & collar bow.
+  const hemRing = new THREE.Mesh(new THREE.TorusGeometry(.325, .024, 10, 28), pinafore);
+  hemRing.rotation.x = Math.PI / 2;
+  hemRing.position.y = .04;
+  hemRing.castShadow = true;
+  torsoPivot.add(hemRing);
 
-  const leftArmPivot = group(torsoPivot, -.40, .64, 0);
-  leftArmPivot.rotation.z = -.2;
-  addCylinder(leftArmPivot, skin, .105, .092, .52, 0, -.26, 0);
-  addSphere(leftArmPivot, skin, .09, 0, -.52, 0);
+  addBox(torsoPivot, materials.cream, .13, .13, .03, .11, .27, .265).rotation.y = .32;
+  addSphere(torsoPivot, materials.gold, .022, .11, .31, .285);
 
-  const rightArmPivot = group(torsoPivot, .40, .64, 0);
-  rightArmPivot.rotation.z = .2;
-  addCylinder(rightArmPivot, skin, .105, .092, .52, 0, -.26, 0);
-  addSphere(rightArmPivot, skin, .09, 0, -.52, 0);
-  const rightHandSlot = group(rightArmPivot, 0, -.52, .04);
+  // Delicate neck + Peter-Pan collar + ribbon tie.
+  addCylinder(torsoPivot, skin, .082, .105, .14, 0, .71, 0, 16);
+  for (const side of [-1, 1]) {
+    const collar = addSphere(torsoPivot, materials.white, .105, side * .085, .645, .115);
+    collar.scale.set(1.05, .35, .85);
+    collar.rotation.z = side * -.28;
+    collar.rotation.y = side * .35;
+  }
+  addSphere(torsoPivot, pinafore, .042, 0, .615, .21);
+  addBox(torsoPivot, pinafore, .12, .05, .035, 0, .615, .205);
+
+  // Head, expressive face & layered hair with side buns and hairclip.
+  const headPivot = group(torsoPivot, 0, .73, 0);
+  const headSphere = addSphere(headPivot, skin, .305, 0, .27, 0);
+  headSphere.scale.set(1, 1.03, .96);
+
+  for (const side of [-1, 1]) {
+    const ear = addSphere(headPivot, skin, .058, side * .295, .24, -.02);
+    ear.scale.set(.55, 1, .75);
+  }
+
+  // Eyes (grouped so blinking closes iris and white catchlight together).
+  const eyes = [];
+  for (const side of [-1, 1]) {
+    const eyeGroup = group(headPivot, side * .105, .255, .268);
+    const iris = addSphere(eyeGroup, materials.ink, .034, 0, 0, 0);
+    iris.scale.set(.9, 1.18, .55);
+    iris.castShadow = false;
+    const catchlight = addSphere(eyeGroup, eyeWhite, .011, -.01, .014, .016);
+    catchlight.castShadow = false;
+    eyes.push(eyeGroup);
+
+    const brow = addCapsule(headPivot, hair, .01, .045, side * .105, .325, .272);
+    brow.rotation.z = Math.PI / 2 + side * -.12;
+    brow.castShadow = false;
+
+    const cheek = addSphere(headPivot, blush, .048, side * .175, .195, .235);
+    cheek.scale.set(1.15, .7, .45);
+    cheek.castShadow = false;
+  }
+
+  // Tiny nose and soft smile.
+  const nose = addSphere(headPivot, skin, .022, 0, .205, .295);
+  nose.castShadow = false;
+  const smile = new THREE.Mesh(new THREE.TorusGeometry(.038, .01, 8, 14, Math.PI * .72), lipMat);
+  smile.position.set(0, .17, .276);
+  smile.rotation.z = Math.PI + Math.PI * .14;
+  headPivot.add(smile);
+
+  // Layered hair crown, bob back volume, twin buns & wispy bangs.
+  const hairCrown = addSphere(headPivot, hair, .322, 0, .335, -.035);
+  hairCrown.scale.set(1.02, .98, 1.04);
+  const hairBob = addCapsule(headPivot, hair, .25, .16, 0, .28, -.14);
+  hairBob.scale.set(1.06, .9, .72);
+  const crownSheen = new THREE.Mesh(new THREE.TorusGeometry(.21, .022, 8, 22, Math.PI * .75), hairSheen);
+  crownSheen.position.set(0, .51, .05);
+  crownSheen.rotation.x = .95;
+  crownSheen.rotation.z = .38;
+  headPivot.add(crownSheen);
+
+  // Swept bangs & temple side locks.
+  const bangLeft = addCapsule(headPivot, hair, .095, .17, -.11, .41, .19);
+  bangLeft.rotation.set(.42, -.2, -.72);
+  const bangRight = addCapsule(headPivot, hair, .085, .15, .12, .415, .19);
+  bangRight.rotation.set(.42, .2, .68);
+  const bangCenter = addSphere(headPivot, hair, .095, -.02, .455, .22);
+  bangCenter.scale.set(1.3, .75, .65);
+
+  // Gold star hairclip on left bang.
+  const hairClip = addBox(headPivot, materials.gold, .07, .022, .024, -.16, .43, .23);
+  hairClip.rotation.z = -.45;
+
+  for (const side of [-1, 1]) {
+    const sideLock = addCapsule(headPivot, hair, .072, .2, side * .27, .22, .05);
+    sideLock.rotation.z = side * .12;
+    const scrunchie = new THREE.Mesh(new THREE.TorusGeometry(.088, .024, 10, 18), materials.lavender);
+    scrunchie.position.set(side * .28, .38, -.13);
+    scrunchie.rotation.y = side * .95;
+    headPivot.add(scrunchie);
+    addSphere(headPivot, hair, .115, side * .305, .39, -.15);
+  }
+
+  // Sculpted arms with knit sleeves, cream cuffs & hands.
+  const buildArm = side => {
+    const armPivot = group(torsoPivot, side * .30, .59, 0);
+    armPivot.rotation.z = side * .2;
+    addCapsule(armPivot, sweater, .08, .22, 0, -.15, 0);
+    addCylinder(armPivot, materials.cream, .076, .072, .055, 0, -.29, 0, 16);
+    addCapsule(armPivot, skin, .062, .16, 0, -.37, 0);
+    addSphere(armPivot, skin, .07, 0, -.48, 0);
+    return armPivot;
+  };
+  const leftArmPivot = buildArm(-1);
+  const rightArmPivot = buildArm(1);
+  const rightHandSlot = group(rightArmPivot, 0, -.48, .04);
 
   const ladle = group(rightHandSlot, 0, 0, 0);
   addCylinder(ladle, materials.oak, .025, .022, .44, 0, 0, .2).rotation.x = Math.PI / 2;
@@ -684,7 +805,7 @@ function createMiri() {
   addBox(fork, materials.gold, .045, .012, .08, 0, 0, .32);
   fork.visible = false;
 
-  const book = group(torsoPivot, 0, .46, .48);
+  const book = group(torsoPivot, 0, .44, .41);
   book.rotation.x = 0.45;
   addBox(book, materials.lavenderDeep, .26, .03, .34, -.13, 0, 0).rotation.z = 0.24;
   addBox(book, materials.lavenderDeep, .26, .03, .34, .13, 0, 0).rotation.z = -0.24;
@@ -700,7 +821,7 @@ function createMiri() {
     headPivot,
     leftArmPivot,
     rightArmPivot,
-    eyes: [leftEye, rightEye],
+    eyes,
     props: { ladle, brush, cup, fork, book },
   };
 }
