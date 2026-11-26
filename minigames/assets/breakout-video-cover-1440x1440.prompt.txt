@@ -1,0 +1,19 @@
+生成方式：内置 image_gen 工具。
+用途：经典打砖块竖版实玩视频的 1:1 宣传封面。
+参考图：breakout-promo-1920x1080.png。
+交付图：breakout-video-cover-1440x1440.png。
+原始生成尺寸：1254×1254。使用 macOS sips 重采样到 1440×1440，满足交付尺寸。
+视觉核验：仅包含标题“经典打砖块”；未包含其他文案、游戏图标、截图、设备边框或播放按钮。霓虹砖块、发光小球、挡板、背景与 16:9 宣传图保持一致。
+
+实际生成提示词：
+Use case: ads-marketing.
+Asset type: square promotional key art used as the video cover for a portrait arcade game gameplay recording.
+Reference image: the supplied 16:9 promotional illustration is the established visual identity of the game. Use it as a visual reference and recompose the artwork for a square cover. This must be a newly composed illustration, not a crop, stretched image, screenshot, app icon, or collage.
+Primary request: one beautiful polished 1:1 square cover for the Chinese arcade game 经典打砖块. Output at 2048 x 2048 pixels, exact square aspect ratio, opaque full bleed.
+Scene/backdrop: the same dark midnight navy arcade environment, subtle electric blue and violet light streaks, sparse tiny glowing square particles, and a subtly reflective dark ground as the reference.
+Subject and visual invariants: preserve the same iconic beveled rectangular cyan, magenta, amber and orange brick wall; one luminous white-cyan ball breaking a brick with faceted shards; one diagonal cyan ball trail connecting the impact to one luminous cyan paddle below. Match the reference's dimensional materials, white/cyan title lettering, color relationships, arcade energy and lighting. These same core elements must make the square and 16:9 art visibly part of one visual family.
+Composition: purpose-built square layout. Large highly legible Chinese game title in the upper-left/left half, balanced with the brick impact in the upper-right/right half. The ball and diagonal trail lead down to the paddle across the lower part of the composition. Use the full square canvas with strong coherent hierarchy, generous breathing space, no title collision with the brick wall. Keep the entire title and paddle comfortably inside a 7% safe margin. Make both the title and breakout action clear at thumbnail size.
+Style: premium crisp stylized dimensional arcade key art, luminous glass-like beveled bricks, selective bloom, controlled energetic particles, sharp title, precise shapes, polished professional illustration consistent with the reference.
+Text verbatim: "经典" on the first line and "打砖块" on the second line. These five simplified Chinese characters are the only text allowed in the image. Match the reference's bold clean white lettering, cyan glow, and subtle blue 3D extrusion.
+Constraints: no other promotional words, slogans, captions, badges, subtitles, numbers, scores, labels, or watermarks. Do not include any app icon, game icon, icon tile, rounded app badge, platform branding, logo stamp, play button, device mockup, phone frame, screenshot, or UI controls. No characters or unrelated objects. Only one ball and one paddle. Exact 1:1 aspect ratio.
+

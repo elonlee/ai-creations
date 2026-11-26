@@ -12,6 +12,8 @@ function loadGame({ tap, highScore = 0, navigator, Audio } = {}) {
     const elements = new Map();
     const frames = new Map();
     const intervals = new Map();
+    const timeouts = new Map();
+    const windowListeners = {};
     let nextId = 1;
     const drawing = new Proxy({}, {
         get: (_, name) => name.startsWith('create')
@@ -45,17 +47,19 @@ function loadGame({ tap, highScore = 0, navigator, Audio } = {}) {
             addEventListener() {}, hidden: false
         },
         HTMLButtonElement: class {},
-        window: { tap, navigator, Audio, addEventListener() {} },
+        window: { tap, navigator, Audio, addEventListener(type, listener) { windowListeners[type] = listener; } },
         requestAnimationFrame(callback) { const id = nextId++; frames.set(id, callback); return id; },
         cancelAnimationFrame(id) { frames.delete(id); },
         setInterval(callback) { const id = nextId++; intervals.set(id, callback); return id; },
-        clearInterval(id) { intervals.delete(id); }
+        clearInterval(id) { intervals.delete(id); },
+        setTimeout(callback) { const id = nextId++; timeouts.set(id, callback); return id; },
+        clearTimeout(id) { timeouts.delete(id); }
     };
     const context = vm.createContext(sandbox);
     vm.runInContext(script, context);
     return {
         run: code => vm.runInContext(code, context),
-        element, frames, intervals,
+        element, frames, intervals, timeouts, windowListeners,
         frame(ts) {
             const queued = [...frames.values()];
             frames.clear();
@@ -202,6 +206,202 @@ function loadTapGame(options = {}) {
     });
     return { ...game, submissions, panels };
 }
+
+function loadAdGame(options = {}) {
+    const ads = [];
+    const panels = [];
+    const game = loadGame({ tap: {
+        getLeaderboardManager: () => ({ openLeaderboard(request) { panels.push(request); } }),
+        createInterstitialAd(config) {
+            if (options.createThrows) throw new Error('create failed');
+            const ad = {
+                config, loads: 0, shows: 0, destroys: 0,
+                onLoad(callback) { this.loaded = callback; },
+                onClose(callback) { this.closed = callback; },
+                onError(callback) { this.failed = callback; },
+                load() { this.loads++; return options.loadRejects ? Promise.reject(new Error('load failed')) : Promise.resolve(); },
+                show() {
+                    this.shows++;
+                    if (options.showThrows) throw new Error('show failed');
+                    return options.showRejects ? Promise.reject(new Error('show failed')) : Promise.resolve();
+                },
+                destroy() { this.destroys++; }
+            };
+            ads.push(ad);
+            return ad;
+        }
+    } });
+    return { ...game, ads, panels, tap: game.run('window.tap') };
+}
+
+test('手动暂停加载竖屏插屏，关闭后保留暂停，下一次暂停使用新实例', () => {
+    const game = loadAdGame();
+    assert.equal(game.ads.length, 0, '主菜单和启动时不弹广告');
+    game.run('restart(); launchBall(); togglePause()');
+    assert.equal(game.ads.length, 1);
+    const ad = game.ads[0];
+    assert.equal(ad.config.adUnitId, '1054324');
+    assert.equal(ad.loads, 1);
+    assert.equal(ad.shows, 0);
+    ad.loaded(); ad.loaded();
+    assert.equal(ad.shows, 1, '重复加载回调不能重复展示');
+    const snapshot = game.run('JSON.stringify(state)');
+    game.run('update(3)');
+    assert.equal(game.run('JSON.stringify(state)'), snapshot);
+    assert.equal(game.frames.size, 0);
+    ad.closed(); ad.closed();
+    assert.equal(game.run('state.paused'), true);
+    assert.equal(game.frames.size, 0);
+    assert.equal(game.timeouts.size, 0);
+    assert.equal(ad.destroys, 1);
+    game.run('togglePause(); togglePause()');
+    assert.equal(game.ads.length, 2);
+});
+
+test('进入下一关的插屏冻结状态和输入，关闭回调只推进一次并等待手动发球', () => {
+    const game = loadAdGame();
+    game.run('restart(); completeLevel(); update(1.3)');
+    assert.equal(game.ads.length, 1);
+    const ad = game.ads[0];
+    assert.equal(game.run('state.level'), 1);
+    ad.loaded();
+    const snapshot = game.run('JSON.stringify(state)');
+    game.run('launchBall(); update(2)');
+    game.element('game-canvas').listeners.pointermove({ pointerType: 'mouse', clientX: 20 });
+    assert.equal(game.run('JSON.stringify(state)'), snapshot);
+    assert.equal(game.frames.size, 0);
+    ad.closed(); ad.closed(); ad.failed({ errCode: 1 });
+    assert.equal(game.run('state.level'), 2);
+    assert.equal(game.run('state.ball.launched'), false);
+    assert.equal(game.run('state.transition'), null);
+    assert.equal(game.frames.size, 1);
+    game.run('launchBall()');
+    assert.equal(game.run('state.ball.launched'), true);
+});
+
+test('广告引发的失焦和排行榜自动暂停不叠加插屏，回到游戏后手动继续', () => {
+    const game = loadAdGame();
+    game.run('restart(); openWeeklyLeaderboard()');
+    assert.equal(game.ads.length, 0);
+    assert.equal(game.panels.length, 1);
+    game.run('togglePause()');
+    game.windowListeners.blur();
+    assert.equal(game.ads.length, 0);
+    game.run('togglePause(); completeLevel(); update(1.3)');
+    const ad = game.ads[0];
+    ad.loaded();
+    game.windowListeners.blur();
+    assert.equal(game.ads.length, 1);
+    ad.closed();
+    assert.equal(game.run('state.level'), 2);
+    assert.equal(game.run('state.paused'), true);
+    assert.equal(game.frames.size, 0);
+    game.run('togglePause()');
+    assert.equal(game.frames.size, 1);
+});
+
+test('广告创建异常、错误回调、加载超时均跳过，普通浏览器正常进入下一关', () => {
+    const browser = loadGame();
+    browser.run('restart(); completeLevel(); update(1.3)');
+    assert.equal(browser.run('state.level'), 2);
+    const broken = loadAdGame({ createThrows: true });
+    broken.run('restart(); completeLevel(); update(1.3)');
+    assert.equal(broken.run('state.level'), 2);
+    for (const failure of ['callback', 'timeout']) {
+        const game = loadAdGame();
+        game.run('restart(); completeLevel(); update(1.3)');
+        const ad = game.ads[0];
+        if (failure === 'callback') ad.failed({ errCode: 1004, errMsg: 'no fill' });
+        else [...game.timeouts.values()].forEach(callback => callback());
+        ad.loaded(); ad.closed();
+        assert.equal(ad.shows, 0, '跳过广告后到达的加载回调不能弹窗');
+        assert.equal(game.run('state.level'), 2);
+        assert.equal(game.frames.size, 1);
+    }
+});
+
+test('广告加载或展示失败只结束本次请求，不产生未处理拒绝或重复推进', async () => {
+    for (const options of [{ loadRejects: true }, { showRejects: true }, { showThrows: true }]) {
+        const game = loadAdGame(options);
+        game.run('restart(); completeLevel(); update(1.3)');
+        const ad = game.ads[0];
+        if (!options.loadRejects) ad.loaded();
+        await new Promise(resolve => setImmediate(resolve));
+        assert.equal(game.run('state.level'), 2);
+        assert.equal(game.frames.size, 1);
+        ad.closed();
+        assert.equal(game.run('state.level'), 2);
+    }
+});
+
+test('重开、回主菜单或继续取消待展示广告，旧回调不会串入新局', () => {
+    for (const action of ['restart()', 'returnToMainMenu()', 'togglePause()']) {
+        const game = loadAdGame();
+        game.run('restart(); togglePause()');
+        const ad = game.ads[0];
+        game.run(action);
+        const snapshot = game.run('JSON.stringify(state)');
+        ad.loaded(); ad.closed(); ad.failed({});
+        assert.equal(game.run('JSON.stringify(state)'), snapshot);
+        assert.equal(ad.shows, 0);
+        assert.equal(ad.destroys, 1);
+        assert.equal(game.timeouts.size, 0);
+    }
+});
+
+test('最终通关不请求下一关插屏', () => {
+    const game = loadAdGame();
+    game.run('restart(); enterLevel(10); completeLevel(); update(2)');
+    assert.equal(game.ads.length, 0);
+    assert.equal(game.run('state.win'), true);
+});
+
+test('广告在动画帧内触发时停止排帧，关闭和同步失败都只恢复一个循环', () => {
+    for (const options of [{}, { createThrows: true }]) {
+        const game = loadAdGame(options);
+        game.run('restart(); completeLevel(); state.transition.remaining=0.01');
+        game.frame(1000);
+        game.frame(1016);
+        if (!options.createThrows) {
+            assert.equal(game.frames.size, 0);
+            game.ads[0].loaded();
+            game.ads[0].closed();
+        }
+        assert.equal(game.run('state.level'), 2);
+        assert.equal(game.frames.size, 1);
+        const ball = game.run('JSON.stringify(state.ball)');
+        game.frame(60000);
+        assert.equal(game.frames.size, 1);
+        assert.equal(game.run('JSON.stringify(state.ball)'), ball, '广告停留时间不能补算为游戏时间');
+    }
+});
+
+test('过关广告等待时失焦后选择继续会跳过广告，不能重新弹出同一次过关广告', () => {
+    const game = loadAdGame();
+    game.run('restart(); completeLevel(); update(1.3)');
+    const ad = game.ads[0];
+    game.windowListeners.blur();
+    game.element('menu-primary-btn').listeners.click();
+    game.run('update(0.1)');
+    ad.loaded(); ad.closed();
+    assert.equal(game.ads.length, 1);
+    assert.equal(game.run('state.level'), 2);
+    assert.equal(ad.shows, 0);
+    assert.equal(game.frames.size, 1);
+});
+
+test('过关广告暂停全部原生音频，广告期间切换声音不能提前播放，关闭后恢复音乐', () => {
+    const sdk = loadAdGame();
+    const game = fileAudioHarness('tap', { tap: sdk.tap });
+    game.run('restart(); launchBall(); completeLevel(); update(1.3)');
+    assert.ok(game.players.every(player => player.paused));
+    sdk.ads[0].loaded();
+    game.run('setSoundEnabled(false); setSoundEnabled(true); playEffect("wall")');
+    assert.ok(game.players.every(player => player.paused));
+    sdk.ads[0].closed();
+    assert.equal(game.players.find(player => player.loop).paused, false);
+    assert.ok(game.players.filter(player => !player.loop).every(player => player.paused));
+});
 
 test('游戏结束上报本局分数，使用真实周榜 ID，不能上传本地历史最高分', () => {
     const game = loadTapGame({ highScore: 99999 });
@@ -662,7 +862,7 @@ test('旧系统分享的异步完成不能覆盖新局状态或泄露旧文案',
     assert.equal(game.element('share-status').textContent, '晒出本局成绩，邀请朋友挑战');
 });
 
-function fileAudioHarness(engine = 'tap', { ready = true } = {}) {
+function fileAudioHarness(engine = 'tap', { ready = true, tap = {} } = {}) {
     const players = [];
     class Player {
         constructor() {
@@ -697,7 +897,7 @@ function fileAudioHarness(engine = 'tap', { ready = true } = {}) {
         load() {}
     }
     const options = engine === 'tap'
-        ? { tap: { createInnerAudioContext(options) {
+        ? { tap: { ...tap, createInnerAudioContext(options) {
             const player = new Player();
             player.useWebAudioImplement = options.useWebAudioImplement;
             return player;

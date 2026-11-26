@@ -1,0 +1,16 @@
+生成方式：内置 image_gen 工具。
+参考图：breakout-cover-920x430.png。
+交付图：breakout-promo-1920x1080.png。
+原始生成尺寸：1672×941。使用 macOS sips 重采样到 1920×1080，满足严格 16:9 的交付尺寸。
+
+实际生成提示词：
+Use case: ads-marketing.
+Asset type: final landscape promotional key art for the existing arcade game 经典打砖块.
+Input image: reference image for the game's established visual identity, title styling, neon palette, beveled bricks, luminous ball and paddle. Create a new properly composed 16:9 promotional image, not a stretched copy.
+Primary request: polished professional horizontal game promotion art, exact 16:9 aspect ratio, render at 2560 x 1440 pixels or larger 16:9 resolution, minimum 1920 x 1080. Full bleed opaque image.
+Scene/backdrop: midnight navy arcade space, subtle blue-violet light beams and sparse glowing square particles; deep clean contrast.
+Subject: instantly recognizable classic breakout action. On the right, an orderly wall of colorful cyan, magenta, amber and orange rectangular beveled bricks in upper half, a small bright white-cyan ball striking a brick with energetic shards at the impact, one cyan luminous paddle fully visible in the lower right. A clear diagonal cyan light trail joins paddle to ball. Keep game elements visually large and iconic.
+Style/medium: premium stylized dimensional arcade key art, crisp luminous edges, restrained bloom, beautiful faceted glass-like bricks, polished commercial game artwork matching the reference.
+Composition/framing: purpose-designed 16:9 wide composition. Large Chinese title on left, action on right. Balance title and action using the full height of the image. Title has two lines: first line 经典, second line 打砖块. Preserve ample 7% safe margin for all text and essential objects; all title strokes and the entire paddle inside frame. A dynamic but uncluttered composition that reads well at thumbnail size.
+Text verbatim: "经典" on the first line and "打砖块" on the second line. Correct simplified Chinese characters. Bold clean white lettering with cyan edge glow and subtle blue 3D extrusion consistent with reference. No other text.
+Constraints: one paddle, one ball, rectangular bricks; no characters, no phone or device mockup, no logos, no TapTap branding, no UI, no buttons, no scores, no watermark, no border. Do not add slogans or invented game features. Exact horizontal 16:9 image.

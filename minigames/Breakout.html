@@ -487,12 +487,13 @@
         }
 
         function openWeeklyLeaderboard() {
+            if (activeInterstitial) return;
             const manager = getLeaderboardManager();
             if (typeof manager?.openLeaderboard !== 'function') {
                 setLeaderboardStatus('请在 TapTap 内打开游戏后查看每周排行榜。');
                 return;
             }
-            if (isPlaying()) togglePause();
+            if (isPlaying()) togglePause(false);
             const onFailure = () => {
                 setLeaderboardStatus('排行榜暂时无法打开，请稍后重试。', scoreSubmission?.status === 'failed');
             };
@@ -594,6 +595,64 @@
         let frameId = null;
         let lastTs = null;
         let animationTime = 0;
+        // 2026-10-20：MCP 按应用 985310 的竖屏配置查询得到。
+        const INTERSTITIAL_SPACE_ID = '1054324';
+        let activeInterstitial = null;
+
+        function cancelInterstitial(continueGame = false) {
+            activeInterstitial?.finish(continueGame);
+        }
+
+        function showInterstitial(onFinished = () => {}) {
+            if (activeInterstitial) return;
+            if (typeof window.tap?.createInterstitialAd !== 'function') {
+                onFinished();
+                return;
+            }
+            const request = { ad: null, timer: null, showing: false, finish: null };
+            const isCurrent = () => activeInterstitial === request;
+            request.finish = (continueGame = true) => {
+                if (!isCurrent()) return;
+                // 先使回调失效，销毁过程中或稍后到达的原生事件不能重复推进。
+                activeInterstitial = null;
+                clearTimeout(request.timer);
+                try { request.ad?.destroy?.(); } catch (_) { /* 宿主也可能自动销毁 */ }
+                if (continueGame) {
+                    onFinished();
+                    syncAudio();
+                    startLoop();
+                }
+            };
+            activeInterstitial = request;
+            clearInput();
+            stopLoop();
+            syncAudio();
+            // 无填充或宿主没有回调时，加载最多等待 8 秒；取消后不会延迟弹出。
+            request.timer = setTimeout(() => request.finish(), 8000);
+            try {
+                const ad = request.ad = window.tap.createInterstitialAd({ adUnitId: INTERSTITIAL_SPACE_ID });
+                ad.onClose(() => request.finish());
+                ad.onError(() => request.finish());
+                ad.onLoad(() => {
+                    if (!isCurrent() || request.showing) return;
+                    request.showing = true;
+                    clearTimeout(request.timer);
+                    try {
+                        ad.show()?.catch(() => request.finish());
+                    } catch (_) { request.finish(); }
+                });
+                ad.load()?.catch(() => request.finish());
+            } catch (_) { request.finish(); }
+        }
+
+        function advanceLevel() {
+            const nextLevel = state.level + 1;
+            showInterstitial(() => {
+                enterLevel(nextLevel);
+                render(animationTime);
+            });
+        }
+
         const AUDIO_SOURCES = Object.fromEntries([
             'music', 'launch', 'paddle', 'wall', 'brick-hit', 'brick-break',
             'explode', 'life-lost', 'game-over', 'win'
@@ -715,7 +774,7 @@
         }
 
         function isPlaying() {
-            return state.running && !state.paused && !state.menu;
+            return state.running && !state.paused && !state.menu && !activeInterstitial;
         }
 
         function syncAudio() {
@@ -789,7 +848,7 @@
         }
 
         function playEffect(name) {
-            if (!audio.enabled || audio.error || state.paused || state.menu || !audio.initialized) return;
+            if (!audio.enabled || audio.error || state.paused || state.menu || activeInterstitial || !audio.initialized) return;
             const effect = audio.effects.get(name);
             if (!effect) return;
             const now = performance.now();
@@ -1199,7 +1258,7 @@
         }
 
         function update(dt) {
-            if (state.paused || state.menu) return;
+            if (state.paused || state.menu || activeInterstitial) return;
             updateStars(dt);
             updateParticles(dt);
             state.effects = state.effects.filter(effect => {
@@ -1211,7 +1270,7 @@
             if (!state.running) return;
             if (state.transition) {
                 state.transition.remaining -= dt;
-                if (state.transition.remaining <= 0) enterLevel(state.level + 1);
+                if (state.transition.remaining <= 0) advanceLevel();
                 return;
             }
             updateBricks(dt);
@@ -1414,17 +1473,19 @@
 
         function gameLoop(ts) {
             frameId = null;
-            if (state.paused || state.menu) return;
+            if (state.paused || state.menu || activeInterstitial) return;
             const dt = lastTs === null ? 0 : Math.min(0.033, (ts - lastTs) / 1000);
             lastTs = ts;
             animationTime += dt * 1000;
             if (dt > 0) update(dt);
             render(animationTime);
-            frameId = requestAnimationFrame(gameLoop);
+            if (!state.paused && !state.menu && !activeInterstitial && frameId === null) {
+                frameId = requestAnimationFrame(gameLoop);
+            }
         }
 
         function startLoop() {
-            if (frameId !== null) return;
+            if (frameId !== null || state.paused || state.menu || activeInterstitial) return;
             lastTs = null;
             frameId = requestAnimationFrame(gameLoop);
         }
@@ -1470,16 +1531,18 @@
             canvas.focus({ preventScroll: true });
         }
 
-        function togglePause() {
+        function togglePause(withAd = true) {
             if (state.gameOver || state.win) {
                 returnToMainMenu();
                 return;
             }
             if (!state.running) return;
+            if (state.paused) cancelInterstitial(true);
             state.paused = !state.paused;
             if (state.paused) {
                 showMenu('pause');
                 setStatus('已暂停，按 P 或 Esc 继续');
+                if (withAd !== false) showInterstitial();
             } else {
                 closeMenu();
                 setStatus(state.ball.launched ? '继续游戏' : '点击下方发球 · 左右滑动控制挡板');
@@ -1490,6 +1553,7 @@
         }
 
         function restart() {
+            cancelInterstitial();
             submitFinalScore();
             runNumber += 1;
             scoreSubmission = null;
@@ -1507,6 +1571,7 @@
         }
 
         function returnToMainMenu() {
+            cancelInterstitial();
             submitFinalScore();
             state.running = false;
             state.paused = false;
@@ -1606,10 +1671,14 @@
         });
         function pauseOnLeave() {
             clearInput();
-            if (isPlaying()) togglePause();
+            if (state.running && !state.paused && !state.menu) togglePause(false);
         }
         window.addEventListener('blur', pauseOnLeave);
-        window.addEventListener('pagehide', destroyAudio);
+        window.addEventListener('pagehide', () => {
+            pauseOnLeave();
+            cancelInterstitial(true);
+            destroyAudio();
+        });
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) pauseOnLeave();
         });
