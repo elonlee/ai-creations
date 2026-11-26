@@ -318,7 +318,7 @@ for(const [x,z,ix,iz] of pond){
   if(!waterSet.has((ix+dx)+','+(iz+dz))){
    // Orient coping along the shoreline: swap width & depth for X vs Z edges, stagger heights to prevent corner z-fighting.
    let cx=x+dx*0.24,cz=z+dz*0.24;
-   if(Math.abs(cz-1.55)<0.82&&(cx<-1.25||cx>4.45))continue;
+   if((cx<-1.10&&Math.abs(cz-2.25)<0.66)||(cx>4.20&&Math.abs(cz-2.15)<0.66))continue;
    let ew=dx!==0?0.22:0.46,ed=dz!==0?0.22:0.46;
    let ch=0.20+(((ix&1)*2+(iz&1))*0.008)+(dx!==0?0.004:0)+rand(ix*31+iz*53+dx*11+dz*17)*0.002;
    box(cx,0.03+ch/2,cz,ew,ch,ed,rand(ix*13+iz*29+dx*7)>0.5?C.stone2:C.stone);
@@ -326,13 +326,23 @@ for(const [x,z,ix,iz] of pond){
  }
 }
 
-// Lotus pads and blossoms (strictly clear of bridge channel, embankment edges, and duplicate cells).
+// Low profile 4-turn Zigzag Garden Bridge (九曲小桥) skimming over the lotus pond with continuous low railings.
+const zPts=[[-1.75,2.25],[0.35,2.25],[0.35,0.85],[2.75,0.85],[2.75,2.15],[4.95,2.15]];
+function nearZigzag(px,pz,pad=0.72){
+ for(let i=0;i<zPts.length-1;i++){
+  let [x1,z1]=zPts[i],[x2,z2]=zPts[i+1];
+  let cx=clamp(px,Math.min(x1,x2),Math.max(x1,x2)),cz=clamp(pz,Math.min(z1,z2),Math.max(z1,z2));
+  if(Math.hypot(px-cx,pz-cz)<pad)return true;
+ }
+ return false;
+}
+
+// Lotus pads and blossoms (strictly clear of zigzag bridge, embankment edges, and duplicate cells).
 const usedLotus=new Set();
-for(let i=0;i<26;i++){
+for(let i=0;i<30;i++){
  let p=pond[Math.floor(rand(i+40)*pond.length)];if(!p)continue;
  let [x,z,ix,iz]=p,cell=ix+','+iz;
- if(usedLotus.has(cell))continue;
- if(Math.abs(z-1.55)<1.25&&x>-1.8&&x<5.0)continue;
+ if(usedLotus.has(cell)||nearZigzag(x,z,0.74))continue;
  if(!waterSet.has((ix+1)+','+iz)||!waterSet.has((ix-1)+','+iz)||!waterSet.has(ix+','+(iz+1))||!waterSet.has(ix+','+(iz-1)))continue;
  usedLotus.add(cell);
  let s=0.24+rand(i+80)*0.14;
@@ -345,48 +355,68 @@ for(let i=0;i<26;i++){
  }
 }
 
-// Stone Arch Bridge (spans from dry west bank x=-1.95 to dry east bank x=5.15 at z=1.55) with open arch, steps & continuous railings.
-const bx0=-1.95,bx1=5.15,bz=1.55;
-function bridgeY(x){let t=clamp((x-bx0)/(bx1-bx0),0,1);return 0.42+Math.sin(t*Math.PI)*0.56}
-for(let k=0;k<=30;k++){
- let x=bx0+k*0.24,y=bridgeY(x);
- if(x<bx0+0.68||x>bx1-0.68){
-  // Solid stone bridgehead abutments grounded below water/lawn.
-  let pierH=y-0.02;
-  box(x,0.02+pierH/2,bz,0.24,pierH,1.38,C.stone);
- }else{
-  // Open arched stone vault so water passes cleanly beneath the bridge.
-  box(x,y-0.11,bz,0.24,0.18,1.36,C.stone);
-  for(const sz of [-0.67,0.67])box(x,y-0.12,bz+sz,0.236,0.20,0.08,C.stone2);
- }
- // Non-overlapping stepped stone deck paving + edge curbs.
- box(x,y,bz,0.234,0.09,1.52,k%2?C.path:C.path2);
- for(const sz of [-0.68,0.68])box(x,y+0.06,bz+sz,0.236,0.07,0.16,C.stone2);
+// Build zigzag bridge piers, corner square turning platforms, stone deck planks, and mitered low railings (elevated clearly above pond water & coping).
+for(let i=0;i<zPts.length;i++){
+ let [vx,vz]=zPts[i];
+ let isEnd=i===0||i===zPts.length-1;
+ box(vx,0.215,vz,isEnd?0.56:0.34,0.43,isEnd?0.92:0.34,C.stone);
+ box(vx,0.475,vz,0.96,0.09,0.96,C.path2);
 }
-// Continuous stone railings: lower rail, intermediate balusters, dense staggered top handrail, and 11 望柱 posts.
-for(let k=0;k<=46;k++){
- let x=bx0+0.15+k*0.148,y=bridgeY(x),stagger=(k%2)*0.005,dz=(k%2)*0.004;
- for(const sz of [-0.68,0.68]){
-  box(x,y+0.20+stagger,bz+sz,0.19,0.07,0.10+dz,C.stone);
-  box(x,y+0.52+stagger,bz+sz,0.19,0.10,0.13+dz,C.stone2);
+// Additional slender center support pier under the longest span.
+box(1.55,0.215,0.85,0.32,0.43,0.32,C.stone);
+for(let i=0;i<zPts.length-1;i++){
+ let [x1,z1]=zPts[i],[x2,z2]=zPts[i+1],alongX=Math.abs(x2-x1)>=Math.abs(z2-z1);
+ let len=Math.max(Math.abs(x2-x1),Math.abs(z2-z1))-0.96;
+ if(len<=0.05)continue;
+ let mx=(x1+x2)/2,mz=(z1+z2)/2;
+ // Recessed stone support beam clearly raised above the water surface (bottom at y=0.35).
+ box(mx,0.39,mz,alongX?len+0.08:0.56,0.08,alongX?0.56:len+0.08,C.stone);
+ let n=Math.max(1,Math.round(len/0.32)),step=len/n,sx=x1+(x2>x1?0.48:(x2<x1?-0.48:0)),sz=z1+(z2>z1?0.48:(z2<z1?-0.48:0));
+ let ux=alongX?Math.sign(x2-x1):0,uz=alongX?0:Math.sign(z2-z1);
+ for(let k=0;k<n;k++){
+  let px=sx+ux*(k+0.5)*step,pz=sz+uz*(k+0.5)*step;
+  box(px,0.47,pz,alongX?step-0.015:0.90,0.08,alongX?0.90:step-0.015,k%2?C.path:C.path2);
  }
 }
-for(let x=bx0+0.15;x<=bx1-0.15+0.001;x+=0.30){
- let y=bridgeY(x);
- for(const sz of [-0.68,0.68])box(x,y+0.36,bz+sz,0.07,0.31,0.07,C.stone2);
-}
-for(let k=0;k<=10;k++){
- let x=bx0+0.15+k*(bx1-bx0-0.30)/10,y=bridgeY(x);
- for(const sz of [-0.68,0.68]){
-  box(x,y+0.34,bz+sz,0.16,0.58,0.16,C.stone2);
-  box(x,y+0.66,bz+sz,0.20,0.07,0.20,C.path);
+// Mitered continuous low stone railings on both sides of the zigzag bridge (off=0.38 inside 0.90 deck).
+for(const side of [-1,1]){
+ const off=0.38,rPts=[];
+ for(let i=0;i<zPts.length;i++){
+  let [vx,vz]=zPts[i];
+  if(i===0){
+   let tx=Math.sign(zPts[1][0]-vx),tz=Math.sign(zPts[1][1]-vz);
+   rPts.push([vx+side*off*(-tz),vz+side*off*tx]);
+  }else if(i===zPts.length-1){
+   let tx=Math.sign(vx-zPts[i-1][0]),tz=Math.sign(vz-zPts[i-1][1]);
+   rPts.push([vx+side*off*(-tz),vz+side*off*tx]);
+  }else{
+   let tx0=Math.sign(vx-zPts[i-1][0]),tz0=Math.sign(vz-zPts[i-1][1]);
+   let tx1=Math.sign(zPts[i+1][0]-vx),tz1=Math.sign(zPts[i+1][1]-vz);
+   rPts.push([vx+side*off*(-tz0-tz1),vz+side*off*(tx0+tx1)]);
+  }
+ }
+ for(const [rx,rz] of rPts){
+  box(rx,0.71,rz,0.13,0.42,0.13,C.stone2);
+  box(rx,0.945,rz,0.17,0.05,0.17,C.path);
+ }
+ for(let i=0;i<rPts.length-1;i++){
+  let [x1,z1]=rPts[i],[x2,z2]=rPts[i+1],alongX=Math.abs(x2-x1)>=Math.abs(z2-z1);
+  let span=Math.max(Math.abs(x2-x1),Math.abs(z2-z1)),railLen=Math.max(0.05,span-0.13);
+  let mx=(x1+x2)/2,mz=(z1+z2)/2;
+  box(mx,0.545,mz,alongX?railLen:0.08,0.06,alongX?0.08:railLen,C.stone);
+  box(mx,0.805,mz,alongX?railLen:0.08,0.065,alongX?0.08:railLen,C.stone2);
+  let bCount=Math.max(2,Math.round(span/0.34));
+  for(let b=1;b<bCount;b++){
+   let t=b/bCount;
+   box(x1+(x2-x1)*t,0.675,z1+(z2-z1)*t,0.055,0.21,0.055,C.stone2);
+  }
  }
 }
-// West & East bridge approach steps down to ground paths.
-box(bx0-0.28,0.22,bz,0.38,0.24,1.52,C.stone2);
-box(bx0-0.62,0.17,bz,0.38,0.14,1.52,C.path);
-box(bx1+0.28,0.22,bz,0.38,0.24,1.52,C.stone2);
-box(bx1+0.62,0.17,bz,0.38,0.14,1.52,C.path);
+// Two-tier shore approach steps linking elevated zigzag bridge ends to the West & East garden paths.
+box(-2.22,0.25,2.25,0.36,0.30,0.98,C.stone2);
+box(-2.56,0.19,2.25,0.36,0.18,0.98,C.path);
+box(5.42,0.25,2.15,0.36,0.30,0.98,C.stone2);
+box(5.76,0.19,2.15,0.36,0.18,0.98,C.path);
 
 // Continuous connected garden stone footpath network (non-colliding slab heights prevent coplanar z-fighting).
 const pathCoords=[],placedSlabs=[];
@@ -414,16 +444,16 @@ function addPath(pts,step=0.38,sw=0.66,sd=0.66){
 }
 // 1. Front gate entry straight to south courtyard plaza.
 addPath([[0,6.25],[0,4.65]],0.40,1.42,0.54);
-// 2. West loop: plaza -> west shore -> bridge west steps -> bamboo-shaded stone table -> main house steps -> moon gate -> rear courtyard.
-addPath([[0,4.65],[-1.30,4.55],[-2.55,4.15],[-3.35,3.45],[-3.45,2.45],[-3.15,1.55],[-2.75,1.55]],0.36,0.72,0.68);
-addPath([[-3.15,1.55],[-4.20,0.85],[-4.55,-0.15],[-4.55,-1.65]],0.36,0.72,0.68);
+// 2. West loop: plaza -> west shore -> zigzag bridge west step -> bamboo-shaded stone table -> main house steps -> moon gate -> rear courtyard.
+addPath([[0,4.65],[-1.30,4.55],[-2.55,4.15],[-3.35,3.45],[-3.45,2.45],[-2.76,2.25]],0.36,0.72,0.68);
+addPath([[-3.45,2.45],[-4.10,1.55],[-4.27,0.65],[-4.55,-0.15],[-4.55,-1.65]],0.36,0.72,0.68);
 addPath([[-4.27,0.65],[-5.22,0.65]],0.36,0.68,0.68);
 addPath([[-4.55,-1.65],[-2.60,-1.88],[-0.40,-1.95],[1.30,-1.95],[1.30,-3.25],[1.30,-3.85]],0.36,0.68,0.64);
 addPath([[-0.65,-3.85],[1.30,-3.85],[3.35,-3.85]],0.36,0.64,0.62);
 addPath([[-0.65,-3.85],[-0.65,-4.65]],0.36,0.62,0.62);
-// 3. East loop: plaza -> east shore -> bridge east steps -> corridor between pond & rockery -> pavilion steps.
-addPath([[0,4.65],[1.35,4.72],[2.75,4.75],[4.15,4.45],[5.20,3.75],[5.85,2.75],[5.95,1.55],[5.75,1.55]],0.36,0.72,0.68);
-addPath([[5.95,1.55],[5.55,0.85],[5.35,0.00],[5.45,-0.95],[5.85,-1.80]],0.36,0.68,0.66);
+// 3. East loop: plaza -> east shore -> zigzag bridge east step -> east lawn -> pavilion steps.
+addPath([[0,4.65],[1.35,4.72],[2.75,4.75],[4.15,4.45],[5.20,3.75],[5.75,2.85],[5.96,2.15]],0.36,0.72,0.68);
+addPath([[5.96,2.15],[5.55,1.15],[5.35,0.00],[5.45,-0.95],[5.85,-1.80]],0.36,0.68,0.66);
 
 // Stone table & 4 grounded drum stools nestled inside the cleared bamboo grove, connected to the west path.
 const stx=-6.20,stz=0.65;
@@ -651,7 +681,7 @@ function lantern(lx,lz){
  box(lx,0.85,lz,0.36,0.10,0.36,C.tile);
  box(lx,0.94,lz,0.14,0.09,0.14,C.stone2);
 }
-lantern(-2.35,2.70);
+lantern(-2.60,3.05);
 lantern(4.95,2.95);
 
 // Grounded shrubs (bottom anchored cleanly into lawn y=0.10).
@@ -673,7 +703,7 @@ function plantable(x,z){
  if(x<-5.10&&z>-1.55&&z<2.45)return false; // bamboo grove & stone table clearing
  if(Math.abs(z+2.95)<0.55&&x>-2.0&&x<4.6)return false; // moon gate wall
  if(x>-1.55&&x<4.20&&z<-3.05)return false; // rear courtyard fenced flowerbed & props
- if(Math.hypot(x+2.35,z-2.70)<0.48||Math.hypot(x-4.95,z-2.95)<0.48)return false; // lanterns
+ if(Math.hypot(x+2.60,z-3.05)<0.48||Math.hypot(x-4.95,z-2.95)<0.48)return false; // lanterns
  if(Math.hypot(x-7.15,z-4.35)<0.55||Math.hypot(x+6.40,z-4.72)<0.55)return false; // willow & pine trunks
  for(const [px,pz] of pathCoords)if(Math.hypot(x-px,z-pz)<0.62)return false;
  if(Math.abs(x)<1.05&&z>4.40)return false; // entry path
