@@ -69,138 +69,489 @@ const ambient=new THREE.HemisphereLight(0xf9fcff,0x849789,1.23);scene.add(ambien
 const sun=new THREE.DirectionalLight(0xffedcf,2.1);sun.position.set(-10,20,13);sun.castShadow=true;
 sun.shadow.mapSize.set(2048,2048);
 sun.shadow.camera.left=-14;sun.shadow.camera.right=14;sun.shadow.camera.top=13;sun.shadow.camera.bottom=-13;
-sun.shadow.camera.near=1;sun.shadow.camera.far=44;sun.shadow.bias=-0.00025;sun.shadow.normalBias=.025;sun.shadow.radius=2.6;
+sun.shadow.camera.near=1;sun.shadow.camera.far=44;sun.shadow.bias=-0.00025;sun.shadow.normalBias=.012;sun.shadow.radius=2.6;
 sun.target.position.set(0,0,0);scene.add(sun.target);scene.add(sun);
 const fill=new THREE.DirectionalLight(0xd9e8ef,.32);fill.position.set(10,8,-10);scene.add(fill);
-const C={base:0xd5dad2,baseEdge:0xbfc9bf,lawn:0x8fa989,lawn2:0x91aa8a,path:0xd8d2c0,path2:0xc3bdaa,wall:0xf5f1e8,wallShade:0xe3e0d7,tile:0x303c3c,tileLight:0x405052,wood:0x624b3d,woodDark:0x46372e,water:0x679c9b,water2:0x83b7b0,waterDark:0x4f8587,stone:0x92988a,stone2:0xb3b4a5,leaf:0x547e57,leaf2:0x759765,leaf3:0x385e49,bamboo:0x5c9060,peach:0xe7aabb,peachLight:0xf4c5cf,lotus:0xf3dfe3};
+const C={base:0xd5dad2,baseEdge:0xbfc9bf,lawn:0x8fa989,lawn2:0x91aa8a,path:0xd8d2c0,path2:0xc3bdaa,wall:0xf5f1e8,wallShade:0xe3e0d7,tile:0x303c3c,tileLight:0x405052,wood:0x624b3d,woodDark:0x46372e,water:0x679c9b,water2:0x83b7b0,waterDark:0x4f8587,stone:0x92988a,stone2:0xb3b4a5,leaf:0x547e57,leaf2:0x759765,leaf3:0x385e49,bamboo:0x5c9060,peach:0xe7aabb,peachLight:0xf4c5cf,peachDeep:0xd88fa3,lotus:0xf3dfe3,paper:0xf2ebd9,lantern:0xf5d696};
 const mats=new Map(),geos=new Map();
 function mat(c,opacity=1){const key=c+':'+opacity;if(!mats.has(key))mats.set(key,new THREE.MeshLambertMaterial({color:c,transparent:opacity<1,opacity,depthWrite:opacity===1}));return mats.get(key)}
-function geo(w,h,d){const k=[w,h,d].join(':');if(!geos.has(k))geos.set(k,new THREE.BoxGeometry(w,h,d));return geos.get(k)}
-function box(x,y,z,w,h,d,c,op=1){let m=new THREE.Mesh(geo(w,h,d),mat(c,op));m.position.set(x,y,z);m.castShadow=op===1&&(h>.38||(w>1.2&&d>.3&&y>1));m.receiveShadow=op===1&&(y<.5||h>1);scene.add(m);return m}
-function groupBox(g,x,y,z,w,h,d,c){let m=new THREE.Mesh(geo(w,h,d),mat(c));m.position.set(x,y,z);m.castShadow=h>.2&&w>.2;m.receiveShadow=h>.5;g.add(m);return m}
+function geo(w,h,d){const k=[w.toFixed(4),h.toFixed(4),d.toFixed(4)].join(':');if(!geos.has(k))geos.set(k,new THREE.BoxGeometry(w,h,d));return geos.get(k)}
+function box(x,y,z,w,h,d,c,op=1,cast,recv){let m=new THREE.Mesh(geo(w,h,d),mat(c,op));m.position.set(x,y,z);m.castShadow=cast!==undefined?cast:(op===1&&(h>.15||(y>.4&&Math.max(w,d)>.15)));m.receiveShadow=recv!==undefined?recv:(op===1&&(y<.8||h>.3||Math.max(w,d)>.35));scene.add(m);return m}
+function groupBox(g,x,y,z,w,h,d,c){let m=new THREE.Mesh(geo(w,h,d),mat(c));m.position.set(x,y,z);m.castShadow=h>.14&&w>.1;m.receiveShadow=h>.35;g.add(m);return m}
 function rand(seed){let v=Math.sin(seed*127.1+42.7)*43758.5453;return v-Math.floor(v)}
-// Raised rectangular garden plinth and soft ground shadow.
-box(0,-.30,0,18.9,.22,14.4,0x8f9b90,.18);
-box(0,-.15,0,18.2,.3,13.65,C.baseEdge);
-box(0,.035,0,18,.12,13.45,C.lawn);
-for(let x=-8.75;x<=8.75;x+=.5)for(let z=-6.45;z<=6.45;z+=.5){let k=Math.floor((x+9)*31+(z+7)*17);if(rand(k)>.80)box(x,.101,z,.48,.018,.48,rand(k+1)>.5?C.lawn2:0x83a17e)}
-// Perimeter walls; front parapet stays low to expose the garden.
-for(let x=-8.8;x<=8.8;x+=.8){box(x,.83,-6.55,.79,1.45,.28,C.wall);box(x,1.59,-6.55,.84,.13,.39,C.tile);box(x,.43,6.55,.79,.65,.28,C.wall);box(x,.80,6.55,.84,.12,.39,C.tile)}
-for(let z=-6.1;z<=6.1;z+=.78){for(const x of [-8.88,8.88]){box(x,.79,z,.28,1.37,.77,C.wall);box(x,1.52,z,.42,.12,.82,C.tile)}}
-for(const x of [-8.9,8.9])for(const z of [-6.55,6.55])box(x,.83,z,.46,1.58,.46,C.wallShade);
-// Lower wall opening at the near edge and entry flagstones.
-for(let x=-1.0;x<=1.0;x+=.43)box(x,.49,6.58,.41,.9,.43,C.baseEdge);
-for(let z=5.0;z<=6.35;z+=.48)box(0,.135,z,1.7,.08,.43,C.path);
-// House at the rear left: plaster bays, timber frame, double eaves.
+function clamp(v,a,b){return Math.min(b,Math.max(a,v))}
+
+// Raised rectangular garden plinth and lush lawn (lawn top = y: 0.10).
+box(0,-.30,0,19.1,.22,14.5,0x8f9b90,.18);
+box(0,-.155,0,18.4,.29,13.8,C.baseEdge,1,false,true);
+box(0,.05,0,18.0,.10,13.4,C.lawn,1,false,true);
+for(let x=-8.55;x<=8.55;x+=.5)for(let z=-6.25;z<=6.25;z+=.5){
+ if(((x-1.60)/3.85)**2+((z-1.55)/2.90)**2<1.05)continue;
+ let k=Math.floor((x+9)*31+(z+7)*17);if(rand(k)>.78)box(x,.104,z,.46,.012,.46,rand(k+1)>.5?C.lawn2:0x83a17e,1,false,true);
+}
+
+// Continuous perimeter walls with stepped front transitions and open front entry gate.
+function wallSpan(x1,z1,x2,z2,y0,h,thick=0.30,hasTile=true,inset=0.36){
+ let dx=Math.abs(x2-x1),dz=Math.abs(z2-z1),cx=(x1+x2)/2,cz=(z1+z2)/2;
+ let alongX=dx>=dz,len=Math.max(0.05,Math.max(dx,dz)-inset),w=alongX?len:thick,d=alongX?thick:len;
+ let footH=0.14;
+ box(cx,y0+footH/2,cz,w+(alongX?0:.04),footH,d+(alongX?.04:0),C.stone2);
+ box(cx,y0+footH+(h-footH)/2,cz,w,h-footH,d,C.wall);
+ if(hasTile){
+  let tw=w+(alongX?0:.14),td=d+(alongX?.14:0),rw=Math.max(0.04,w-0.04),rd=Math.max(0.04,d-0.04);
+  box(cx,y0+h+.06,cz,tw,.12,td,C.tile);
+  box(cx,y0+h+.15,cz,alongX?rw:thick-.06,0.08,alongX?thick-.06:rd,C.tileLight);
+ }
+}
+function pier(x,z,y0,h,size=0.42,cap=true){
+ box(x,y0+.085,z,size+.04,.17,size+.04,C.stone2);
+ box(x,y0+.17+(h-.17)/2,z,size,h-.17,size,C.wallShade);
+ if(cap){
+  box(x,y0+h+.07,z,size+.14,.14,size+.14,C.tile);
+  box(x,y0+h+.17,z,size-.06,.09,size-.06,C.tileLight);
+ }
+}
+// Back wall & full-height side walls + stepped drop to low front parapet.
+wallSpan(-8.85,-6.55,8.85,-6.55,0.10,1.44,0.30,true);
+for(const sx of [-8.85,8.85]){
+ wallSpan(sx,-6.55,sx,4.90,0.10,1.44,0.30,true);
+ wallSpan(sx,4.90,sx,5.75,0.10,1.04,0.30,true);
+ wallSpan(sx,5.75,sx,6.55,0.10,0.64,0.30,true);
+ pier(sx,-6.55,0.10,1.48,0.44,true);
+ pier(sx,4.90,0.10,1.46,0.40,true);
+ pier(sx,5.75,0.10,1.06,0.40,true);
+ pier(sx,6.55,0.10,0.68,0.44,true);
+}
+// Front parapet with open stone-framed center entry (x in [-0.82, 0.82]).
+wallSpan(-8.85,6.55,-0.96,6.55,0.10,0.64,0.30,true);
+wallSpan(0.96,6.55,8.85,6.55,0.10,0.64,0.30,true);
+for(const s of [-1,1]){
+ pier(s*0.96,6.55,0.10,0.96,0.42,true);
+ box(s*0.70,0.23,6.55,0.18,0.26,0.36,C.stone2);
+}
+box(0,0.148,6.55,1.54,0.096,0.64,C.path);
+box(0,0.06,6.81,1.66,0.12,0.24,C.stone2);
+
+// Main House (rear-left): 3-bay timber frame, stepped gable infill, watertight double-slope roof.
 function house(cx,cz,w,d){
-box(cx,.23,cz,w+.38,.26,d+.36,C.stone2);
-box(cx,1.26,cz,w,1.82,d,C.wall);
-for(let x=cx-w/2+.13;x<=cx+w/2;x+=w/4)box(x,1.28,cz+d/2+.04,.17,2.03,.16,C.woodDark);
-for(const z of [cz-d/2+.06,cz+d/2-.05]){box(cx,2.19,z,w+.2,.14,.16,C.woodDark);box(cx,.34,z,w+.2,.16,.2,C.wood)}
-for(const x of [cx-w/2+.7,cx+w/2-.7]){
- box(x,1.39,cz+d/2+.11,.78,.93,.08,C.woodDark);
- for(let i=-1;i<=1;i++){box(x+i*.22,1.39,cz+d/2+.17,.045,.9,.04,C.wood);box(x,1.39+i*.27,cz+d/2+.17,.75,.045,.04,C.wood)}
+ box(cx,0.23,cz,w+.44,0.26,d+.44,C.stone2);
+ box(cx,1.28,cz,w,1.84,d,C.wall);
+ // Four front & rear timber columns forming 3 bays + side pilasters.
+ const bay=w/3-0.14;
+ for(const x of [cx-w/2+0.14,cx-bay/2,cx+bay/2,cx+w/2-0.14]){
+  for(const sz of [-1,1]){
+   let pz=cz+sz*(d/2-0.01);
+   box(x,0.40,pz,0.24,0.08,0.24,C.stone);
+   box(x,1.33,pz,0.17,1.78,0.17,C.woodDark);
+  }
+ }
+ for(const sx of [-1,1])box(cx+sx*(w/2-0.01),1.26,cz,0.15,1.80,0.15,C.woodDark);
+ for(const z of [cz-d/2+0.02,cz+d/2-0.02]){box(cx,2.17,z,w+.16,0.14,0.18,C.woodDark);box(cx,0.41,z,w+.16,0.12,0.20,C.wood)}
+ for(const x of [cx-w/2+0.02,cx+w/2-0.02])box(x,2.19,cz,0.18,0.14,d+.04,C.woodDark);
+ // Lattice windows on left/right front bays, plus back & east courtyard windows.
+ function latticeWindow(wx,wy,wz,alongX=true){
+  if(alongX){
+   let dir=wz>cz?1:-1;
+   box(wx,wy,wz-dir*0.005,0.84,0.92,0.05,C.paper);
+   for(const dy of [-0.47,0.47])box(wx,wy+dy,wz+dir*0.02,0.96,0.08,0.10,C.woodDark);
+   for(const dx of [-0.44,0.44])box(wx+dx,wy,wz+dir*0.02,0.08,0.86,0.10,C.woodDark);
+   for(let i=-1;i<=1;i++){box(wx+i*0.21,wy,wz+dir*0.045,0.042,0.86,0.036,C.wood);box(wx,wy+i*0.24,wz+dir*0.04,0.82,0.042,0.032,C.wood)}
+  }else{
+   box(wx-0.005,wy,wz,0.05,0.74,0.74,C.paper);
+   for(const dy of [-0.38,0.38])box(wx+0.02,wy+dy,wz,0.10,0.08,0.86,C.woodDark);
+   for(const dz of [-0.38,0.38])box(wx+0.02,wy,wz+dz,0.10,0.68,0.08,C.woodDark);
+   for(let i=-1;i<=1;i++){box(wx+0.045,wy,wz+i*0.18,0.036,0.68,0.042,C.wood);box(wx+0.04,wy+i*0.19,wz,0.032,0.042,0.68,C.wood)}
+  }
+ }
+ latticeWindow(cx-(w/2-0.14+bay/2)/2,1.38,cz+d/2+0.02,true);
+ latticeWindow(cx+(w/2-0.14+bay/2)/2,1.38,cz+d/2+0.02,true);
+ latticeWindow(cx-1.45,1.38,cz-d/2-0.02,true);
+ latticeWindow(cx+1.45,1.38,cz-d/2-0.02,true);
+ latticeWindow(cx+w/2+0.02,1.36,cz-0.38,false);
+ // Center double doors & front stone steps.
+ box(cx,1.15,cz+d/2+0.04,1.14,1.54,0.10,C.woodDark);
+ box(cx-0.25,1.13,cz+d/2+0.065,0.48,1.42,0.07,C.wood);
+ box(cx+0.25,1.13,cz+d/2+0.065,0.48,1.42,0.07,C.wood);
+ box(cx-0.07,1.10,cz+d/2+0.11,0.05,0.09,0.04,0xd4b26b);
+ box(cx+0.07,1.10,cz+d/2+0.11,0.05,0.09,0.04,0xd4b26b);
+ box(cx,0.19,cz+d/2+0.36,1.52,0.18,0.32,C.stone2);
+ box(cx,0.152,cz+d/2+0.64,1.76,0.104,0.32,C.path);
+ // Solid eaves soffit + stepped gable core + watertight pitched dark-tile roof slopes + ridge (zero coplanar ribs).
+ box(cx,2.24,cz,w+0.60,0.08,d+0.64,C.woodDark);
+ for(let i=0;i<9;i++){
+  let y=2.24+i*0.14,off=1.84-i*0.2025,ww=w+1.04-i*0.06;
+  if(i<8){
+   let coreD=Math.min(d-0.04,Math.max(0.20,off*2-0.22));
+   box(cx,2.27+i*0.14,cz,w,0.14,coreD,C.wall);
+  }else{
+   box(cx,3.34,cz,w,0.08,0.16,C.wall);
+  }
+  for(const s of [-1,1]){
+   let zz=cz+s*off,ribD=i===8?0.26:0.36,ribZ=i===8?zz+s*0.05:zz;
+   box(cx,y,zz,ww,0.18,0.44,i%2?C.tile:C.tileLight);
+   for(let x=cx-ww/2+0.18;x<=cx+ww/2-0.16;x+=0.38)box(x,y+0.104,ribZ,0.055,0.036,ribD,0x253335);
+  }
+ }
+ box(cx,3.47,cz,w+0.68,0.22,0.34,C.tile);
+ for(let x=cx-w/2-0.26;x<=cx+w/2+0.26;x+=0.42)box(x,3.59,cz,0.11,0.09,0.30,C.tileLight);
+ for(const sx of [-1,1])box(cx+sx*(w/2+0.28),3.63,cz,0.18,0.16,0.28,C.tileLight);
 }
-box(cx,.97,cz+d/2+.13,1.06,1.49,.1,C.woodDark);
-box(cx-.25,.97,cz+d/2+.2,.47,1.41,.06,C.wood);box(cx+.25,.97,cz+d/2+.2,.47,1.41,.06,C.wood);
-for(let s=-1;s<=1;s+=2){for(let i=0;i<6;i++){
- let y=2.20+i*.18, zz=cz+s*(d/2+.45-i*.14), ww=w+1.05-i*.1;
- box(cx,y,zz,ww,.18,.38,i%2?C.tile:C.tileLight);
- for(let x=cx-ww/2+.18;x<cx+ww/2-.1;x+=.38)box(x,y+.104,zz,.055,.038,.38,0x253335);
-}}
-box(cx,3.35,cz,w+.3,.24,.25,C.tile);for(let x=cx-w/2-.28;x<=cx+w/2+.28;x+=.42)box(x,3.45,cz,.1,.11,.29,C.tileLight);
-for(const x of [cx-w/2-.45,cx+w/2+.45])for(const z of [cz-d/2-.46,cz+d/2+.46])box(x,2.35,z,.25,.28,.32,C.tile);
+house(-4.55,-4.05,5.70,2.90);
+
+// Interior courtyard wall with solid Moon Gate (connects House east wall to Pavilion west side) & lattice window.
+const gx=1.30,gz=-2.95,gy=1.30,grad=1.06;
+wallSpan(-1.75,gz,gx-1.40,gz,0.10,1.82,0.32,true,0.0);
+// Central Moon Gate masonry wall (exact 0.14 grid cells so nothing floats, z-fights, or protrudes inside circle).
+box(gx,0.16,gz,2.60,0.12,0.56,C.stone2);
+for(let ix=-10;ix<=10;ix++){
+ let dx=ix*0.14;
+ for(let iy=0;iy<17;iy++){
+  let y=0.29+iy*0.14;
+  let r=Math.hypot(dx,y-gy);
+  if(r>=grad){
+   let ring=r<grad+0.18;
+   box(gx+dx,y,gz,0.14,0.14,ring?0.42:0.34,ring?C.wallShade:C.wall);
+  }
+ }
 }
-house(-4.45,-3.94,5.85,3.0);
-// Moon gate assembled from square masonry blocks around a circular void.
-const gx=1.12,gz=-2.8,gy=1.52,rad=1.08;
-for(let x=-1.08;x<=-.47;x+=.2)box(gx+x,.84,gz,.2,1.38,.38,C.wall);
-for(let x=1.09;x<=2.7;x+=.2)box(gx+x,.84,gz,.2,1.38,.38,C.wall);
-box(gx-1.45,1.59,gz,1.27,.13,.49,C.tile);
-box(gx+1.9,1.59,gz,2.0,.13,.49,C.tile);
-for(let x=-1.55;x<=1.55;x+=.18)for(let y=.47;y<=2.89;y+=.18){let r=Math.hypot(x,y-gy);if(r>rad&&r<rad+.31)box(gx+x,y,gz,.18,.18,.40,r<rad+.17?C.wall:C.wallShade)}
-for(let x of [-.21,.21])box(gx+x,.46,gz,.39,.24,.53,C.stone2);
-for(let x=-1.75;x<=1.75;x+=.18){let outer=Math.hypot(x,2.9-gy);if(outer>rad)box(gx+x,2.94,gz,.18,.17,.46,C.wall)}
-box(gx,3.12,gz,3.9,.16,.55,C.tile);box(gx,3.24,gz,3.45,.13,.42,C.tileLight);
-// Pond: shallow irregular voxel outline and edge blocks.
-const pond=[];for(let ix=-9;ix<=9;ix++)for(let iz=-6;iz<=6;iz++){
- let x=1.65+ix*.44,z=1.52+iz*.44,inside=(ix/9)**2+(iz/6)**2<1.05+(rand(ix*47+iz*19)-.5)*.14;
- if(inside)pond.push([x,z,ix,iz]);}
-const waterSet=new Set(pond.map(p=>p[2]+','+p[3]));
-for(const [x,z,ix,iz] of pond){box(x,.105,z,.45,.09,.45,rand(ix*39+iz*87)>.64?C.water2:C.water);for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]])if(!waterSet.has((ix+dx)+','+(iz+dz)))box(x+dx*.23,.18,z+dz*.23,.46,.22,.19,C.stone2)}
-// Lotus pads, stems and blossoms.
-for(let i=0;i<22;i++){let p=pond[Math.floor(rand(i+40)*pond.length)];if(!p)continue;let [x,z]=p;if(Math.abs(z-1.55)<.55&&x>-.2&&x<3.5)continue;let s=.25+rand(i+80)*.15;box(x,.17,z,s,.035,s,rand(i+100)>.5?C.leaf:C.leaf2);box(x+s*.14,.191,z-s*.12,.09,.02,.09,C.water);if(i%4===0){box(x,.27,z,.06,.18,.06,C.leaf3);for(let j=0;j<4;j++){let a=j*Math.PI/2;box(x+Math.cos(a)*.11,.36,z+Math.sin(a)*.11,.17,.12,.14,C.lotus)}box(x,.40,z,.09,.08,.09,0xf5ca7e)}}
-// Slightly arched stone bridge crossing the pond, with a textured parapet.
-for(let i=0;i<13;i++){let x=-1.05+i*.43,dy=.26+Math.sin(i/12*Math.PI)*.52;
- box(x,.16+dy/2,1.37,.46,dy,1.35,C.stone);
- box(x,.22+dy,1.37,.42,.1,1.65,i%2?C.path:C.path2);
- if(i%3===0){for(let z of [.49,2.25]){box(x,.54+dy,z,.16,.59,.16,C.stone2);box(x,.9+dy,z,.48,.1,.18,C.stone)}}
-}
-// Paths and irregular stepping slabs.
-function slab(x,z,w=.75,d=.47){box(x,.15,z,w,.09,d,rand(x*9+z*7)>.5?C.path:C.path2)}
-for(let i=0;i<8;i++)slab(-5.7+i*.58,3.7-Math.sin(i*.7)*.18,.62,.49);
-for(let i=0;i<6;i++)slab(4.45+i*.26,4.5-i*.51,.58,.55);
-for(let i=0;i<5;i++)slab(-1.6+i*.38,-1.2-i*.49,.55,.5);
-// Voxel pavilion: open posts, railings, square hip roof and ridge finial.
+box(gx,2.74,gz,3.30,0.16,0.54,C.tile);
+box(gx,2.87,gz,2.98,0.12,0.38,C.tileLight);
+// Right wing wall connecting Moon Gate to Pavilion with a traditional square lattice window (漏窗).
+wallSpan(gx+1.40,gz,3.14,gz,0.10,1.82,0.32,false,0.0);
+wallSpan(3.86,gz,4.24,gz,0.10,1.82,0.32,false,0.0);
+box(3.50,0.47,gz,0.72,0.74,0.32,C.wall);
+box(3.50,0.17,gz,0.72,0.14,0.36,C.stone2);
+box(3.50,1.72,gz,0.72,0.40,0.32,C.wall);
+box(3.50,1.98,gz,1.64,0.12,0.46,C.tile);
+box(3.50,2.07,gz,1.56,0.08,0.26,C.tileLight);
+for(const dy of [-0.34,0.34])box(3.50,1.18+dy,gz,0.72,0.07,0.38,C.woodDark);
+for(const dx of [-0.34,0.34])box(3.50+dx,1.18,gz,0.07,0.72,0.38,C.woodDark);
+for(let i=-1;i<=1;i++){box(3.50+i*0.17,1.18,gz,0.04,0.64,0.06,C.wood);box(3.50,1.18+i*0.17,gz,0.64,0.04,0.06,C.wood)}
+pier(4.34,gz,0.10,1.84,0.38,true);
+
+// Pavilion (rear-right): open south entrance, steps, 美人靠 railings with balusters, watertight hip roof + flying eaves.
 function pavilion(cx,cz){
-box(cx,.23,cz,3.05,.26,3.0,C.stone2);box(cx,.38,cz,2.68,.12,2.65,C.path);
-for(let x of [-1.08,1.08])for(let z of [-1.04,1.04]){box(cx+x,1.39,cz+z,.18,2.02,.18,C.woodDark);box(cx+x,2.42,cz+z,.32,.2,.32,C.wood)}
-for(let z of [-1.04,1.04]){box(cx,2.20,cz+z,2.43,.16,.18,C.wood);box(cx,.78,cz+z,2.34,.12,.14,C.wood)}
-for(let x of [-1.08,1.08]){box(cx+x,2.20,cz,.18,.16,2.24,C.wood);box(cx+x,.78,cz,.14,.12,2.1,C.wood)}
-for(let tier=0;tier<6;tier++){let sz=3.78-tier*.42,y=2.48+tier*.20;for(let x=cx-sz/2;x<=cx+sz/2+.01;x+=.27){box(x,y,cz-sz/2,.28,.18,.28,C.tile);box(x,y,cz+sz/2,.28,.18,.28,C.tile)}for(let z=cz-sz/2;z<=cz+sz/2+.01;z+=.27){box(cx-sz/2,y,z,.28,.18,.28,C.tile);box(cx+sz/2,y,z,.28,.18,.28,C.tile)}}
-box(cx,3.65,cz,.7,.22,.7,C.tileLight);box(cx,3.83,cz,.18,.23,.18,C.tile);
+ box(cx,0.23,cz,3.06,0.26,2.96,C.stone2);
+ box(cx,0.41,cz,2.72,0.10,2.62,C.path);
+ // South entry steps aligned to the open doorway.
+ box(cx,0.22,cz+1.62,1.32,0.24,0.32,C.stone2);
+ box(cx,0.16,cz+1.94,1.52,0.12,0.34,C.path);
+ // Four corner timber columns + stone plinths + beams & brackets.
+ for(const x of [-1.06,1.06])for(const z of [-1.01,1.01]){
+  box(cx+x,0.50,cz+z,0.28,0.08,0.28,C.stone);
+  box(cx+x,1.50,cz+z,0.18,1.92,0.18,C.woodDark);
+  box(cx+x,2.42,cz+z,0.30,0.16,0.30,C.wood);
+ }
+ for(const z of [-1.01,1.01])box(cx,2.34,cz+z,2.14,0.14,0.14,C.wood);
+ for(const x of [-1.06,1.06])box(cx+x,2.34,cz,0.14,0.14,2.04,C.wood);
+ // Hanging lintel fretwork on front entrance.
+ box(cx,2.14,cz+1.01,1.94,0.06,0.10,C.woodDark);
+ for(const s of [-0.65,0.65])box(cx+s,2.21,cz+1.01,0.08,0.12,0.09,C.woodDark);
+ // Full 美人靠 (bench + handrail + vertical balusters) on North, East, West; open doorway on South.
+ function railSpan(rx1,rz1,rx2,rz2){
+  let alongX=Math.abs(rx2-rx1)>=Math.abs(rz2-rz1),len=Math.max(Math.abs(rx2-rx1),Math.abs(rz2-rz1));
+  let mx=(rx1+rx2)/2,mz=(rz1+rz2)/2;
+  box(mx,0.52,mz,alongX?len:0.24,0.12,alongX?0.24:len,C.wood);
+  box(mx,0.95,mz,alongX?len:0.12,0.09,alongX?0.12:len,C.wood);
+  let count=Math.max(2,Math.round(len/0.30));
+  for(let k=1;k<count;k++){
+   let t=k/count;
+   box(rx1+(rx2-rx1)*t,0.74,rz1+(rz2-rz1)*t,0.07,0.34,0.07,C.woodDark);
+  }
+ }
+ railSpan(cx-1.06,cz-1.01,cx+1.06,cz-1.01);
+ railSpan(cx-1.06,cz-1.01,cx-1.06,cz+1.01);
+ railSpan(cx+1.06,cz-1.01,cx+1.06,cz+1.01);
+ railSpan(cx-1.06,cz+1.01,cx-0.52,cz+1.01);
+ railSpan(cx+0.52,cz+1.01,cx+1.06,cz+1.01);
+ for(const s of [-0.52,0.52])box(cx+s,0.76,cz+1.01,0.12,0.60,0.12,C.woodDark);
+ // Watertight solid pyramidal hip roof + upturned flying corner eaves + continuous diagonal hip ridges + pagoda finial.
+ box(cx,2.48,cz,2.56,0.12,2.46,C.woodDark);
+ for(let tier=0;tier<8;tier++){
+  let sz=3.84-tier*0.48,y=2.58+tier*0.16;
+  box(cx,y,cz,sz,0.18,sz,tier%2?C.tileLight:C.tile);
+  if(tier<7){
+   let diag=sz/2-0.16;
+   for(const sx of [-1,1])for(const szSign of [-1,1])box(cx+sx*diag,y+0.11,cz+szSign*diag,0.24,0.09,0.24,C.tileLight);
+  }
+ }
+ for(const sx of [-1,1])for(const szSign of [-1,1]){
+  box(cx+sx*1.94,2.67,cz+szSign*1.94,0.26,0.14,0.26,C.tileLight);
+  box(cx+sx*2.04,2.75,cz+szSign*2.04,0.16,0.12,0.16,C.tile);
+ }
+ box(cx,3.82,cz,0.56,0.16,0.56,C.tileLight);
+ box(cx,3.95,cz,0.30,0.14,0.30,C.tile);
+ box(cx,4.11,cz,0.15,0.20,0.15,C.stone2);
 }
-pavilion(5.8,-3.85);
-// Rockery with staggered stone masses; tiny pavilion-side shrubs.
-for(let i=0;i<42;i++){let a=rand(i+731)*Math.PI*2,r=Math.sqrt(rand(i+912))*1.65,x=6.05+Math.cos(a)*r,z=.01+Math.sin(a)*r;let h=.22+rand(i+343)*(.9+(1-r/1.65)*1.5),w=.28+rand(i+66)*.5;box(x,.12+h/2,z,w,h,w*.9,i%5?C.stone:C.stone2)}
-for(let i=0;i<6;i++)box(5.1+i*.36,.14,-1.65,.4,.18,.47,C.path2);
-// Bamboo grove: grouped segmented stalks and angular leaves.
-function bamboo(x,z,seed){let h=1.65+rand(seed)*1.15;for(let j=0;j<7;j++){let y=.13+j*h/7;box(x,y+h/14,z,.07,h/7-.015,.07,j%2?C.bamboo:0x4c7b52);box(x,y+h/7,z,.105,.035,.105,C.leaf3)}for(let k=0;k<5;k++){let a=k*2.4+rand(seed+k),y=.8+k*.31,dx=Math.cos(a),dz=Math.sin(a);box(x+dx*.26,y,z+dz*.26,.45,.06,.16,k%2?C.leaf:C.leaf2);box(x+dx*.48,y+.08,z+dz*.41,.38,.05,.14,C.leaf3)}}
-for(let i=0;i<31;i++){let x=-7.45+rand(i+13)*2.1,z=-.9+rand(i+46)*3.2;bamboo(x,z,i+22)}
-// Peach tree, visibly square branching and blossom clouds.
-function peach(x,z,seed,scale=1){let g=new THREE.Group();g.position.set(x,0,z);g.scale.setScalar(scale);scene.add(g);groupBox(g,0,.89,0,.22,1.7,.22,C.woodDark);for(const [dx,dz,h] of [[-.65,.22,1.96],[.65,-.23,2.12],[-.33,-.55,2.23],[.42,.48,1.92]]){groupBox(g,dx*.5,1.72,dz*.5,.14,.75,.14,C.wood);groupBox(g,dx,h,dz,.15,.37,.15,C.woodDark)}for(let i=0;i<33;i++){let a=rand(seed+i*7)*Math.PI*2,r=.25+rand(seed+i*13)*1.12,y=1.82+rand(seed+i*19)*1.1;let s=.30+rand(seed+i*23)*.32;groupBox(g,Math.cos(a)*r,y,Math.sin(a)*r,s,s,s,i%4===0?C.peachLight:C.peach)}for(let i=0;i<9;i++){let a=rand(seed+i*41)*6.28,r=.65+rand(seed+i*5)*.7;groupBox(g,Math.cos(a)*r,2.1+rand(i+seed)*.5,Math.sin(a)*r,.24,.23,.24,C.leaf2)}}
-peach(6.83,3.61,3,1.0);peach(-5.95,4.78,29,.73);
-// Accent shrubs, moss and courtyard furniture.
-function shrub(x,z,s,seed){for(let i=0;i<8;i++){let a=rand(seed+i*8)*6.28,r=rand(seed+i*9)*s*.5;box(x+Math.cos(a)*r,.27+rand(seed+i*3)*.14,z+Math.sin(a)*r,s*.32,s*.35,s*.32,i%3?C.leaf:C.leaf2)}}
-for(const [x,z,s] of [[-7.25,-4.95,.7],[-1.05,-4.85,.6],[3.6,-4.9,.55],[7.7,-5.2,.48],[-7.5,5.25,.58],[7.6,5.37,.42]])shrub(x,z,s,Math.floor((x+z)*19));
-box(-3.25,.51,.00,1.35,.18,.62,C.stone2);box(-3.72,.27,.0,.17,.38,.47,C.stone);box(-2.78,.27,.0,.17,.38,.47,C.stone);for(const z of [-.58,.59])box(-3.25,.29,z,.6,.1,.25,C.stone2);
-// Low, instanced meadow plants: keep paths, water and buildings clear.
+pavilion(5.85,-3.85);
+
+// Lotus Pond (centered at 1.60, 1.55) with properly oriented stone bank coping.
+const pond=[];
+for(let ix=-7;ix<=7;ix++)for(let iz=-5;iz<=5;iz++){
+ let x=1.60+ix*0.44,z=1.55+iz*0.44;
+ let inside=(ix/7.2)**2+(iz/5.2)**2<1.02+(rand(ix*47+iz*19)-0.5)*0.12;
+ if(inside)pond.push([x,z,ix,iz]);
+}
+const waterSet=new Set(pond.map(p=>p[2]+','+p[3]));
+for(const [x,z,ix,iz] of pond){
+ box(x,0.105,z,0.44,0.06,0.44,C.waterDark,1,false,true);
+ box(x,0.145,z,0.44,0.02,0.44,rand(ix*39+iz*87)>0.64?C.water2:C.water,1,false,true);
+ for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){
+  if(!waterSet.has((ix+dx)+','+(iz+dz))){
+   // Orient coping along the shoreline: swap width & depth for X vs Z edges, stagger heights to prevent corner z-fighting.
+   let cx=x+dx*0.24,cz=z+dz*0.24;
+   if(Math.abs(cz-1.55)<0.82&&(cx<-1.25||cx>4.45))continue;
+   let ew=dx!==0?0.22:0.46,ed=dz!==0?0.22:0.46;
+   let ch=0.20+(((ix&1)*2+(iz&1))*0.008)+(dx!==0?0.004:0)+rand(ix*31+iz*53+dx*11+dz*17)*0.002;
+   box(cx,0.03+ch/2,cz,ew,ch,ed,rand(ix*13+iz*29+dx*7)>0.5?C.stone2:C.stone);
+  }
+ }
+}
+
+// Lotus pads and blossoms (strictly clear of bridge channel, embankment edges, and duplicate cells).
+const usedLotus=new Set();
+for(let i=0;i<26;i++){
+ let p=pond[Math.floor(rand(i+40)*pond.length)];if(!p)continue;
+ let [x,z,ix,iz]=p,cell=ix+','+iz;
+ if(usedLotus.has(cell))continue;
+ if(Math.abs(z-1.55)<1.25&&x>-1.8&&x<5.0)continue;
+ if(!waterSet.has((ix+1)+','+iz)||!waterSet.has((ix-1)+','+iz)||!waterSet.has(ix+','+(iz+1))||!waterSet.has(ix+','+(iz-1)))continue;
+ usedLotus.add(cell);
+ let s=0.24+rand(i+80)*0.14;
+ box(x,0.165,z,s,0.03,s,rand(i+100)>0.5?C.leaf:C.leaf2,1,false,true);
+ box(x+s*0.14,0.181,z-s*0.12,0.08,0.015,0.08,C.water,1,false,true);
+ if(i%4===0){
+  box(x,0.26,z,0.055,0.18,0.055,C.leaf3);
+  for(let j=0;j<4;j++){let a=j*Math.PI/2;box(x+Math.cos(a)*0.10,0.35,z+Math.sin(a)*0.10,0.16,0.11,0.13,C.lotus)}
+  box(x,0.39,z,0.08,0.07,0.08,0xf5ca7e);
+ }
+}
+
+// Stone Arch Bridge (spans from dry west bank x=-1.95 to dry east bank x=5.15 at z=1.55) with open arch, steps & continuous railings.
+const bx0=-1.95,bx1=5.15,bz=1.55;
+function bridgeY(x){let t=clamp((x-bx0)/(bx1-bx0),0,1);return 0.42+Math.sin(t*Math.PI)*0.56}
+for(let k=0;k<=30;k++){
+ let x=bx0+k*0.24,y=bridgeY(x);
+ if(x<bx0+0.68||x>bx1-0.68){
+  // Solid stone bridgehead abutments grounded below water/lawn.
+  let pierH=y-0.02;
+  box(x,0.02+pierH/2,bz,0.24,pierH,1.38,C.stone);
+ }else{
+  // Open arched stone vault so water passes cleanly beneath the bridge.
+  box(x,y-0.11,bz,0.24,0.18,1.36,C.stone);
+  for(const sz of [-0.67,0.67])box(x,y-0.12,bz+sz,0.236,0.20,0.08,C.stone2);
+ }
+ // Non-overlapping stepped stone deck paving + edge curbs.
+ box(x,y,bz,0.234,0.09,1.52,k%2?C.path:C.path2);
+ for(const sz of [-0.68,0.68])box(x,y+0.06,bz+sz,0.236,0.07,0.16,C.stone2);
+}
+// Continuous stone railings: lower rail, intermediate balusters, dense staggered top handrail, and 11 望柱 posts.
+for(let k=0;k<=46;k++){
+ let x=bx0+0.15+k*0.148,y=bridgeY(x),stagger=(k%2)*0.005,dz=(k%2)*0.004;
+ for(const sz of [-0.68,0.68]){
+  box(x,y+0.20+stagger,bz+sz,0.19,0.07,0.10+dz,C.stone);
+  box(x,y+0.52+stagger,bz+sz,0.19,0.10,0.13+dz,C.stone2);
+ }
+}
+for(let x=bx0+0.15;x<=bx1-0.15+0.001;x+=0.30){
+ let y=bridgeY(x);
+ for(const sz of [-0.68,0.68])box(x,y+0.36,bz+sz,0.07,0.31,0.07,C.stone2);
+}
+for(let k=0;k<=10;k++){
+ let x=bx0+0.15+k*(bx1-bx0-0.30)/10,y=bridgeY(x);
+ for(const sz of [-0.68,0.68]){
+  box(x,y+0.34,bz+sz,0.16,0.58,0.16,C.stone2);
+  box(x,y+0.66,bz+sz,0.20,0.07,0.20,C.path);
+ }
+}
+// West & East bridge approach steps down to ground paths.
+box(bx0-0.28,0.22,bz,0.38,0.24,1.52,C.stone2);
+box(bx0-0.62,0.17,bz,0.38,0.14,1.52,C.path);
+box(bx1+0.28,0.22,bz,0.38,0.24,1.52,C.stone2);
+box(bx1+0.62,0.17,bz,0.38,0.14,1.52,C.path);
+
+// Continuous connected garden stone footpath network (non-colliding slab heights prevent coplanar z-fighting).
+const pathCoords=[],placedSlabs=[];
+let pathIdx=0;
+function addPath(pts,step=0.38,sw=0.66,sd=0.66){
+ for(let i=0;i<pts.length-1;i++){
+  let [x1,z1]=pts[i],[x2,z2]=pts[i+1],dist=Math.hypot(x2-x1,z2-z1),n=Math.max(1,Math.ceil(dist/step));
+  for(let k=0;k<=n;k++){
+   let t=k/n,px=x1+(x2-x1)*t,pz=z1+(z2-z1)*t;
+   if(placedSlabs.some(s=>Math.hypot(s.x-px,s.z-pz)<0.10))continue;
+   pathCoords.push([px,pz]);
+   let idx=pathIdx++;
+   let dw=(idx%2)*0.004,dd=((idx>>1)%2)*0.004,w=sw-dw,d=sd-dd;
+   let dh=((idx*0.61803398875)%1)*0.014;
+   for(let guard=0;guard<16;guard++){
+    let top=0.18+dh;
+    if(!placedSlabs.some(s=>Math.abs(s.x-px)<(s.w+w)/2&&Math.abs(s.z-pz)<(s.d+d)/2&&Math.abs(s.top-top)<0.0028))break;
+    dh=(guard+1)*0.0028;
+   }
+   placedSlabs.push({x:px,z:pz,w,d,top:0.18+dh});
+   let tone=rand(Math.round(px*17)+Math.round(pz*31)+k)>0.5?C.path:C.path2;
+   box(px,0.14+dh/2,pz,w,0.08+dh,d,tone,1,false,true);
+  }
+ }
+}
+// 1. Front gate entry straight to south courtyard plaza.
+addPath([[0,6.25],[0,4.65]],0.40,1.42,0.54);
+// 2. West loop: plaza -> west shore -> bridge west steps -> stone table patio -> main house steps -> moon gate -> rear courtyard.
+addPath([[0,4.65],[-1.30,4.55],[-2.55,4.15],[-3.35,3.45],[-3.45,2.45],[-3.15,1.55],[-2.75,1.55]],0.36,0.72,0.68);
+addPath([[-3.15,1.55],[-4.20,0.85],[-4.55,-0.15],[-4.55,-1.65]],0.36,0.72,0.68);
+addPath([[-4.55,-1.65],[-2.60,-1.88],[-0.40,-1.95],[1.30,-1.95],[1.30,-3.25],[1.30,-4.45],[2.45,-4.55]],0.36,0.68,0.64);
+// 3. East loop: plaza -> east shore -> bridge east steps -> corridor between pond & rockery -> pavilion steps.
+addPath([[0,4.65],[1.35,4.72],[2.75,4.75],[4.15,4.45],[5.20,3.75],[5.85,2.75],[5.95,1.55],[5.75,1.55]],0.36,0.72,0.68);
+addPath([[5.95,1.55],[5.55,0.85],[5.35,0.00],[5.45,-0.95],[5.85,-1.80]],0.36,0.68,0.66);
+
+// Stone table & 4 grounded drum stools on a side courtyard terrace connected to the west path.
+const stx=-3.10,stz=-0.38;
+box(stx,0.132,stz,1.76,0.064,1.62,C.path2,1,false,true);
+box(stx-0.98,0.135,stz,0.50,0.070,0.86,C.path,1,false,true);
+box(stx,0.54,stz,1.16,0.13,0.66,C.stone2);
+box(stx-0.38,0.32,stz,0.16,0.32,0.46,C.stone);
+box(stx+0.38,0.32,stz,0.16,0.32,0.46,C.stone);
+for(const [ox,oz] of [[0,-0.55],[0,0.55],[-0.76,0],[0.76,0]]){
+ box(stx+ox,0.25,stz+oz,0.28,0.16,0.24,C.stone);
+ box(stx+ox,0.36,stz+oz,0.38,0.08,0.32,C.stone2);
+}
+
+// Sculptural Taihu Rockery (east corridor, right of east path) + rear courtyard focal stone.
+function rockery(rx,rz,seed){
+ // Main arched Taihu peak with natural overhang & grounded plinth stones.
+ const parts=[
+  [0,0.30,0,1.45,0.44,1.30,C.stone],[ -0.45,0.52,0.20,0.68,0.88,0.64,C.stone2],[0.48,0.58,-0.15,0.64,1.00,0.68,C.stone],
+  [-0.38,1.08,0.10,0.56,0.54,0.56,C.stone],[0.42,1.18,-0.10,0.58,0.66,0.54,C.stone2],
+  [0.05,1.46,-0.02,1.12,0.46,0.54,C.stone],[0.24,1.82,-0.06,0.54,0.48,0.44,C.stone2],
+  [0.28,2.14,-0.06,0.32,0.32,0.30,C.stone],[-0.68,0.38,-0.45,0.55,0.58,0.55,C.stone2],
+  [0.65,0.42,0.48,0.58,0.68,0.52,C.stone],[0.85,0.28,-0.25,0.48,0.42,0.52,C.stone2],
+  [-0.18,0.26,0.62,0.56,0.38,0.46,C.stone],[0.02,0.24,-0.64,0.62,0.34,0.44,C.stone2]
+ ];
+ for(const [dx,y,dz,w,h,d,col] of parts)box(rx+dx,y,rz+dz,w,h,d,col);
+ // Small moss/fern tufts tucked into rockery base.
+ for(let i=0;i<7;i++){
+  let a=rand(seed+i*19)*6.28,r=0.72+rand(seed+i*7)*0.45;
+  box(rx+Math.cos(a)*r,0.19,rz+Math.sin(a)*r,0.22,0.20,0.22,i%2?C.leaf:C.leaf3);
+ }
+}
+rockery(7.30,-0.28,55);
+// Rear courtyard focal Taihu peak framed through the Moon Gate.
+box(2.35,0.28,-5.25,0.84,0.40,0.68,C.stone);
+box(2.45,0.66,-5.25,0.48,0.52,0.44,C.stone2);
+box(2.22,0.52,-5.18,0.38,0.44,0.38,C.stone);
+box(2.50,1.02,-5.26,0.32,0.36,0.30,C.stone);
+
+// Bamboo grove (west courtyard) & rear courtyard accent bamboo.
+function bamboo(x,z,seed,minH=1.65){
+ let h=minH+rand(seed)*1.15;
+ for(let j=0;j<7;j++){
+  let y=0.06+j*h/7;
+  box(x,y+h/14,z,0.075,h/7-0.01,0.075,j%2?C.bamboo:0x4c7b52);
+  box(x,y+h/7,z,0.11,0.035,0.11,C.leaf3);
+ }
+ for(let k=0;k<5;k++){
+  let a=k*2.4+rand(seed+k),y=0.82+k*0.30,dx=Math.cos(a),dz=Math.sin(a);
+  box(x+dx*0.24,y,z+dz*0.24,0.42,0.055,0.15,k%2?C.leaf:C.leaf2);
+  box(x+dx*0.44,y+0.07,z+dz*0.39,0.36,0.05,0.13,C.leaf3);
+ }
+}
+for(let i=0;i<30;i++){let x=-7.75+rand(i+13)*2.05,z=-1.15+rand(i+46)*3.25;bamboo(x,z,i+22)}
+for(let i=0;i<7;i++){let x=0.35+rand(i+91)*1.35,z=-5.75+rand(i+64)*0.85;bamboo(x,z,i+140,1.50)}
+
+// Peach trees: grounded trunk, continuous stepped branches, and cohesive blossom canopies (zero detached voxels).
+function peach(x,z,seed,scale=1){
+ let g=new THREE.Group();g.position.set(x,0,z);g.scale.setScalar(scale);scene.add(g);
+ groupBox(g,0,0.88,0,0.24,1.68,0.24,C.woodDark);
+ groupBox(g,0,0.16,0,0.36,0.16,0.36,C.woodDark);
+ const tips=[];
+ for(const [dx,dz,h] of [[-0.68,0.24,2.08],[0.68,-0.22,2.20],[-0.34,-0.58,2.28],[0.44,0.52,2.02]]){
+  // Build continuous stepped branch from trunk center (0,1.55,0) out to tip (dx,h,dz).
+  for(let s=1;s<=5;s++){
+   let t=s/5;
+   groupBox(g,dx*t,1.52+(h-1.52)*t,dz*t,0.15,0.26,0.15,s<4?C.wood:C.woodDark);
+  }
+  tips.push([dx,h,dz]);
+ }
+ // Anchor blossom and leaf clusters directly onto branch tips & crown center so every block connects.
+ const anchors=[[0,2.35,0],...tips];
+ for(const [ax,ay,az] of anchors){
+  groupBox(g,ax,ay+0.12,az,0.48,0.44,0.48,C.peach);
+  for(let i=0;i<7;i++){
+   let a=rand(seed+ax*13+i*7)*Math.PI*2,r=0.20+rand(seed+az*17+i*11)*0.34,dy=(rand(seed+i*19)-0.35)*0.42;
+   let s=0.30+rand(seed+i*23)*0.22;
+   let col=i%4===0?C.peachLight:(i%5===0?C.peachDeep:C.peach);
+   groupBox(g,ax+Math.cos(a)*r,ay+0.16+dy,az+Math.sin(a)*r,s,s,s,col);
+  }
+  for(let i=0;i<2;i++){
+   let a=rand(seed+ax*29+i*41)*6.28,r=0.22+rand(seed+i*5)*0.28;
+   groupBox(g,ax+Math.cos(a)*r,ay+0.24+rand(i+seed)*0.18,az+Math.sin(a)*r,0.24,0.22,0.24,C.leaf2);
+  }
+ }
+}
+peach(7.20,4.35,3,1.04);
+peach(-6.45,4.72,29,0.78);
+
+// Grounded stone garden lanterns (石灯笼) beside paths.
+function lantern(lx,lz){
+ box(lx,0.16,lz,0.34,0.12,0.34,C.stone2);
+ box(lx,0.36,lz,0.16,0.32,0.16,C.stone);
+ box(lx,0.56,lz,0.30,0.08,0.30,C.stone2);
+ box(lx,0.70,lz,0.20,0.20,0.20,C.lantern);
+ for(const sx of [-0.09,0.09])for(const sz of [-0.09,0.09])box(lx+sx,0.70,lz+sz,0.04,0.22,0.04,C.stone);
+ box(lx,0.85,lz,0.36,0.10,0.36,C.tile);
+ box(lx,0.94,lz,0.14,0.09,0.14,C.stone2);
+}
+lantern(-2.35,2.70);
+lantern(4.95,2.95);
+
+// Grounded shrubs (bottom anchored cleanly into lawn y=0.10).
+function shrub(x,z,s,seed){
+ for(let i=0;i<8;i++){
+  let a=rand(seed+i*8)*6.28,r=rand(seed+i*9)*s*0.44,h=s*(0.28+rand(seed+i*3)*0.18)+i*0.004;
+  box(x+Math.cos(a)*r,0.09+h/2,z+Math.sin(a)*r,s*0.34,h,s*0.34,i%3?C.leaf:C.leaf2);
+ }
+}
+for(const [x,z,s] of [[-7.95,-5.25,0.68],[-0.85,-5.30,0.62],[3.45,-5.35,0.58],[8.05,-5.35,0.50],[-7.85,5.35,0.60],[7.95,5.45,0.46],[4.05,-1.65,0.50]])shrub(x,z,s,Math.floor((x+z)*19));
+
+// Low instanced meadow grass & flowers: keep paths, stone patio, lanterns, water, buildings & rockery clear.
 function plantable(x,z){
- if(Math.abs(x)>8.15||Math.abs(z)>5.9)return false;
- if(x<-1.15&&z<-2.08)return false; // main house
- if(x>3.8&&z<-1.75)return false; // pavilion
- if(((x-1.65)/4.5)**2+((z-1.52)/3.02)**2<1)return false; // pond and bridge
- if(x>4.05&&z<1.95&&z>-1.9)return false; // rockery
- if(x<-5.15&&z>-.95&&z<2.45)return false; // bamboo grove
- if(Math.abs(x)<1.5&&z>4.65)return false; // entry
- if(Math.abs(z-3.7)<.55&&x>-6&&x<-1.2)return false; // stone path
- if(Math.abs(z+2.8)<.45&&x>-.7&&x<4)return false; // moon gate
+ if(Math.abs(x)>8.25||Math.abs(z)>5.95)return false;
+ if(x<-1.20&&z<-2.05)return false; // main house
+ if(x>3.85&&z<-1.65)return false; // pavilion
+ if(((x-1.60)/3.85)**2+((z-1.55)/2.90)**2<1)return false; // pond & coping
+ if(x>5.80&&z<1.15&&z>-1.70)return false; // rockery
+ if(x<-5.35&&z>-1.40&&z<2.45)return false; // bamboo grove
+ if(Math.abs(z+2.95)<0.55&&x>-2.0&&x<4.6)return false; // moon gate wall
+ if(x>-4.35&&x<-1.95&&z>-1.45&&z<0.70)return false; // stone table patio
+ if(x>0.0&&x<3.1&&z<-4.4)return false; // rear courtyard bamboo & focal stone
+ if(Math.hypot(x+2.35,z-2.70)<0.48||Math.hypot(x-4.95,z-2.95)<0.48)return false; // lanterns
+ for(const [px,pz] of pathCoords)if(Math.hypot(x-px,z-pz)<0.62)return false;
+ if(Math.abs(x)<1.05&&z>4.40)return false; // entry path
  return true;
 }
 const grassPositions=[],flowerPositions=[];
-for(let i=0;i<2000&&(grassPositions.length<175||flowerPositions.length<58);i++){
- let x=-8.1+rand(i*11+1)*16.2,z=-5.9+rand(i*13+7)*11.8;
+for(let i=0;i<2400&&(grassPositions.length<185||flowerPositions.length<62);i++){
+ let x=-8.2+rand(i*11+1)*16.4,z=-5.9+rand(i*13+7)*11.8;
  if(!plantable(x,z))continue;
- if(grassPositions.length<175&&rand(i+777)>.14)grassPositions.push([x,z,i]);
- if(flowerPositions.length<58&&rand(i+991)>.73)flowerPositions.push([x,z,i]);
+ if(grassPositions.length<185&&rand(i+777)>0.14)grassPositions.push([x,z,i]);
+ if(flowerPositions.length<62&&rand(i+991)>0.72)flowerPositions.push([x,z,i]);
 }
 const tmp=new THREE.Object3D(),color=new THREE.Color();
-const grass=new THREE.InstancedMesh(geo(.035,.21,.035),mat(0xffffff),grassPositions.length*3);grass.name='meadow-grass';
+const grass=new THREE.InstancedMesh(geo(0.035,0.21,0.035),mat(0xffffff),grassPositions.length*3);grass.name='meadow-grass';
 let gi=0;for(const [x,z,seed] of grassPositions)for(let k=0;k<3;k++){
- let h=.72+rand(seed+k*17)*.65;tmp.position.set(x+(k-1)*.075,.10+.105*h,z+(k%2-.5)*.095);tmp.rotation.set(0,rand(seed+k*23)*6.28,(k-1)*.23);tmp.scale.set(1,h,1);tmp.updateMatrix();grass.setMatrixAt(gi,tmp.matrix);grass.setColorAt(gi,color.setHex([0x4b7650,0x719765,0x91aa77][(seed+k)%3]));gi++;
+ let h=0.72+rand(seed+k*17)*0.65;tmp.position.set(x+(k-1)*0.075,0.10+0.105*h,z+(k%2-0.5)*0.095);tmp.rotation.set(0,rand(seed+k*23)*6.28,(k-1)*0.23);tmp.scale.set(1,h,1);tmp.updateMatrix();grass.setMatrixAt(gi,tmp.matrix);grass.setColorAt(gi,color.setHex([0x4b7650,0x719765,0x91aa77][(seed+k)%3]));gi++;
 }grass.instanceMatrix.needsUpdate=true;scene.add(grass);
-const stems=new THREE.InstancedMesh(geo(.038,.22,.038),mat(0x4b7650),flowerPositions.length);
-const petals=new THREE.InstancedMesh(geo(.105,.067,.105),mat(0xffffff),flowerPositions.length*5);petals.name='meadow-flowers';
+const stems=new THREE.InstancedMesh(geo(0.038,0.22,0.038),mat(0x4b7650),flowerPositions.length);
+const petals=new THREE.InstancedMesh(geo(0.105,0.067,0.105),mat(0xffffff),flowerPositions.length*5);petals.name='meadow-flowers';
 let pi=0;for(let i=0;i<flowerPositions.length;i++){
- let [x,z,seed]=flowerPositions[i];tmp.position.set(x,.215,z);tmp.rotation.set(0,0,0);tmp.scale.set(1,1,1);tmp.updateMatrix();stems.setMatrixAt(i,tmp.matrix);
+ let [x,z,seed]=flowerPositions[i];tmp.position.set(x,0.215,z);tmp.rotation.set(0,0,0);tmp.scale.set(1,1,1);tmp.updateMatrix();stems.setMatrixAt(i,tmp.matrix);
  let flowerColor=[0xf3d7a7,0xe7afbd,0xf3eee0,0xcfb7d7][seed%4];
- for(let p=0;p<5;p++){let a=p*Math.PI*2/5;tmp.position.set(x+Math.cos(a)*.09,.345,z+Math.sin(a)*.09);tmp.rotation.set(0,a,0);tmp.updateMatrix();petals.setMatrixAt(pi,tmp.matrix);petals.setColorAt(pi,color.setHex(flowerColor));pi++}
+ for(let p=0;p<5;p++){let a=p*Math.PI*2/5;tmp.position.set(x+Math.cos(a)*0.09,0.345,z+Math.sin(a)*0.09);tmp.rotation.set(0,a,0);tmp.updateMatrix();petals.setMatrixAt(pi,tmp.matrix);petals.setColorAt(pi,color.setHex(flowerColor));pi++}
 }stems.instanceMatrix.needsUpdate=true;petals.instanceMatrix.needsUpdate=true;scene.add(stems,petals);
 // Camera orbit, panning and zoom.
 const camera=new THREE.OrthographicCamera(-11,11,11,-11,.1,100);
 let yaw=Math.PI/4,desiredYaw=yaw,pitch=1.01,desiredPitch=pitch,zoom=.79,desiredZoom=zoom;
 const target=new THREE.Vector3(0,.65,0),desiredTarget=target.clone();
-function clamp(v,a,b){return Math.min(b,Math.max(a,v))}
 function resize(){let w=host.clientWidth,h=host.clientHeight;renderer.setSize(w,h,false);let aspect=w/h,view=Math.max(16.6,18/aspect);camera.left=-view*aspect/2;camera.right=view*aspect/2;camera.top=view/2;camera.bottom=-view/2;camera.updateProjectionMatrix()}
 new ResizeObserver(resize).observe(host);resize();
 function frame(){requestAnimationFrame(frame);const smooth=matchMedia('(prefers-reduced-motion: reduce)').matches?1:.13;yaw+=(desiredYaw-yaw)*smooth;pitch+=(desiredPitch-pitch)*smooth;zoom+=(desiredZoom-zoom)*smooth;target.lerp(desiredTarget,smooth);let radius=28;camera.position.set(target.x+radius*Math.sin(yaw)*Math.cos(pitch),target.y+radius*Math.sin(pitch),target.z+radius*Math.cos(yaw)*Math.cos(pitch));camera.lookAt(target);camera.zoom=zoom;camera.updateProjectionMatrix();renderer.render(scene,camera)}frame();
