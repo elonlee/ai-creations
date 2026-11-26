@@ -10,7 +10,12 @@ import {
   moveFurniture,
   getActionAvailability,
 } from './game.mjs';
-import { createCharacterController, INTERACTION_STAGES, computeAnchoredCardPosition } from './motion.mjs';
+import {
+  createCharacterController,
+  INTERACTION_STAGES,
+  computeAnchoredCardPosition,
+  clampAndSnapBuildPoint,
+} from './motion.mjs';
 
 const $ = selector => document.querySelector(selector);
 const $$ = selector => [...document.querySelectorAll(selector)];
@@ -21,16 +26,25 @@ let state = loadState(stateStore);
 let mode = 'life';
 let selectedInteraction = null;
 let selectedFurniture = null;
+let movingFurniture = null;
+let draggingFurniture = false;
 let selectedNeighbor = 'nora';
 let pendingChatWave = false;
 let scene, camera, renderer, controls, roomGroup, movableGroup, miri, floor;
 let wallBack, wallLeft;
 let miriRig = null;
+const movableNodes = new Map();
+const buildFloorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.06);
+const buildPlaneHit = new THREE.Vector3();
+const buildTarget = { x: 0, z: 0, cellX: 0, cellZ: 0, snapX: 0, snapZ: 0 };
 const sceneRefs = {
   potLid: null,
   sketchOverlay: null,
   walkRing: null,
   walkRingTimer: 0,
+  buildGridGroup: null,
+  buildTargetPad: null,
+  buildCursorRing: null,
   ambientLight: null,
   sunLight: null,
   fillLight: null,
@@ -617,8 +631,53 @@ function buildRoom() {
     sceneRefs.pendantBulbs.push(bulb);
   }
 
+  buildPlacementGuides();
   buildSceneStateProps({ kitchen, desk, shower, bed, sofa, table, windowGroup });
   createMiri();
+}
+
+function buildPlacementGuides() {
+  const gridGroup = group(roomGroup, 0, 0, 0);
+  const slotGeo = new THREE.RingGeometry(0.22, 0.28, 24);
+  const slotMat = new THREE.MeshBasicMaterial({ color: 0x9d83b1, transparent: true, opacity: 0.32, side: THREE.DoubleSide, depthWrite: false });
+  for (let gx = 0; gx < 5; gx++) {
+    for (let gz = 0; gz < 5; gz++) {
+      const [wx, wz] = worldFromCell(gx, gz);
+      const ring = new THREE.Mesh(slotGeo, slotMat);
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.set(wx, 0.072, wz);
+      gridGroup.add(ring);
+    }
+  }
+  gridGroup.visible = false;
+  sceneRefs.buildGridGroup = gridGroup;
+
+  const targetPad = group(roomGroup, 0, 0, 0);
+  const padFill = new THREE.Mesh(
+    new THREE.CircleGeometry(0.45, 28),
+    new THREE.MeshBasicMaterial({ color: 0xcbb8d5, transparent: true, opacity: 0.35, side: THREE.DoubleSide, depthWrite: false }),
+  );
+  padFill.rotation.x = -Math.PI / 2;
+  padFill.position.y = 0.073;
+  const padRing = new THREE.Mesh(
+    new THREE.RingGeometry(0.45, 0.56, 32),
+    new THREE.MeshBasicMaterial({ color: 0x81699a, transparent: true, opacity: 0.88, side: THREE.DoubleSide, depthWrite: false }),
+  );
+  padRing.rotation.x = -Math.PI / 2;
+  padRing.position.y = 0.075;
+  targetPad.add(padFill, padRing);
+  targetPad.visible = false;
+  sceneRefs.buildTargetPad = targetPad;
+
+  const cursorRing = new THREE.Mesh(
+    new THREE.CircleGeometry(0.42, 26),
+    new THREE.MeshBasicMaterial({ color: 0x51465b, transparent: true, opacity: 0.16, side: THREE.DoubleSide, depthWrite: false }),
+  );
+  cursorRing.rotation.x = -Math.PI / 2;
+  cursorRing.position.y = 0.071;
+  cursorRing.visible = false;
+  roomGroup.add(cursorRing);
+  sceneRefs.buildCursorRing = cursorRing;
 }
 
 function createMiri() {
@@ -898,11 +957,13 @@ function createFurniture(id, parent) {
 }
 function updateMovableFurniture() {
   if (movableGroup) roomGroup.remove(movableGroup);
+  movableNodes.clear();
   sceneRefs.lampMaterials = [];
   movableGroup = group(roomGroup);
   for (const [id, cell] of Object.entries(state.furniture)) {
     const piece = createFurniture(id, movableGroup);
     const [x, z] = worldFromCell(cell.x, cell.z); piece.position.set(x, 0, z);
+    movableNodes.set(id, piece);
   }
   updateAtmosphere(state.minute);
 }
@@ -963,37 +1024,121 @@ function initScene() {
   };
   new ResizeObserver(resize).observe(canvas); resize();
   let down = null;
-  canvas.addEventListener('pointerdown', event => { down = { x: event.clientX, y: event.clientY }; });
-  canvas.addEventListener('pointercancel', () => { down = null; });
+  const updateBuildPointer = (clientX, clientY) => {
+    const rect = canvas.getBoundingClientRect();
+    pointer.set((clientX - rect.left) / rect.width * 2 - 1, -(clientY - rect.top) / rect.height * 2 + 1);
+    raycaster.setFromCamera(pointer, camera);
+    if (raycaster.ray.intersectPlane(buildFloorPlane, buildPlaneHit)) {
+      const snapped = clampAndSnapBuildPoint(buildPlaneHit.x, buildPlaneHit.z);
+      Object.assign(buildTarget, snapped);
+      return true;
+    }
+    return false;
+  };
+  canvas.addEventListener('pointerdown', event => {
+    if (mode === 'build' && event.button === 2 && movingFurniture) {
+      event.preventDefault();
+      cancelMovingFurniture();
+      return;
+    }
+    if (mode === 'build' && event.button === 0) {
+      if (movingFurniture) {
+        controls.enabled = false;
+        try { canvas.setPointerCapture(event.pointerId); } catch {}
+        updateBuildPointer(event.clientX, event.clientY);
+        down = { x: event.clientX, y: event.clientY, action: 'drop' };
+        return;
+      }
+      const rect = canvas.getBoundingClientRect();
+      pointer.set((event.clientX - rect.left) / rect.width * 2 - 1, -(event.clientY - rect.top) / rect.height * 2 + 1);
+      raycaster.setFromCamera(pointer, camera);
+      const hits = raycaster.intersectObjects(movableGroup ? movableGroup.children : [], true);
+      for (const hit of hits) {
+        let obj = hit.object;
+        while (obj && obj !== movableGroup) {
+          if (obj.userData.furniture) {
+            controls.enabled = false;
+            try { canvas.setPointerCapture(event.pointerId); } catch {}
+            draggingFurniture = true;
+            down = { x: event.clientX, y: event.clientY, action: 'pickup', furnitureId: obj.userData.furniture };
+            startMovingFurniture(obj.userData.furniture, event.clientX, event.clientY);
+            return;
+          }
+          obj = obj.parent;
+        }
+      }
+    }
+    down = { x: event.clientX, y: event.clientY };
+  }, { capture: true });
+  canvas.addEventListener('pointercancel', () => {
+    down = null;
+    draggingFurniture = false;
+    controls.enabled = true;
+  });
+  canvas.addEventListener('contextmenu', event => {
+    if (mode === 'build' && movingFurniture) {
+      event.preventDefault();
+      cancelMovingFurniture();
+    }
+  });
+  window.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && mode === 'build' && movingFurniture) {
+      cancelMovingFurniture();
+    }
+  });
   canvas.addEventListener('pointermove', event => {
+    if (mode === 'build' && movingFurniture) {
+      updateBuildPointer(event.clientX, event.clientY);
+      canvas.style.cursor = 'grabbing';
+      return;
+    }
     if (down) return;
     const rect = canvas.getBoundingClientRect();
     pointer.set((event.clientX - rect.left) / rect.width * 2 - 1, -(event.clientY - rect.top) / rect.height * 2 + 1);
     raycaster.setFromCamera(pointer, camera);
     const hits = raycaster.intersectObjects(roomGroup.children, true);
-    let hoverInteractive = false;
+    let hoverKind = '';
     for (const hit of hits) {
       let object = hit.object;
       while (object && object !== roomGroup) {
-        if (mode === 'build' && object.userData.furniture) { hoverInteractive = true; break; }
+        if (mode === 'build' && object.userData.furniture) { hoverKind = 'grab'; break; }
         if (mode === 'life' && object.userData.interaction) {
           if (object.userData.interaction === 'meal' && state.scene?.meal !== 'ready') {
             object = object.parent;
             continue;
           }
-          hoverInteractive = true;
+          hoverKind = 'pointer';
           break;
         }
-        if (mode === 'life' && object.userData.miri && miriCtrl.state.phase === 'idle') { hoverInteractive = true; break; }
+        if (mode === 'life' && object.userData.miri && miriCtrl.state.phase === 'idle') { hoverKind = 'pointer'; break; }
         object = object.parent;
       }
-      if (hoverInteractive) break;
+      if (hoverKind) break;
     }
-    canvas.style.cursor = hoverInteractive ? 'pointer' : '';
+    canvas.style.cursor = hoverKind;
   });
   canvas.addEventListener('pointerup', event => {
+    try { if (canvas.hasPointerCapture?.(event.pointerId)) canvas.releasePointerCapture(event.pointerId); } catch {}
+    if (!controls.enabled) controls.enabled = true;
     const start = down;
     down = null;
+    if (mode === 'build' && movingFurniture) {
+      if (start?.action === 'drop') {
+        draggingFurniture = false;
+        updateBuildPointer(event.clientX, event.clientY);
+        commitMovingFurniture();
+        return;
+      }
+      if (start?.action === 'pickup') {
+        draggingFurniture = false;
+        const dist = Math.hypot(event.clientX - start.x, event.clientY - start.y);
+        if (dist > 8) {
+          updateBuildPointer(event.clientX, event.clientY);
+          commitMovingFurniture();
+        }
+        return;
+      }
+    }
     if (!start || Math.hypot(event.clientX - start.x, event.clientY - start.y) > 5) return;
     const rect = canvas.getBoundingClientRect();
     pointer.set((event.clientX - rect.left) / rect.width * 2 - 1, -(event.clientY - rect.top) / rect.height * 2 + 1);
@@ -1002,7 +1147,7 @@ function initScene() {
     for (const hit of hits) {
       let object = hit.object;
       while (object && object !== roomGroup) {
-        if (mode === 'build' && object.userData.furniture) { selectFurniture(object.userData.furniture); return; }
+        if (mode === 'build' && object.userData.furniture) { startMovingFurniture(object.userData.furniture, event.clientX, event.clientY); return; }
         if (mode === 'life' && object.userData.interaction) {
           if (object.userData.interaction === 'meal' && state.scene?.meal !== 'ready') {
             object = object.parent;
@@ -1017,10 +1162,6 @@ function initScene() {
           return;
         }
         if (object.userData.ground) {
-          if (mode === 'build' && selectedFurniture) {
-            const [x, z] = cellFromWorld(hit.point.x, hit.point.z);
-            applyMove(selectedFurniture, x, z); return;
-          }
           if (mode === 'life') {
             $('#interaction-card').hidden = true;
             selectedInteraction = null;
@@ -1097,6 +1238,25 @@ function initScene() {
 
     applyMiriPose(pose);
     updateParticles(dt, mode === 'life' ? pose.effect : null, pose);
+
+    if (mode === 'build' && movingFurniture) {
+      const node = movableNodes.get(movingFurniture);
+      if (node) {
+        const followT = isReducedMotion() ? 1 : Math.min(1, dt * 22);
+        const targetY = isReducedMotion() ? 0.14 : 0.14 + Math.sin(now * 0.006) * 0.025;
+        node.position.x += (buildTarget.x - node.position.x) * followT;
+        node.position.y += (targetY - node.position.y) * followT;
+        node.position.z += (buildTarget.z - node.position.z) * followT;
+        if (sceneRefs.buildCursorRing) {
+          sceneRefs.buildCursorRing.position.set(node.position.x, 0.071, node.position.z);
+        }
+      }
+      if (sceneRefs.buildTargetPad) {
+        sceneRefs.buildTargetPad.position.set(buildTarget.snapX, 0, buildTarget.snapZ);
+        const pulse = isReducedMotion() ? 1 : 1 + Math.sin(now * 0.008) * 0.06;
+        sceneRefs.buildTargetPad.scale.setScalar(pulse);
+      }
+    }
 
     if (sceneRefs.walkRing && sceneRefs.walkRingTimer > 0) {
       sceneRefs.walkRingTimer = Math.max(0, sceneRefs.walkRingTimer - dt);
@@ -1191,7 +1351,7 @@ function positionActiveCards() {
     if (card && !card.hidden && pt) {
       positionFloatingCard(card, new THREE.Vector3(...pt));
     }
-  } else if (mode === 'build' && selectedFurniture) {
+  } else if (mode === 'build' && selectedFurniture && !movingFurniture) {
     const card = $('#placement-card');
     const cell = state.furniture?.[selectedFurniture];
     if (card && !card.hidden && cell) {
@@ -1222,7 +1382,7 @@ function renderShop() {
   $('#shop-list').innerHTML = Object.entries(CATALOG).map(([id, item]) => `<div class="shop-item"><span class="shop-icon" aria-hidden="true">${icons[id]}</span><span class="shop-details"><strong>${item.name}</strong><small>${item.price} 暖光币</small></span><button type="button" data-buy="${id}" ${state.furniture[id] ? 'disabled' : ''}>${state.furniture[id] ? '已拥有' : '购买'}</button></div>`).join('');
   $$('[data-buy]').forEach(button => button.addEventListener('click', () => {
     const result = purchaseFurniture(state, button.dataset.buy); applyResult(result);
-    if (result.ok) { updateMovableFurniture(); selectFurniture(button.dataset.buy); }
+    if (result.ok) { updateMovableFurniture(); startMovingFurniture(button.dataset.buy); }
   }));
 }
 function renderNeighbors() {
@@ -1336,19 +1496,85 @@ function selectInteraction(id) {
   $$('.hotspot').forEach(button => button.classList.toggle('active', button.getAttribute('aria-label') === `查看${interactionMeta[id].name}互动`));
   renderInteractionCard(id);
 }
-function selectFurniture(id) {
-  if (mode !== 'build') return;
+function furnitureDisplayName(id) {
+  return CATALOG[id]?.name || (id === 'plant' ? '窗边绿植' : '圆形地毯');
+}
+function hideBuildGuides() {
+  if (sceneRefs.buildGridGroup) sceneRefs.buildGridGroup.visible = false;
+  if (sceneRefs.buildTargetPad) sceneRefs.buildTargetPad.visible = false;
+  if (sceneRefs.buildCursorRing) sceneRefs.buildCursorRing.visible = false;
+}
+function startMovingFurniture(id, clientX = null, clientY = null) {
+  if (mode !== 'build' || !state.furniture[id]) return;
   selectedFurniture = id;
-  const name = CATALOG[id]?.name || (id === 'plant' ? '窗边绿植' : '圆形地毯');
+  movingFurniture = id;
+  const cell = state.furniture[id];
+  const [wx, wz] = worldFromCell(cell.x, cell.z);
+  Object.assign(buildTarget, { x: wx, z: wz, cellX: cell.x, cellZ: cell.z, snapX: wx, snapZ: wz });
+
+  if (clientX !== null && clientY !== null) {
+    const canvas = $('#room-canvas');
+    const rect = canvas.getBoundingClientRect();
+    pointer.set((clientX - rect.left) / rect.width * 2 - 1, -(clientY - rect.top) / rect.height * 2 + 1);
+    raycaster.setFromCamera(pointer, camera);
+    if (raycaster.ray.intersectPlane(buildFloorPlane, buildPlaneHit)) {
+      Object.assign(buildTarget, clampAndSnapBuildPoint(buildPlaneHit.x, buildPlaneHit.z));
+    }
+  }
+
+  if (sceneRefs.buildGridGroup) sceneRefs.buildGridGroup.visible = true;
+  if (sceneRefs.buildTargetPad) {
+    sceneRefs.buildTargetPad.position.set(buildTarget.snapX, 0, buildTarget.snapZ);
+    sceneRefs.buildTargetPad.visible = true;
+  }
+  if (sceneRefs.buildCursorRing) {
+    sceneRefs.buildCursorRing.position.set(buildTarget.x, 0.071, buildTarget.z);
+    sceneRefs.buildCursorRing.visible = true;
+  }
+
   const card = $('#placement-card');
-  card.innerHTML = `<button class="close-card" type="button" aria-label="关闭摆放菜单">×</button><span class="card-kicker">BUILD / 摆放家具</span><h3>${name}</h3><p>已选中。点击房间地板上的新位置，家具就会移过去。</p><button class="place-action" type="button">换个位置试试</button>`;
+  card.classList.add('build-bar');
+  card.style.left = '';
+  card.style.top = '';
+  card.innerHTML = `<span>正在移动「${furnitureDisplayName(id)}」· 点击地板放下</span><button type="button" class="cancel-build">取消</button>`;
   card.hidden = false;
-  positionActiveCards();
-  card.querySelector('.close-card').addEventListener('click', () => { card.hidden = true; selectedFurniture = null; });
-  card.querySelector('.place-action').addEventListener('click', () => toast('现在点击地板，就能摆放这件家具。'));
+  card.querySelector('.cancel-build').addEventListener('click', cancelMovingFurniture);
+  $('#room-canvas').style.cursor = 'grabbing';
+}
+function commitMovingFurniture() {
+  if (!movingFurniture) return;
+  const id = movingFurniture;
+  const { cellX, cellZ } = buildTarget;
+  movingFurniture = null;
+  selectedFurniture = null;
+  draggingFurniture = false;
+  hideBuildGuides();
+  const card = $('#placement-card');
+  card.hidden = true;
+  card.classList.remove('build-bar');
+  $('#room-canvas').style.cursor = '';
+  applyMove(id, cellX, cellZ);
+}
+function cancelMovingFurniture() {
+  const id = movingFurniture;
+  movingFurniture = null;
+  selectedFurniture = null;
+  draggingFurniture = false;
+  if (controls) controls.enabled = true;
+  hideBuildGuides();
+  const card = $('#placement-card');
+  card.hidden = true;
+  card.classList.remove('build-bar');
+  $('#room-canvas').style.cursor = '';
+  if (id && state.furniture[id]) {
+    const node = movableNodes.get(id);
+    const [wx, wz] = worldFromCell(state.furniture[id].x, state.furniture[id].z);
+    if (node) node.position.set(wx, 0, wz);
+  }
 }
 function applyMove(id, x, z) { const result = moveFurniture(state, id, x, z); applyResult(result); if (result.ok) updateMovableFurniture(); }
 function setMode(next) {
+  cancelMovingFurniture();
   mode = next;
   $$('.mode-tab').forEach(button => { const active = button.dataset.mode === next; button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active)); });
   $('#room-view').hidden = next === 'community'; $('#community-view').hidden = next !== 'community';
@@ -1371,7 +1597,7 @@ function setMode(next) {
       miriCtrl.triggerReaction('wave');
     }
   }
-  $('#room-message').textContent = next === 'build' ? '点击已拥有的家具，再点击地板重新摆放。拖动旋转，滚轮缩放。' : '拖动旋转房间，滚轮缩放。点击家具，与 Miri 一起生活。';
+  $('#room-message').textContent = next === 'build' ? '点击或拖动家具即可跟随鼠标移动，点击地板放下。' : '拖动旋转房间，滚轮缩放。点击家具，与 Miri 一起生活。';
   if (next !== 'community') setTimeout(() => window.dispatchEvent(new Event('resize')), 40);
 }
 

@@ -656,6 +656,42 @@ small {
   padding:13px 14px;
   backdrop-filter:blur(18px)
 }
+.placement-card.build-bar {
+  top:114px;
+  left:50%;
+  transform:translateX(-50%);
+  width:auto;
+  max-width:calc(100% - 28px);
+  padding:7px 10px 7px 14px;
+  border-radius:999px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  white-space:nowrap;
+  background:#51465bf0;
+  border:1px solid #ffffff45;
+  color:#fffdf9;
+  box-shadow:0 10px 26px #382c4238
+}
+.placement-card.build-bar[hidden] {
+  display:none
+}
+.placement-card.build-bar span {
+  font-size:11px;
+  font-weight:700
+}
+.placement-card.build-bar button {
+  border:0;
+  border-radius:999px;
+  padding:5px 10px;
+  font-size:10px;
+  font-weight:700;
+  background:#ffffff24;
+  color:#fffdf9
+}
+.placement-card.build-bar button:hover {
+  background:#ffffff3b
+}
 .interaction-card[hidden],.placement-card[hidden] {
   display:none
 }

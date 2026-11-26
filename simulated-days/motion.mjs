@@ -134,6 +134,21 @@ export function worldFromCell(x, z) {
   return [-4.75 + x * 2.28, -3.65 + z * 1.83];
 }
 
+export function cellFromWorld(x, z) {
+  return [
+    Math.max(0, Math.min(4, Math.round((x + 4.75) / 2.28))),
+    Math.max(0, Math.min(4, Math.round((z + 3.65) / 1.83))),
+  ];
+}
+
+export function clampAndSnapBuildPoint(x, z) {
+  const clampedX = Math.max(-5.1, Math.min(4.8, x));
+  const clampedZ = Math.max(-4.1, Math.min(4.1, z));
+  const [cellX, cellZ] = cellFromWorld(clampedX, clampedZ);
+  const [snapX, snapZ] = worldFromCell(cellX, cellZ);
+  return { x: clampedX, z: clampedZ, cellX, cellZ, snapX, snapZ };
+}
+
 export function computeAnchoredCardPosition({
   anchorX,
   anchorY,

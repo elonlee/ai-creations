@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   ACTION_TO_INTERACTION,
   INTERACTION_STAGES,
+  clampAndSnapBuildPoint,
   computeAnchoredCardPosition,
   createCharacterController,
   findRoomPath,
@@ -202,4 +203,19 @@ test('交互菜单会贴近场景锚点定位，并自动避开顶部与边界�
     stageHeight: 720,
   });
   assert.equal(rightEdge.left, 480 - 260 - 12);
+});
+
+test('建造模式跟随指针移动时正确钳制地板范围并对齐五乘五网格', () => {
+  const center = clampAndSnapBuildPoint(-0.15, 0.05);
+  assert.equal(center.cellX, 2);
+  assert.equal(center.cellZ, 2);
+  assert.ok(Math.abs(center.snapX - (-0.19)) < 0.01);
+  assert.ok(Math.abs(center.snapZ - 0.01) < 0.01);
+
+  // 超出墙外时也限制在室内网格边界
+  const out = clampAndSnapBuildPoint(-12, 15);
+  assert.equal(out.x, -5.1);
+  assert.equal(out.z, 4.1);
+  assert.equal(out.cellX, 0);
+  assert.equal(out.cellZ, 4);
 });
