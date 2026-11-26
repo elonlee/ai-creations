@@ -7,23 +7,41 @@
 <style>
   :root{color-scheme:light;--ink:#263630;--muted:#6b7971;--green:#31584d;--line:#d6dbd3;--paper:#f8f8f4}
   *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden}body{font-family: -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;background:#e8ebe8;color:var(--ink)}
-  #scene{position:absolute;inset:0 0 0 302px;touch-action:none;outline:none}canvas{display:block;width:100%;height:100%}
-  .panel{position:absolute;z-index:5;left:0;top:0;bottom:0;width:302px;padding:35px 27px 24px;background:linear-gradient(160deg,#fafbf7 0%,#f1f4ed 100%);border-right:1px solid #d9e0d8;box-shadow:8px 0 35px rgba(55,77,66,.06);display:flex;flex-direction:column;overflow:auto}
-  .eyebrow{font-size:10px;letter-spacing:.27em;color:#738b80;font-weight:700;margin-bottom:24px}.seal{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;background:#aa624f;color:#fff;font-family:serif;font-size:16px;letter-spacing:0;margin-right:7px;vertical-align:middle}
-  h1{font-family:"Songti SC","STSong","Noto Serif CJK SC",serif;font-size:36px;font-weight:500;letter-spacing:.12em;line-height:1.22;margin:0 0 10px}.roman{font-family:Georgia,serif;font-size:11px;letter-spacing:.22em;color:#89978d;margin:0 0 27px}.intro{font-size:12px;color:#68776f;line-height:1.9;margin:0 0 24px;max-width:240px}
-  .divider{height:1px;background:var(--line);margin-bottom:23px}.section-title{font-size:11px;letter-spacing:.19em;font-weight:700;color:#71857a;margin:0 0 12px}.button-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.button-grid button{min-height:42px;border:1px solid #cad5cb;background:#fffdf8;border-radius:7px;color:#334c40;font-size:12px;font-weight:600;cursor:pointer;transition:background .2s,border-color .2s,box-shadow .2s;white-space:nowrap}.button-grid button:hover{background:#eaf1ea;border-color:#799887;box-shadow:0 3px 10px rgba(42,80,59,.07)}.button-grid button:focus-visible{outline:2px solid #31584d;outline-offset:2px}.button-grid button.wide{grid-column:span 2;background:#31584d;color:white;border-color:#31584d}.button-grid button.wide:hover{background:#26473c}.button-grid button:active{transform:translateY(1px)}
-  .shortcut{margin-top:26px;border-top:1px solid var(--line);padding-top:21px}.hint{display:grid;grid-template-columns:70px 1fr;gap:7px;font-size:11px;color:#75827a;line-height:1.7;margin:4px 0}.hint strong{color:#385448;font-weight:600}.foot{margin-top:auto;padding-top:27px;font-family:Georgia,serif;font-size:10px;letter-spacing:.13em;color:#9aa99d}
+  #scene{position:absolute;inset:0;touch-action:none;outline:none}canvas{display:block;width:100%;height:100%}
+  .panel{position:absolute;z-index:6;left:18px;top:18px;bottom:18px;width:292px;padding:24px 24px 22px;background:linear-gradient(160deg,rgba(250,251,247,.90) 0%,rgba(241,244,237,.86) 100%);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(206,215,205,.92);border-radius:16px;box-shadow:0 18px 44px rgba(38,54,48,.12),0 2px 10px rgba(38,54,48,.05);display:flex;flex-direction:column;overflow:auto;transition:transform .32s cubic-bezier(.22,1,.36,1),opacity .26s ease,visibility .26s ease}
+  .panel.is-hidden{transform:translateX(calc(-100% - 28px));opacity:0;visibility:hidden;pointer-events:none}
+  .panel-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:18px}
+  .eyebrow{font-size:9.5px;letter-spacing:.14em;color:#738b80;font-weight:700;display:flex;align-items:center;white-space:nowrap}.seal{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:#aa624f;color:#fff;font-family:serif;font-size:14px;letter-spacing:0;margin-right:7px;border-radius:4px;flex:none}
+  .panel-actions{display:flex;align-items:center;gap:6px;flex:none}
+  .panel-ctrl{border:1px solid #ced8cf;background:rgba(255,253,248,.85);color:#4d6458;border-radius:999px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;line-height:1.35;white-space:nowrap;transition:background .2s,border-color .2s,color .2s}
+  .panel-ctrl:hover{background:#eaf1ea;border-color:#799887;color:#263630}
+  .panel-ctrl[aria-pressed="true"]{background:#31584d;border-color:#31584d;color:#fff}
+  .panel-ctrl:focus-visible,.panel-tab:focus-visible{outline:2px solid #31584d;outline-offset:2px}
+  .panel-tab{position:absolute;z-index:5;left:18px;top:18px;display:inline-flex;align-items:center;gap:8px;padding:7px 14px 7px 8px;border:1px solid rgba(206,215,205,.95);border-radius:999px;background:rgba(250,251,247,.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 8px 24px rgba(38,54,48,.11);color:var(--ink);font-size:12px;font-weight:600;letter-spacing:.06em;cursor:pointer;opacity:0;visibility:hidden;pointer-events:none;transform:translateX(-10px);transition:opacity .24s ease,transform .28s cubic-bezier(.22,1,.36,1),visibility .24s ease,background .2s}
+  .panel-tab.is-visible{opacity:1;visibility:visible;pointer-events:auto;transform:translateX(0)}
+  .panel-tab:hover{background:rgba(255,253,248,.98)}
+  .panel-tab .seal{width:24px;height:24px;font-size:13px;margin-right:0}
+  h1{font-family:"Songti SC","STSong","Noto Serif CJK SC",serif;font-size:34px;font-weight:500;letter-spacing:.12em;line-height:1.22;margin:0 0 8px}.roman{font-family:Georgia,serif;font-size:11px;letter-spacing:.22em;color:#89978d;margin:0 0 20px}.intro{font-size:12px;color:#68776f;line-height:1.85;margin:0 0 20px;max-width:240px}
+  .divider{height:1px;background:var(--line);margin-bottom:18px}.section-title{font-size:11px;letter-spacing:.19em;font-weight:700;color:#71857a;margin:0 0 11px}.button-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.button-grid button{min-height:40px;border:1px solid #cad5cb;background:rgba(255,253,248,.92);border-radius:7px;color:#334c40;font-size:12px;font-weight:600;cursor:pointer;transition:background .2s,border-color .2s,box-shadow .2s;white-space:nowrap}.button-grid button:hover{background:#eaf1ea;border-color:#799887;box-shadow:0 3px 10px rgba(42,80,59,.07)}.button-grid button:focus-visible{outline:2px solid #31584d;outline-offset:2px}.button-grid button.wide{grid-column:span 2;background:#31584d;color:white;border-color:#31584d}.button-grid button.wide:hover{background:#26473c}.button-grid button:active{transform:translateY(1px)}
+  .shortcut{margin-top:20px;border-top:1px solid var(--line);padding-top:16px}.hint{display:grid;grid-template-columns:70px 1fr;gap:7px;font-size:11px;color:#75827a;line-height:1.65;margin:4px 0}.hint strong{color:#385448;font-weight:600}.foot{margin-top:auto;padding-top:20px;font-family:Georgia,serif;font-size:10px;letter-spacing:.13em;color:#9aa99d}
   .scene-label{position:absolute;z-index:3;right:32px;top:25px;text-align:right;pointer-events:none}.scene-label b{display:block;font-size:11px;letter-spacing:.23em;color:#7b8e82}.scene-label span{display:block;font-family:Georgia,serif;font-size:11px;letter-spacing:.1em;color:#9aa89f;margin-top:5px}.badge{position:absolute;z-index:3;right:27px;bottom:24px;background:rgba(248,250,246,.82);border:1px solid #dce5db;border-radius:20px;padding:8px 13px;color:#60766a;font-size:11px;backdrop-filter:blur(8px);pointer-events:none}
-  #error{display:none;position:absolute;inset:0 0 0 302px;align-items:center;justify-content:center;padding:30px;text-align:center;color:#6f4235;font-size:15px;background:#e8ebe8}
-  @media(max-width:700px){#scene{inset:0 0 286px 0}.panel{top:auto;right:0;width:auto;height:286px;padding:18px 20px;box-shadow:0 -8px 26px rgba(55,77,66,.07)}.eyebrow,.roman,.intro,.divider,.shortcut,.foot{display:none}h1{font-size:24px;margin:0 0 13px}.section-title{margin:0 0 8px}.button-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.button-grid button{min-height:40px;font-size:11px;padding:0 2px}.button-grid button.wide{grid-column:span 2}.scene-label{right:17px;top:16px}.badge{right:12px;bottom:296px;font-size:10px}#error{inset:0 0 286px 0}}
-  @media(max-width:390px){.panel{height:300px}#scene{bottom:300px}.badge{bottom:310px}.button-grid button{font-size:10px}}
-  @media(prefers-reduced-motion:reduce){.button-grid button{transition:none}}
+  #error{display:none;position:absolute;inset:0;align-items:center;justify-content:center;padding:30px;text-align:center;color:#6f4235;font-size:15px;background:#e8ebe8}
+  @media(max-width:700px){.panel{left:12px;right:12px;top:auto;bottom:12px;width:auto;height:auto;max-height:244px;padding:14px 16px 16px;box-shadow:0 12px 32px rgba(38,54,48,.14)}.panel.is-hidden{transform:translateY(calc(100% + 24px))}.panel-top{margin-bottom:8px}.eyebrow span:last-child,.roman,.intro,.divider,.shortcut,.foot{display:none}h1{font-size:21px;margin:0 0 10px}.section-title{margin:0 0 8px}.button-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.button-grid button{min-height:38px;font-size:11px;padding:0 2px}.button-grid button.wide{grid-column:span 2}.panel-tab{left:14px;top:auto;bottom:16px;transform:translateY(8px)}.panel-tab.is-visible{transform:translateY(0)}.scene-label{right:17px;top:16px}.badge{right:14px;bottom:18px;font-size:10px}}
+  @media(max-width:390px){.button-grid button{font-size:10px}}
+  @media(prefers-reduced-motion:reduce){.panel,.panel-tab,.panel-ctrl,.button-grid button{transition:none}}
 </style>
 </head>
 <body>
-<main id="scene" tabindex="0" role="img" aria-label="可旋转的体素江南园林：粉墙黛瓦、月洞门、莲池石桥、竹林桃花、假山亭台"></main>
+<main id="scene" tabindex="0" role="img" aria-label="可旋转的体素江南园林：粉墙黛瓦、月洞门、莲池石桥、竹林松柳、花圃亭台"></main>
+<button type="button" class="panel-tab" aria-label="展开视角控制面板" aria-expanded="false"><span class="seal">园</span><span>视角面板</span></button>
 <aside class="panel" aria-label="视角控制面板">
-  <div class="eyebrow"><span class="seal">园</span> A GARDEN IN VOXELS</div>
+  <div class="panel-top">
+    <div class="eyebrow"><span class="seal">园</span><span>VOXEL GARDEN</span></div>
+    <div class="panel-actions">
+      <button type="button" class="panel-ctrl" data-panel="pin" aria-pressed="false" title="切换固定或自动隐藏">固定</button>
+      <button type="button" class="panel-ctrl" data-panel="hide" title="收起面板">收起</button>
+    </div>
+  </div>
   <h1>江南一隅</h1><p class="roman">A QUIET CORNER · JIANGNAN</p>
   <p class="intro">一方粉墙黛瓦，半池荷影清风。转动视角，慢慢游赏这座小小园林。</p>
   <div class="divider"></div>
@@ -396,50 +414,148 @@ function addPath(pts,step=0.38,sw=0.66,sd=0.66){
 }
 // 1. Front gate entry straight to south courtyard plaza.
 addPath([[0,6.25],[0,4.65]],0.40,1.42,0.54);
-// 2. West loop: plaza -> west shore -> bridge west steps -> stone table patio -> main house steps -> moon gate -> rear courtyard.
+// 2. West loop: plaza -> west shore -> bridge west steps -> bamboo-shaded stone table -> main house steps -> moon gate -> rear courtyard.
 addPath([[0,4.65],[-1.30,4.55],[-2.55,4.15],[-3.35,3.45],[-3.45,2.45],[-3.15,1.55],[-2.75,1.55]],0.36,0.72,0.68);
 addPath([[-3.15,1.55],[-4.20,0.85],[-4.55,-0.15],[-4.55,-1.65]],0.36,0.72,0.68);
-addPath([[-4.55,-1.65],[-2.60,-1.88],[-0.40,-1.95],[1.30,-1.95],[1.30,-3.25],[1.30,-4.45],[2.45,-4.55]],0.36,0.68,0.64);
+addPath([[-4.27,0.65],[-5.22,0.65]],0.36,0.68,0.68);
+addPath([[-4.55,-1.65],[-2.60,-1.88],[-0.40,-1.95],[1.30,-1.95],[1.30,-3.25],[1.30,-3.85]],0.36,0.68,0.64);
+addPath([[-0.65,-3.85],[1.30,-3.85],[3.35,-3.85]],0.36,0.64,0.62);
+addPath([[-0.65,-3.85],[-0.65,-4.65]],0.36,0.62,0.62);
 // 3. East loop: plaza -> east shore -> bridge east steps -> corridor between pond & rockery -> pavilion steps.
 addPath([[0,4.65],[1.35,4.72],[2.75,4.75],[4.15,4.45],[5.20,3.75],[5.85,2.75],[5.95,1.55],[5.75,1.55]],0.36,0.72,0.68);
 addPath([[5.95,1.55],[5.55,0.85],[5.35,0.00],[5.45,-0.95],[5.85,-1.80]],0.36,0.68,0.66);
 
-// Stone table & 4 grounded drum stools on a side courtyard terrace connected to the west path.
-const stx=-3.10,stz=-0.38;
-box(stx,0.132,stz,1.76,0.064,1.62,C.path2,1,false,true);
-box(stx-0.98,0.135,stz,0.50,0.070,0.86,C.path,1,false,true);
-box(stx,0.54,stz,1.16,0.13,0.66,C.stone2);
+// Stone table & 4 grounded drum stools nestled inside the cleared bamboo grove, connected to the west path.
+const stx=-6.20,stz=0.65;
+box(stx,0.132,stz,1.88,0.064,1.80,C.path2,1,false,true);
+box(stx,0.54,stz,1.14,0.13,0.66,C.stone2);
 box(stx-0.38,0.32,stz,0.16,0.32,0.46,C.stone);
 box(stx+0.38,0.32,stz,0.16,0.32,0.46,C.stone);
 for(const [ox,oz] of [[0,-0.55],[0,0.55],[-0.76,0],[0.76,0]]){
- box(stx+ox,0.25,stz+oz,0.28,0.16,0.24,C.stone);
+ box(stx+ox,0.245,stz+oz,0.28,0.16,0.24,C.stone);
  box(stx+ox,0.36,stz+oz,0.38,0.08,0.32,C.stone2);
 }
 
-// Sculptural Taihu Rockery (east corridor, right of east path) + rear courtyard focal stone.
-function rockery(rx,rz,seed){
- // Main arched Taihu peak with natural overhang & grounded plinth stones.
+// Sculptural Taihu Rockery (lean, wrinkled, perforated) placed in front-right courtyard by Moon Gate & pond north shore.
+function rockery(rx,rz){
+ const stoneDeep=0x7d8476;
  const parts=[
-  [0,0.30,0,1.45,0.44,1.30,C.stone],[ -0.45,0.52,0.20,0.68,0.88,0.64,C.stone2],[0.48,0.58,-0.15,0.64,1.00,0.68,C.stone],
-  [-0.38,1.08,0.10,0.56,0.54,0.56,C.stone],[0.42,1.18,-0.10,0.58,0.66,0.54,C.stone2],
-  [0.05,1.46,-0.02,1.12,0.46,0.54,C.stone],[0.24,1.82,-0.06,0.54,0.48,0.44,C.stone2],
-  [0.28,2.14,-0.06,0.32,0.32,0.30,C.stone],[-0.68,0.38,-0.45,0.55,0.58,0.55,C.stone2],
-  [0.65,0.42,0.48,0.58,0.68,0.52,C.stone],[0.85,0.28,-0.25,0.48,0.42,0.52,C.stone2],
-  [-0.18,0.26,0.62,0.56,0.38,0.46,C.stone],[0.02,0.24,-0.64,0.62,0.34,0.44,C.stone2]
+  // Layered grounded plinth & pond-side recumbent stones.
+  [0.00,0.14,0.00,1.56,0.16,1.16,stoneDeep],[-0.58,0.21,0.12,0.58,0.18,0.72,C.stone],
+  [0.56,0.19,0.10,0.66,0.16,0.74,C.stone2],[-0.08,0.18,0.50,0.92,0.14,0.34,C.stone2],
+  // Twin sculpted lower pillars framing a true see-through cavern opening.
+  [-0.36,0.48,-0.02,0.36,0.48,0.44,stoneDeep],[-0.32,0.84,-0.04,0.32,0.34,0.38,C.stone],
+  [-0.48,0.64,0.14,0.24,0.42,0.28,C.stone2],[0.28,0.46,0.02,0.32,0.44,0.40,C.stone],
+  [0.24,0.82,0.00,0.28,0.36,0.34,C.stone2],
+  // Overarching bridge stone & slender waist (束腰).
+  [-0.04,1.08,-0.02,0.84,0.24,0.40,C.stone],[-0.12,1.28,-0.03,0.52,0.22,0.34,C.stone2],
+  [-0.44,1.14,0.04,0.28,0.22,0.30,stoneDeep],
+  // Upper spire legs framing secondary perforation & overhanging Taihu cloud crest (云头峰).
+  [-0.28,1.52,-0.02,0.22,0.32,0.30,C.stone],[0.06,1.50,-0.04,0.20,0.28,0.26,stoneDeep],
+  [-0.14,1.74,-0.02,0.64,0.20,0.38,C.stone2],[-0.24,1.90,0.00,0.46,0.18,0.32,C.stone],
+  [-0.28,2.06,0.00,0.26,0.18,0.24,C.stone2],[0.16,1.86,-0.04,0.22,0.14,0.22,stoneDeep],
+  // Low east companion peak (stays below the 漏窗 lattice window).
+  [0.64,0.42,0.08,0.42,0.34,0.38,C.stone],[0.70,0.66,0.04,0.26,0.22,0.26,C.stone2],
+  [0.92,0.28,0.18,0.34,0.20,0.32,stoneDeep]
  ];
  for(const [dx,y,dz,w,h,d,col] of parts)box(rx+dx,y,rz+dz,w,h,d,col);
- // Small moss/fern tufts tucked into rockery base.
- for(let i=0;i<7;i++){
-  let a=rand(seed+i*19)*6.28,r=0.72+rand(seed+i*7)*0.45;
-  box(rx+Math.cos(a)*r,0.19,rz+Math.sin(a)*r,0.22,0.20,0.22,i%2?C.leaf:C.leaf3);
- }
+ // Moss cushions & fern tufts tucked into stone crevices.
+ const moss=[[-0.58,0.33,0.24,0.22,0.08,0.20,C.leaf3],[0.56,0.30,0.28,0.24,0.08,0.22,C.leaf],[-0.48,0.88,0.14,0.16,0.08,0.16,C.leaf2],[0.08,0.27,0.48,0.22,0.07,0.16,C.leaf3],[0.42,0.29,-0.32,0.20,0.14,0.20,C.leaf],[-0.76,0.22,-0.22,0.24,0.16,0.22,C.leaf2]];
+ for(const [dx,y,dz,w,h,d,col] of moss)box(rx+dx,y,rz+dz,w,h,d,col);
 }
-rockery(7.30,-0.28,55);
-// Rear courtyard focal Taihu peak framed through the Moon Gate.
-box(2.35,0.28,-5.25,0.84,0.40,0.68,C.stone);
-box(2.45,0.66,-5.25,0.48,0.52,0.44,C.stone2);
-box(2.22,0.52,-5.18,0.38,0.44,0.38,C.stone);
-box(2.50,1.02,-5.26,0.32,0.36,0.30,C.stone);
+rockery(3.00,-1.60);
+
+// Rear courtyard: cleared of rockery & bamboo, reorganized into a wooden-fenced flowerbed with trellis & gardening props.
+(function rearFlowerGarden(){
+ const x0=0.45,x1=3.75,z0=-6.12,z1=-4.48,cx=(x0+x1)/2,cz=(z0+z1)/2,gw=x1-x0,gd=z1-z0;
+ const soil=0x5d4637,woodWarm=0x7c5f4a,potClay=0xb86d53,potJade=0x6f948a,goldFl=0xf2cf72,violetFl=0xc8a4d4,ivoryFl=0xf6f0e2;
+ // Raised flowerbed stone border & dark garden soil bed (non-coplanar layered heights).
+ box(cx,0.145,cz,gw-0.06,0.09,gd-0.06,soil,1,false,true);
+ box(cx,0.155,z0,gw+0.10,0.11,0.10,C.stone2);
+ box(0.72,0.155,z1,0.62,0.11,0.10,C.stone2);
+ box(2.68,0.155,z1,2.22,0.11,0.10,C.stone2);
+ box(x0,0.155,cz,0.10,0.11,gd-0.10,C.stone2);
+ box(x1,0.155,cz,0.10,0.11,gd-0.10,C.stone2);
+ // Wooden picket fence surrounding the flowerbed with an open entry gate at x=1.30, z=z1.
+ function fenceSpan(fx1,fz1,fx2,fz2){
+  let alongX=Math.abs(fx2-fx1)>=Math.abs(fz2-fz1),len=Math.max(Math.abs(fx2-fx1),Math.abs(fz2-fz1));
+  let mx=(fx1+fx2)/2,mz=(fz1+fz2)/2;
+  for(const ry of [0.29,0.46])box(mx,ry,mz,alongX?len:0.04,0.045,alongX?0.04:len,woodWarm);
+  let n=Math.max(1,Math.floor(len/0.17));
+  for(let i=0;i<=n;i++){
+   let t=n===0?0.5:i/n,px=fx1+(fx2-fx1)*t,pz=fz1+(fz2-fz1)*t;
+   box(px,0.34,pz,alongX?0.05:0.055,0.42,alongX?0.055:0.05,i%2?C.wood:woodWarm);
+  }
+ }
+ fenceSpan(x0,z0,x1,z0);
+ fenceSpan(x0,z0,x0,z1);
+ fenceSpan(x1,z0,x1,z1);
+ fenceSpan(x0,z1,0.98,z1);
+ fenceSpan(1.62,z1,x1,z1);
+ for(const [px,pz] of [[x0,z0],[x1,z0],[x0,z1],[x1,z1],[0.98,z1],[1.62,z1],[2.15,z0],[2.68,z1]]){
+  box(px,0.36,pz,0.09,0.52,0.09,C.woodDark);
+  box(px,0.635,pz,0.12,0.045,0.12,woodWarm);
+ }
+ // Stepping stones leading from gate inside flowerbed.
+ box(1.30,0.198,z1+0.12,0.52,0.036,0.34,C.path);
+ box(1.30,0.201,z1-0.36,0.44,0.034,0.34,C.path2);
+ box(1.75,0.203,z1-0.66,0.38,0.034,0.32,C.path);
+ // Back-side wooden trellis with climbing vines & flowers (stays below 1.54 back wall).
+ for(const tx of [1.15,1.85,2.55,3.25])box(tx,0.82,z0+0.10,0.07,1.24,0.07,C.woodDark);
+ for(const ty of [0.58,0.94,1.30])box(2.20,ty,z0+0.10,2.24,0.05,0.05,woodWarm);
+ for(let i=0;i<14;i++){
+  let vx=1.18+i*0.16,vy=0.52+rand(i+501)*0.82,vz=z0+0.14+(i%2)*0.024;
+  box(vx,vy,vz,0.18,0.16,0.09,i%3?C.leaf:C.leaf2);
+  if(i%2===0)box(vx,vy+0.05,vz+0.04,0.10,0.10,0.07,i%4===0?C.peachLight:ivoryFl);
+ }
+ // Curated colorful flower rows & ornamental clumps inside the flowerbed.
+ function flowerClump(fx,fz,col,h=0.28,seed=1){
+  box(fx,0.21+h*0.30,fz,0.22,h*0.60,0.22,seed%2?C.leaf:C.leaf2);
+  box(fx,0.21+h*0.72,fz,0.06,h*0.45,0.06,C.leaf3);
+  for(const [dx,dz,dh] of [[0,0,0.10],[-0.08,0.07,0.04],[0.08,-0.06,0.02]]){
+   box(fx+dx,0.21+h+dh,fz+dz,0.12,0.09,0.12,col);
+  }
+ }
+ const bedFlowers=[
+  [0.78,-5.58,C.peach,0.34],[0.76,-5.05,goldFl,0.28],[0.82,-4.72,ivoryFl,0.24],
+  [1.22,-5.62,violetFl,0.34],[1.65,-5.55,C.peachLight,0.32],[2.05,-5.50,goldFl,0.30],
+  [2.48,-5.60,C.peach,0.36],[2.95,-5.55,ivoryFl,0.30],[3.38,-5.58,violetFl,0.34],
+  [2.18,-5.02,C.peachLight,0.28],[2.62,-4.98,goldFl,0.26],[3.04,-5.04,C.peach,0.30],[3.42,-4.96,ivoryFl,0.26],
+  [2.32,-4.68,ivoryFl,0.22],[2.78,-4.68,violetFl,0.24],[3.28,-4.68,goldFl,0.22]
+ ];
+ bedFlowers.forEach(([fx,fz,col,h],i)=>flowerClump(fx,fz,col,h,i+11));
+ // Potted plant helper & rear courtyard gardening props (potting stand, water vat, watering bucket, bench & pots).
+ function pottedPlant(px,pz,baseY,potCol,flCol,scale=1){
+  let ph=0.22*scale,pw=0.24*scale;
+  box(px,baseY+ph/2,pz,pw,ph,pw,potCol);
+  box(px,baseY+ph+0.02*scale,pz,pw+0.04*scale,0.04*scale,pw+0.04*scale,potCol);
+  box(px,baseY+ph+0.09*scale,pz,0.18*scale,0.12*scale,0.18*scale,C.leaf);
+  if(flCol)box(px,baseY+ph+0.17*scale,pz,0.12*scale,0.09*scale,0.12*scale,flCol);
+ }
+ // 1. Two-tier wooden flower stand along north-west rear courtyard wall with 3 potted plants.
+ const sx=-0.62,sz=-5.80;
+ for(const lx of [sx-0.46,sx+0.46])for(const lz of [sz-0.18,sz+0.18])box(lx,0.38,lz,0.07,0.56,0.07,C.woodDark);
+ box(sx,0.36,sz+0.06,1.06,0.055,0.44,woodWarm);
+ box(sx,0.66,sz-0.08,1.04,0.055,0.26,woodWarm);
+ pottedPlant(sx-0.30,sz-0.08,0.688,potClay,C.peachLight,0.86);
+ pottedPlant(sx+0.04,sz-0.08,0.688,potJade,ivoryFl,0.90);
+ pottedPlant(sx+0.34,sz-0.08,0.688,potClay,goldFl,0.82);
+ pottedPlant(sx-0.16,sz+0.12,0.388,potJade,violetFl,0.88);
+ // 2. Glazed ceramic rain-water vat & wooden watering bucket beside the fence.
+ box(0.14,0.13,sz+0.06,0.44,0.06,0.44,C.stone2);
+ box(0.14,0.31,sz+0.06,0.38,0.30,0.38,0x55716c);
+ box(0.14,0.48,sz+0.06,0.44,0.05,0.44,0x64837d);
+ box(0.14,0.502,sz+0.06,0.30,0.024,0.30,C.water2);
+ box(0.16,0.20,-4.82,0.22,0.20,0.22,woodWarm);
+ box(0.16,0.305,-4.82,0.24,0.03,0.24,C.woodDark);
+ box(0.16,0.316,-4.82,0.15,0.02,0.15,C.water);
+ // 3. Low wooden gardening bench & terracotta corner pots framing paths & lattice window.
+ box(-1.05,0.22,-5.05,0.20,0.24,0.62,C.woodDark);
+ box(-1.05,0.36,-5.05,0.26,0.05,0.72,woodWarm);
+ pottedPlant(-1.05,-4.88,0.385,potClay,C.peach,0.78);
+ pottedPlant(-1.18,-4.35,0.10,potJade,goldFl,1.05);
+ pottedPlant(3.58,-4.18,0.10,potClay,C.peachLight,1.10);
+})();
 
 // Bamboo grove (west courtyard) & rear courtyard accent bamboo.
 function bamboo(x,z,seed,minH=1.65){
@@ -455,41 +571,75 @@ function bamboo(x,z,seed,minH=1.65){
   box(x+dx*0.44,y+0.07,z+dz*0.39,0.36,0.05,0.13,C.leaf3);
  }
 }
-for(let i=0;i<30;i++){let x=-7.75+rand(i+13)*2.05,z=-1.15+rand(i+46)*3.25;bamboo(x,z,i+22)}
-for(let i=0;i<7;i++){let x=0.35+rand(i+91)*1.35,z=-5.75+rand(i+64)*0.85;bamboo(x,z,i+140,1.50)}
+// Thinned L-shaped bamboo backdrop (15 stalks) framing the stone table clearing on west & north sides.
+const westBamboo=[
+ [-8.02,-1.32],[-7.62,-1.08],[-7.95,-0.62],[-7.54,-0.32],[-8.04,0.12],
+ [-7.60,0.55],[-7.98,1.02],[-7.56,1.45],[-8.00,1.92],[-7.52,2.18],
+ [-6.95,-1.30],[-6.42,-1.02],[-5.92,-1.28],[-6.68,-0.68],[-5.75,-0.66]
+];
+westBamboo.forEach(([x,z],i)=>bamboo(x,z,i+22));
 
-// Peach trees: grounded trunk, continuous stepped branches, and cohesive blossom canopies (zero detached voxels).
-function peach(x,z,seed,scale=1){
+// Traditional Chinese garden trees: lakeside weeping willow (垂柳) & cloud-pruned garden pine (造型松).
+function willow(x,z,seed,scale=1){
  let g=new THREE.Group();g.position.set(x,0,z);g.scale.setScalar(scale);scene.add(g);
- groupBox(g,0,0.88,0,0.24,1.68,0.24,C.woodDark);
- groupBox(g,0,0.16,0,0.36,0.16,0.36,C.woodDark);
- const tips=[];
- for(const [dx,dz,h] of [[-0.68,0.24,2.08],[0.68,-0.22,2.20],[-0.34,-0.58,2.28],[0.44,0.52,2.02]]){
-  // Build continuous stepped branch from trunk center (0,1.55,0) out to tip (dx,h,dz).
-  for(let s=1;s<=5;s++){
-   let t=s/5;
-   groupBox(g,dx*t,1.52+(h-1.52)*t,dz*t,0.15,0.26,0.15,s<4?C.wood:C.woodDark);
-  }
-  tips.push([dx,h,dz]);
+ groupBox(g,0,0.14,0,0.38,0.14,0.38,C.woodDark);
+ for(let s=0;s<=6;s++){
+  let t=s/6;
+  groupBox(g,-0.22*t,0.26+t*1.58,-0.16*t,0.24-t*0.05,0.32,0.24-t*0.05,s<4?C.woodDark:C.wood);
  }
- // Anchor blossom and leaf clusters directly onto branch tips & crown center so every block connects.
- const anchors=[[0,2.35,0],...tips];
- for(const [ax,ay,az] of anchors){
-  groupBox(g,ax,ay+0.12,az,0.48,0.44,0.48,C.peach);
-  for(let i=0;i<7;i++){
-   let a=rand(seed+ax*13+i*7)*Math.PI*2,r=0.20+rand(seed+az*17+i*11)*0.34,dy=(rand(seed+i*19)-0.35)*0.42;
-   let s=0.30+rand(seed+i*23)*0.22;
-   let col=i%4===0?C.peachLight:(i%5===0?C.peachDeep:C.peach);
-   groupBox(g,ax+Math.cos(a)*r,ay+0.16+dy,az+Math.sin(a)*r,s,s,s,col);
+ const willowDark=0x467247,willowMid=0x5c8b58,willowBright=0x73a166;
+ const limbs=[[-0.78,2.24,-0.38],[0.46,2.20,-0.32],[-0.46,2.16,0.48],[0.42,2.14,0.42]];
+ for(const [dx,hy,dz] of limbs){
+  for(let s=1;s<=4;s++){
+   let t=s/4;
+   groupBox(g,-0.20+(dx+0.20)*t,1.76+(hy-1.76)*t,-0.14+(dz+0.14)*t,0.13,0.18,0.13,s<3?C.woodDark:C.wood);
   }
-  for(let i=0;i<2;i++){
-   let a=rand(seed+ax*29+i*41)*6.28,r=0.22+rand(seed+i*5)*0.28;
-   groupBox(g,ax+Math.cos(a)*r,ay+0.24+rand(i+seed)*0.18,az+Math.sin(a)*r,0.24,0.22,0.24,C.leaf2);
-  }
+  groupBox(g,dx,hy+0.16,dz,0.68,0.34,0.68,willowMid);
+  groupBox(g,dx,hy+0.36,dz,0.46,0.20,0.46,willowBright);
+ }
+ groupBox(g,-0.16,2.46,-0.04,1.12,0.42,1.08,willowMid);
+ groupBox(g,-0.16,2.72,-0.04,0.74,0.26,0.72,willowBright);
+ for(let i=0;i<16;i++){
+  let a=i*Math.PI*2/16+rand(seed+i*7)*0.22,r=0.72+rand(seed+i*13)*0.40;
+  let fx=-0.16+Math.cos(a)*r,fz=-0.04+Math.sin(a)*r,topY=2.24-rand(seed+i*11)*0.16;
+  let drop=0.86+rand(seed+i*19)*0.56,midY=topY-drop/2;
+  groupBox(g,fx,topY,fz,0.18,0.18,0.18,i%2?willowMid:willowDark);
+  groupBox(g,fx,midY,fz,0.07,drop,0.07,i%3===0?willowDark:willowMid);
+  groupBox(g,fx,topY-drop-0.08,fz,0.085,0.22,0.085,willowBright);
  }
 }
-peach(7.20,4.35,3,1.04);
-peach(-6.45,4.72,29,0.78);
+function pine(x,z,seed,scale=1){
+ let g=new THREE.Group();g.position.set(x,0,z);g.scale.setScalar(scale);scene.add(g);
+ groupBox(g,0,0.14,0,0.38,0.14,0.38,C.woodDark);
+ groupBox(g,0.22,0.17,0.16,0.26,0.16,0.24,C.stone);
+ groupBox(g,-0.20,0.15,-0.18,0.24,0.13,0.22,C.stone2);
+ const spine=[[0,0.26,0],[-0.08,0.62,0.04],[-0.16,0.98,0.06],[-0.06,1.34,0.02],[0.08,1.70,-0.04],[0.02,2.06,-0.06],[-0.04,2.42,-0.08]];
+ for(let i=0;i<spine.length-1;i++){
+  let [x1,y1,z1]=spine[i],[x2,y2,z2]=spine[i+1];
+  for(let s=0;s<=2;s++){
+   let t=s/2;
+   groupBox(g,x1+(x2-x1)*t,y1+(y2-y1)*t,z1+(z2-z1)*t,0.20-i*0.012,0.24,0.20-i*0.012,i<4?C.woodDark:C.wood);
+  }
+ }
+ const pineDark=0x2d503c,pineMid=0x3e684e,pineLight=0x537f5d;
+ const pads=[
+  {sx:-0.12,sy:1.38,sz:0.04,tx:-0.78,ty:1.54,tz:0.24,w:0.96,d:0.84},
+  {sx:0.08,sy:1.74,sz:-0.04,tx:0.74,ty:1.92,tz:-0.20,w:0.92,d:0.82},
+  {sx:0.02,sy:2.06,sz:-0.06,tx:0.26,ty:2.22,tz:0.60,w:0.84,d:0.76},
+  {sx:-0.04,sy:2.42,sz:-0.08,tx:-0.06,ty:2.64,tz:-0.10,w:0.98,d:0.88}
+ ];
+ for(const p of pads){
+  for(let s=1;s<=4;s++){
+   let t=s/4;
+   groupBox(g,p.sx+(p.tx-p.sx)*t,p.sy+(p.ty-p.sy)*t,p.sz+(p.tz-p.sz)*t,0.12,0.14,0.12,s<3?C.woodDark:C.wood);
+  }
+  groupBox(g,p.tx,p.ty+0.08,p.tz,p.w,0.16,p.d,pineDark);
+  groupBox(g,p.tx,p.ty+0.19,p.tz,p.w*0.72,0.12,p.d*0.72,pineMid);
+  groupBox(g,p.tx,p.ty+0.28,p.tz,p.w*0.44,0.08,p.d*0.44,pineLight);
+ }
+}
+willow(7.15,4.35,3,1.00);
+pine(-6.40,4.72,29,0.96);
 
 // Grounded stone garden lanterns (石灯笼) beside paths.
 function lantern(lx,lz){
@@ -511,7 +661,7 @@ function shrub(x,z,s,seed){
   box(x+Math.cos(a)*r,0.09+h/2,z+Math.sin(a)*r,s*0.34,h,s*0.34,i%3?C.leaf:C.leaf2);
  }
 }
-for(const [x,z,s] of [[-7.95,-5.25,0.68],[-0.85,-5.30,0.62],[3.45,-5.35,0.58],[8.05,-5.35,0.50],[-7.85,5.35,0.60],[7.95,5.45,0.46],[4.05,-1.65,0.50]])shrub(x,z,s,Math.floor((x+z)*19));
+for(const [x,z,s] of [[-7.95,-5.25,0.68],[8.05,-5.35,0.50],[-7.85,5.35,0.60],[7.95,5.45,0.46],[7.55,-0.55,0.62],[7.80,0.55,0.52]])shrub(x,z,s,Math.floor((x+z)*19));
 
 // Low instanced meadow grass & flowers: keep paths, stone patio, lanterns, water, buildings & rockery clear.
 function plantable(x,z){
@@ -519,12 +669,12 @@ function plantable(x,z){
  if(x<-1.20&&z<-2.05)return false; // main house
  if(x>3.85&&z<-1.65)return false; // pavilion
  if(((x-1.60)/3.85)**2+((z-1.55)/2.90)**2<1)return false; // pond & coping
- if(x>5.80&&z<1.15&&z>-1.70)return false; // rockery
- if(x<-5.35&&z>-1.40&&z<2.45)return false; // bamboo grove
+ if(x>1.95&&x<4.15&&z>-2.40&&z<-0.85)return false; // moon gate Taihu rockery
+ if(x<-5.10&&z>-1.55&&z<2.45)return false; // bamboo grove & stone table clearing
  if(Math.abs(z+2.95)<0.55&&x>-2.0&&x<4.6)return false; // moon gate wall
- if(x>-4.35&&x<-1.95&&z>-1.45&&z<0.70)return false; // stone table patio
- if(x>0.0&&x<3.1&&z<-4.4)return false; // rear courtyard bamboo & focal stone
+ if(x>-1.55&&x<4.20&&z<-3.05)return false; // rear courtyard fenced flowerbed & props
  if(Math.hypot(x+2.35,z-2.70)<0.48||Math.hypot(x-4.95,z-2.95)<0.48)return false; // lanterns
+ if(Math.hypot(x-7.15,z-4.35)<0.55||Math.hypot(x+6.40,z-4.72)<0.55)return false; // willow & pine trunks
  for(const [px,pz] of pathCoords)if(Math.hypot(x-px,z-pz)<0.62)return false;
  if(Math.abs(x)<1.05&&z>4.40)return false; // entry path
  return true;
@@ -557,9 +707,41 @@ new ResizeObserver(resize).observe(host);resize();
 function frame(){requestAnimationFrame(frame);const smooth=matchMedia('(prefers-reduced-motion: reduce)').matches?1:.13;yaw+=(desiredYaw-yaw)*smooth;pitch+=(desiredPitch-pitch)*smooth;zoom+=(desiredZoom-zoom)*smooth;target.lerp(desiredTarget,smooth);let radius=28;camera.position.set(target.x+radius*Math.sin(yaw)*Math.cos(pitch),target.y+radius*Math.sin(pitch),target.z+radius*Math.cos(yaw)*Math.cos(pitch));camera.lookAt(target);camera.zoom=zoom;camera.updateProjectionMatrix();renderer.render(scene,camera)}frame();
 const deg=Math.PI/180;
 document.querySelectorAll('[data-action]').forEach(btn=>btn.addEventListener('click',()=>{switch(btn.dataset.action){case 'left':desiredYaw-=15*deg;break;case 'right':desiredYaw+=15*deg;break;case 'square':desiredYaw=Math.round(desiredYaw/(Math.PI/2))*Math.PI/2;break;case 'front':desiredYaw=0;desiredTarget.set(0,.65,0);desiredZoom=.79;break;case 'up':desiredPitch=clamp(desiredPitch-10*deg,.19,1.52);break;case 'down':desiredPitch=clamp(desiredPitch+10*deg,.19,1.52);break;case 'pitch':desiredPitch=1.01;break;}}));
-let drag=null;host.addEventListener('contextmenu',e=>e.preventDefault());host.addEventListener('pointerdown',e=>{host.setPointerCapture(e.pointerId);drag={x:e.clientX,y:e.clientY,button:e.button};host.style.cursor=e.button===2?'move':'grabbing'});host.addEventListener('pointerup',()=>{drag=null;host.style.cursor='grab'});host.addEventListener('pointercancel',()=>{drag=null;host.style.cursor='grab'});host.style.cursor='grab';
+let drag=null;host.addEventListener('contextmenu',e=>e.preventDefault());host.addEventListener('pointerdown',e=>{host.setPointerCapture(e.pointerId);drag={x:e.clientX,y:e.clientY,button:e.button};host.style.cursor=e.button===2?'move':'grabbing';if(typeof hidePanel==='function')hidePanel()});host.addEventListener('pointerup',()=>{drag=null;host.style.cursor='grab'});host.addEventListener('pointercancel',()=>{drag=null;host.style.cursor='grab'});host.style.cursor='grab';
 host.addEventListener('pointermove',e=>{if(!drag)return;let dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.x=e.clientX;drag.y=e.clientY;if(drag.button===2||e.buttons===2){let right=new THREE.Vector3(Math.cos(yaw),0,-Math.sin(yaw)),forward=new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw));desiredTarget.addScaledVector(right,-dx*.021/zoom);desiredTarget.addScaledVector(forward,-dy*.021/zoom)}else{desiredYaw-=dx*.007;desiredPitch=clamp(desiredPitch+dy*.007,.19,1.52)}});
-host.addEventListener('wheel',e=>{e.preventDefault();desiredZoom=clamp(desiredZoom*Math.exp(-e.deltaY*.001),.58,2.9)},{passive:false});
+host.addEventListener('wheel',e=>{e.preventDefault();desiredZoom=clamp(desiredZoom*Math.exp(-e.deltaY*.001),.58,2.9);if(typeof hidePanel==='function')hidePanel()},{passive:false});
+
+// Floating panel auto-hide & pill hover/tap reveal.
+const panel=document.querySelector?.('.panel'),panelTab=document.querySelector?.('.panel-tab');
+const pinBtn=document.querySelector?.('[data-panel="pin"]'),hideBtn=document.querySelector?.('[data-panel="hide"]');
+let pinned=false,hideTimer=null;
+function setPanelVisible(visible){
+ if(!panel||!panelTab)return;
+ panel.classList.toggle('is-hidden',!visible);
+ panelTab.classList.toggle('is-visible',!visible);
+ panelTab.setAttribute('aria-expanded',String(visible));
+}
+function clearHideTimer(){if(hideTimer){clearTimeout(hideTimer);hideTimer=null}}
+function hidePanel(){if(pinned)return;clearHideTimer();setPanelVisible(false)}
+function scheduleAutoHide(ms=2600){
+ clearHideTimer();
+ if(pinned||!panel)return;
+ if(panel.matches?.(':hover')||panel.querySelector?.(':focus-visible'))return;
+ hideTimer=setTimeout(()=>setPanelVisible(false),ms);
+}
+function showPanel(autoMs=0){clearHideTimer();setPanelVisible(true);if(autoMs>0)scheduleAutoHide(autoMs)}
+if(panel&&panelTab){
+ panel.addEventListener('pointerenter',clearHideTimer);
+ panel.addEventListener('pointerleave',()=>scheduleAutoHide(900));
+ panel.addEventListener('focusin',clearHideTimer);
+ panel.addEventListener('focusout',()=>setTimeout(()=>scheduleAutoHide(900),0));
+ panel.addEventListener('click',()=>scheduleAutoHide(3200));
+ panelTab.addEventListener('pointerenter',e=>{if(!drag&&e.pointerType!=='touch')showPanel(1600)});
+ panelTab.addEventListener('click',()=>showPanel(4500));
+ pinBtn?.addEventListener('click',e=>{e.stopPropagation();pinned=!pinned;pinBtn.setAttribute('aria-pressed',String(pinned));pinBtn.textContent=pinned?'已固定':'固定';if(pinned)showPanel();else scheduleAutoHide(1800)});
+ hideBtn?.addEventListener('click',e=>{e.stopPropagation();pinned=false;if(pinBtn){pinBtn.setAttribute('aria-pressed','false');pinBtn.textContent='固定'}clearHideTimer();setPanelVisible(false)});
+ scheduleAutoHide(2800);
+}
 })();
 
 </script>
