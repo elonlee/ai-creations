@@ -18,9 +18,9 @@ export const INTERACTION_STAGES = {
     actionId: 'cook',
     label: '正在做暖心早午餐',
     walkLabel: '前往橡木小厨房',
-    approach: [-4.52, -2.46],
-    actPos: [-4.52, 0, -2.46],
-    faceTarget: [-4.85, -3.61],
+    approach: [-4.04, -2.82],
+    actPos: [-4.04, 0, -2.82],
+    faceTarget: [-4.04, -3.98],
     enterDur: 0.2,
     exitDur: 0.16,
     actDur: 2.9,
@@ -41,10 +41,10 @@ export const INTERACTION_STAGES = {
     label: '正在小睡一会儿',
     walkLabel: '前往柔软小床',
     approach: [1.52, 1.45],
-    actPos: [2.93, 1.18, 2.3],
+    actPos: [2.93, 0.93, 2.3],
     faceYaw: 0,
-    enterDur: 0.5,
-    exitDur: 0.44,
+    enterDur: 1.25,
+    exitDur: 0.92,
     actDur: 3.2,
   },
   shower: {
@@ -85,9 +85,9 @@ export const INTERACTION_STAGES = {
     actionId: 'eat',
     label: '正在享用早午餐',
     walkLabel: '前往厨房餐盒旁',
-    approach: [-3.62, -2.44],
-    actPos: [-3.62, 0, -2.44],
-    faceTarget: [-3.62, -3.27],
+    approach: [-3.12, -2.82],
+    actPos: [-3.12, 0, -2.82],
+    faceTarget: [-3.12, -3.66],
     enterDur: 0.2,
     exitDur: 0.16,
     actDur: 2.7,
@@ -102,7 +102,7 @@ const GRID_ROWS = 23; // -4.4 .. +4.4
 
 const STATIC_BOXES = [
   // Kitchen counter & refrigerator
-  { minX: -6.0, maxX: -2.4, minZ: -5.0, maxZ: -2.68 },
+  { minX: -6.0, maxX: -1.85, minZ: -5.0, maxZ: -3.05 },
   // Desk
   { minX: 0.68, maxX: 3.72, minZ: -4.5, maxZ: -2.58 },
   // Desk chair
@@ -431,6 +431,9 @@ function defaultPose(x, y, z, yaw, eyeScaleY = 1) {
     prop: null,
     effect: null,
     potShake: 0,
+    blanketOpen: 0,
+    blanketTuck: 0,
+    blanketBreath: 0,
     activityLabel: null,
   };
 }
@@ -668,22 +671,47 @@ export function createCharacterController(initialX = -0.2, initialZ = 0.2) {
       state.timer += safeDt;
       const meta = INTERACTION_STAGES[state.activeInteraction];
       const rawT = clamp(state.timer / Math.max(0.05, state.duration), 0, 1);
-      const t = smoothstep(rawT);
-      const hopArc = (state.activeInteraction === 'bed' || state.activeInteraction === 'tea')
-        ? Math.sin(rawT * Math.PI) * 0.38
-        : 0;
-      state.x = lerp(state.enterFrom[0], meta.actPos[0], t);
-      state.y = lerp(state.enterFrom[1], meta.actPos[1], t) + hopArc;
-      state.z = lerp(state.enterFrom[2], meta.actPos[2], t);
-      const shelfYaw = targetYawForInteraction(state.activeInteraction);
-      if (state.activeInteraction === 'bookshelf') {
-        if (rawT < 0.55) {
-          state.yaw = lerpAngle(state.enterFromYaw, shelfYaw, smoothstep(rawT / 0.55));
+      if (state.activeInteraction === 'bed') {
+        const edgeX = 2.44;
+        const edgeY = 0.84;
+        const edgeZ = 1.42;
+        const edgeYaw = -Math.PI / 2;
+        if (rawT < 0.34) {
+          const seg = rawT / 0.34;
+          const k = smoothstep(seg);
+          state.x = lerp(state.enterFrom[0], edgeX, k);
+          state.y = lerp(state.enterFrom[1], edgeY, k) + Math.sin(seg * Math.PI) * 0.24;
+          state.z = lerp(state.enterFrom[2], edgeZ, k);
+          state.yaw = lerpAngle(state.enterFromYaw, edgeYaw, k);
+        } else if (rawT < 0.68) {
+          const seg = (rawT - 0.34) / 0.34;
+          const k = smoothstep(seg);
+          state.x = lerp(edgeX, meta.actPos[0], k);
+          state.y = lerp(edgeY, meta.actPos[1], k) + Math.sin(seg * Math.PI) * 0.06;
+          state.z = lerp(edgeZ, meta.actPos[2], k);
+          state.yaw = lerpAngle(edgeYaw, finalActYawForInteraction('bed'), k);
         } else {
-          state.yaw = lerpAngle(shelfYaw, meta.readYaw, smoothstep((rawT - 0.55) / 0.45));
+          state.x = meta.actPos[0];
+          state.y = meta.actPos[1];
+          state.z = meta.actPos[2];
+          state.yaw = finalActYawForInteraction('bed');
         }
       } else {
-        state.yaw = lerpAngle(state.enterFromYaw, shelfYaw, t);
+        const t = smoothstep(rawT);
+        const hopArc = state.activeInteraction === 'tea' ? Math.sin(rawT * Math.PI) * 0.38 : 0;
+        state.x = lerp(state.enterFrom[0], meta.actPos[0], t);
+        state.y = lerp(state.enterFrom[1], meta.actPos[1], t) + hopArc;
+        state.z = lerp(state.enterFrom[2], meta.actPos[2], t);
+        const shelfYaw = targetYawForInteraction(state.activeInteraction);
+        if (state.activeInteraction === 'bookshelf') {
+          if (rawT < 0.55) {
+            state.yaw = lerpAngle(state.enterFromYaw, shelfYaw, smoothstep(rawT / 0.55));
+          } else {
+            state.yaw = lerpAngle(shelfYaw, meta.readYaw, smoothstep((rawT - 0.55) / 0.45));
+          }
+        } else {
+          state.yaw = lerpAngle(state.enterFromYaw, shelfYaw, t);
+        }
       }
       if (state.timer >= state.duration) {
         state.x = meta.actPos[0];
@@ -709,16 +737,47 @@ export function createCharacterController(initialX = -0.2, initialZ = 0.2) {
     } else if (state.phase === 'exit') {
       state.timer += safeDt;
       const rawT = clamp(state.timer / Math.max(0.05, state.duration), 0, 1);
-      const t = smoothstep(rawT);
-      const hopArc = (state.occupiedInteraction === 'bed' || state.occupiedInteraction === 'tea')
-        ? Math.sin(rawT * Math.PI) * 0.34
-        : 0;
-      state.x = lerp(state.enterFrom[0], state.exitTo[0], t);
-      state.y = lerp(state.enterFrom[1], state.exitTo[1], t) + hopArc;
-      state.z = lerp(state.enterFrom[2], state.exitTo[2], t);
-      const exitYaw = yawTowards(state.enterFrom[0], state.enterFrom[2], state.exitTo[0], state.exitTo[2]);
-      if (Math.hypot(state.exitTo[0] - state.enterFrom[0], state.exitTo[2] - state.enterFrom[2]) > 0.05) {
-        state.yaw = lerpAngle(state.enterFromYaw, exitYaw, t);
+      if (state.occupiedInteraction === 'bed') {
+        const sitX = 2.74;
+        const sitY = 0.88;
+        const sitZ = 1.98;
+        const edgeX = 2.44;
+        const edgeY = 0.84;
+        const edgeZ = 1.42;
+        const edgeYaw = -Math.PI / 2;
+        const exitYaw = Math.hypot(state.exitTo[0] - edgeX, state.exitTo[2] - edgeZ) > 0.05
+          ? yawTowards(edgeX, edgeZ, state.exitTo[0], state.exitTo[2])
+          : edgeYaw;
+        if (rawT < 0.42) {
+          const k = smoothstep(rawT / 0.42);
+          state.x = lerp(state.enterFrom[0], sitX, k);
+          state.y = lerp(state.enterFrom[1], sitY, k);
+          state.z = lerp(state.enterFrom[2], sitZ, k);
+          state.yaw = state.enterFromYaw;
+        } else if (rawT < 0.74) {
+          const k = smoothstep((rawT - 0.42) / 0.32);
+          state.x = lerp(sitX, edgeX, k);
+          state.y = lerp(sitY, edgeY, k);
+          state.z = lerp(sitZ, edgeZ, k);
+          state.yaw = lerpAngle(state.enterFromYaw, edgeYaw, k);
+        } else {
+          const seg = (rawT - 0.74) / 0.26;
+          const k = smoothstep(seg);
+          state.x = lerp(edgeX, state.exitTo[0], k);
+          state.y = lerp(edgeY, state.exitTo[1], k) + Math.sin(seg * Math.PI) * 0.2;
+          state.z = lerp(edgeZ, state.exitTo[2], k);
+          state.yaw = lerpAngle(edgeYaw, exitYaw, k);
+        }
+      } else {
+        const t = smoothstep(rawT);
+        const hopArc = state.occupiedInteraction === 'tea' ? Math.sin(rawT * Math.PI) * 0.34 : 0;
+        state.x = lerp(state.enterFrom[0], state.exitTo[0], t);
+        state.y = lerp(state.enterFrom[1], state.exitTo[1], t) + hopArc;
+        state.z = lerp(state.enterFrom[2], state.exitTo[2], t);
+        const exitYaw = yawTowards(state.enterFrom[0], state.enterFrom[2], state.exitTo[0], state.exitTo[2]);
+        if (Math.hypot(state.exitTo[0] - state.enterFrom[0], state.exitTo[2] - state.enterFrom[2]) > 0.05) {
+          state.yaw = lerpAngle(state.enterFromYaw, exitYaw, t);
+        }
       }
       if (state.timer >= state.duration) {
         state.x = state.exitTo[0];
@@ -860,21 +919,101 @@ export function createCharacterController(initialX = -0.2, initialZ = 0.2) {
     }
 
     if (id === 'bed') {
-      pose.poseRotX = (-Math.PI / 2) * blend;
-      pose.leftLegRotX = -0.08 * blend;
-      pose.rightLegRotX = 0.06 * blend;
-      pose.leftArmRotZ = lerp(-0.2, -0.12, blend);
-      pose.rightArmRotZ = lerp(0.2, 0.12, blend);
-      pose.leftArmRotX = -0.12 * blend;
-      pose.rightArmRotX = -0.15 * blend;
-      if (state.phase === 'act') {
-        pose.eyeScaleY = 0.14;
-        if (!reducedMotion) {
-          pose.posePosY = Math.sin(state.timer * 2.0) * 0.018;
-          pose.headRotZ = Math.sin(state.timer * 1.0) * 0.05;
+      const rawT = clamp(state.timer / Math.max(0.05, state.duration), 0, 1);
+      if (state.phase === 'enter') {
+        if (rawT < 0.34) {
+          const k = smoothstep(rawT / 0.34);
+          pose.leftLegRotX = -1.38 * k;
+          pose.rightLegRotX = -1.38 * k;
+          pose.torsoRotX = 0.08 * k;
+          pose.headRotX = 0.06 * k;
+          pose.leftArmRotX = -0.35 * k;
+          pose.rightArmRotX = -1.18 * Math.sin(k * Math.PI * 0.78);
+          pose.rightArmRotZ = lerp(0.2, -0.38, k);
+          pose.blanketOpen = smoothstep(clamp((rawT - 0.06) / 0.28, 0, 1)) * 0.92;
+        } else if (rawT < 0.68) {
+          const seg = (rawT - 0.34) / 0.34;
+          const k = smoothstep(seg);
+          pose.poseRotX = -1.42 * k;
+          pose.leftLegRotX = lerp(-1.38, -0.05, k) + Math.sin(seg * Math.PI) * 0.22;
+          pose.rightLegRotX = lerp(-1.38, 0.04, k) - Math.sin(seg * Math.PI) * 0.16;
+          pose.torsoRotX = lerp(0.08, 0, k);
+          pose.headRotX = lerp(0.06, 0.14, k);
+          pose.leftArmRotX = lerp(-0.35, -1.38, k);
+          pose.rightArmRotX = lerp(-0.75, -1.42, k);
+          pose.leftArmRotZ = lerp(-0.2, -0.1, k);
+          pose.rightArmRotZ = lerp(-0.38, 0.1, k);
+          pose.blanketOpen = lerp(0.92, 0.88, k);
+        } else {
+          const seg = (rawT - 0.68) / 0.32;
+          const k = smoothstep(seg);
+          pose.poseRotX = -1.42;
+          pose.leftLegRotX = -0.05;
+          pose.rightLegRotX = 0.04;
+          pose.headRotX = 0.14;
+          pose.headRotZ = Math.sin(seg * Math.PI) * 0.07;
+          pose.leftArmRotX = lerp(-1.38, -0.08, k);
+          pose.rightArmRotX = lerp(-1.42, -0.08, k);
+          pose.leftArmRotZ = lerp(-0.1, -0.06, k);
+          pose.rightArmRotZ = lerp(0.1, 0.06, k);
+          pose.eyeScaleY = lerp(blinkScale, 0.14, k);
+          pose.blanketOpen = lerp(0.88, 0, k);
+          pose.blanketTuck = k;
         }
-        pose.effect = 'rest';
+        return pose;
       }
+
+      if (state.phase === 'exit') {
+        if (rawT < 0.42) {
+          const seg = rawT / 0.42;
+          const k = smoothstep(seg);
+          pose.poseRotX = lerp(-1.42, 0, k);
+          pose.leftLegRotX = lerp(-0.05, -0.18, k);
+          pose.rightLegRotX = lerp(0.04, -0.15, k);
+          pose.headRotX = lerp(0.14, 0.06, k);
+          pose.leftArmRotX = lerp(-0.08, -1.05, Math.sin(seg * Math.PI * 0.85));
+          pose.rightArmRotX = lerp(-0.08, -1.12, Math.sin(seg * Math.PI * 0.85));
+          pose.leftArmRotZ = lerp(-0.06, -0.25, k);
+          pose.rightArmRotZ = lerp(0.06, 0.25, k);
+          pose.eyeScaleY = lerp(0.14, 1, clamp(k * 1.4, 0, 1));
+          pose.blanketOpen = smoothstep(clamp(rawT / 0.35, 0, 1)) * 0.88;
+          pose.blanketTuck = 1 - k;
+        } else if (rawT < 0.74) {
+          const k = smoothstep((rawT - 0.42) / 0.32);
+          pose.leftLegRotX = lerp(-0.18, -1.35, k);
+          pose.rightLegRotX = lerp(-0.15, -1.35, k);
+          pose.torsoRotX = lerp(0, 0.08, k);
+          pose.headRotX = 0.06;
+          pose.leftArmRotX = lerp(-0.45, -0.18, k);
+          pose.rightArmRotX = lerp(-0.45, -0.18, k);
+          pose.blanketOpen = lerp(0.88, 0, k);
+        } else {
+          const k = smoothstep((rawT - 0.74) / 0.26);
+          pose.leftLegRotX = lerp(-1.35, 0, k);
+          pose.rightLegRotX = lerp(-1.35, 0, k);
+          pose.torsoRotX = lerp(0.08, 0, k);
+          pose.headRotX = lerp(0.06, 0, k);
+        }
+        return pose;
+      }
+
+      pose.poseRotX = -1.42;
+      pose.leftLegRotX = -0.05;
+      pose.rightLegRotX = 0.04;
+      pose.headRotX = 0.14;
+      pose.leftArmRotZ = -0.06;
+      pose.rightArmRotZ = 0.06;
+      pose.leftArmRotX = -0.08;
+      pose.rightArmRotX = -0.08;
+      pose.eyeScaleY = 0.14;
+      pose.blanketTuck = 1;
+      if (!reducedMotion) {
+        const breath = Math.sin(state.timer * 2.1);
+        pose.posePosY = breath * 0.015;
+        pose.headRotZ = Math.sin(state.timer * 1.0) * 0.055;
+        pose.blanketBreath = breath * 0.5 + 0.5;
+      }
+      pose.effect = 'rest';
       return pose;
     }
 

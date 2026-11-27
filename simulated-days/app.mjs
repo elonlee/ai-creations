@@ -9,13 +9,13 @@ import {
   purchaseFurniture,
   moveFurniture,
   getActionAvailability,
-} from './game.mjs';
+} from './game.mjs?v=5';
 import {
   createCharacterController,
   INTERACTION_STAGES,
   computeAnchoredCardPosition,
   clampAndSnapBuildPoint,
-} from './motion.mjs';
+} from './motion.mjs?v=5';
 
 const $ = selector => document.querySelector(selector);
 const $$ = selector => [...document.querySelectorAll(selector)];
@@ -48,10 +48,27 @@ const sceneRefs = {
   ambientLight: null,
   sunLight: null,
   fillLight: null,
-  roomPointLight: null,
+  pendantLights: [],
   pendantBulbs: [],
+  pendantShades: [],
+  deskLight: null,
+  bathLight: null,
+  staticLampMaterials: [],
+  movableLampMaterials: [],
+  movableLampLights: [],
   outsideWindows: [],
-  lampMaterials: [],
+  skySun: null,
+  skyMoon: null,
+  skyStars: [],
+  clockHourPivot: null,
+  clockMinutePivot: null,
+  clockFaceMat: null,
+  showerWallGroup: null,
+  showerSpray: null,
+  showerStreams: [],
+  bedBlanketPivot: null,
+  bedClothState: null,
+  bedEyeMask: null,
 };
 const sceneProps = {
   mealMain: null,
@@ -66,7 +83,40 @@ const sceneProps = {
   souvenirEllis: null,
 };
 const propReveal = { key: null, waitingAction: null, mode: 'appear', animating: false, progress: 1 };
+let pendingAction = null;
 let ambientFoodTimer = 0;
+let showerAfterglowTimer = 0;
+let clockDisplayTotal = state.day * 1440 + state.minute;
+let clockTargetTotal = state.day * 1440 + state.minute;
+
+const atmosphereTarget = {
+  period: 'morning',
+  weatherText: '晴日晨光',
+  sunColor: new THREE.Color(0xffe6b4),
+  sunIntensity: 3.15,
+  sunPos: new THREE.Vector3(-4, 10, 7),
+  ambSky: new THREE.Color(0xfff4df),
+  ambGround: new THREE.Color(0xbaa8c6),
+  ambIntensity: 2.45,
+  fillIntensity: 1.1,
+  indoorGlow: 0,
+  exposure: 1.75,
+  sunOpacity: 1,
+  moonOpacity: 0,
+};
+const atmosphereCurrent = {
+  sunColor: new THREE.Color(0xffe6b4),
+  sunIntensity: 3.15,
+  sunPos: new THREE.Vector3(-4, 10, 7),
+  ambSky: new THREE.Color(0xfff4df),
+  ambGround: new THREE.Color(0xbaa8c6),
+  ambIntensity: 2.45,
+  fillIntensity: 1.1,
+  indoorGlow: 0,
+  exposure: 1.75,
+  sunOpacity: 1,
+  moonOpacity: 0,
+};
 
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
@@ -100,13 +150,13 @@ const people = {
   ellis: { name: 'Ellis', place: '小咖啡馆', color: '#b9a17d', initial: 'E', description: '记得每位客人的喜好。', gift: '厨房台面放着咖啡与点心' },
 };
 const interactionMeta = {
-  stove: { name: '橡木小厨房', hint: '冰箱里还有新鲜食材。', actions: ['cook'], point: [-4.1, 2.2, -3.3] },
+  stove: { name: '橡木小厨房', hint: '冰箱里还有新鲜食材。', actions: ['cook'], point: [-3.38, 2.2, -3.7] },
   desk: { name: '窗边画桌', hint: '太阳刚好照在画纸上。', actions: ['paint'], point: [2.15, 2.15, -3.2] },
   bed: { name: '柔软的小床', hint: '累的时候，就安心睡一会儿，或一觉睡到明天清晨。', actions: ['rest', 'sleep'], point: [3.9, 1.6, 1.8] },
   shower: { name: '暖光浴室', hint: '让热水带走一天的疲惫。', actions: ['shower'], point: [-4.65, 2.35, 2.7] },
   bookshelf: { name: '收集的旧书', hint: '每一本都藏着另一种生活。', actions: ['read'], point: [4.8, 2.25, -3.2] },
   tea: { name: '客厅圆桌', hint: '给生活留一点空白时间，桌面上也会留下日常的痕迹。', actions: ['tea'], point: [-0.78, 1.45, 2.55] },
-  meal: { name: '厨房桌上的早午餐', hint: '刚做好的热乎餐盒就放在厨房桌面上，点击即可享用。', actions: ['eat'], point: [-3.62, 1.45, -3.27], noHotspot: true },
+  meal: { name: '厨房桌上的早午餐', hint: '刚做好的热乎餐盒就放在厨房桌面上，点击即可享用。', actions: ['eat'], point: [-3.12, 1.45, -3.66], noHotspot: true },
 };
 
 function addBox(parent, material, w, h, d, x = 0, y = 0, z = 0, cast = true) {
@@ -152,10 +202,14 @@ let particleAssets = null;
 function ensureParticleAssets() {
   if (particleAssets) return particleAssets;
   particleAssets = {
-    steamGeo: new THREE.SphereGeometry(0.12, 10, 8),
-    dropGeo: new THREE.CylinderGeometry(0.024, 0.034, 0.22, 6),
+    steamGeo: new THREE.SphereGeometry(0.14, 10, 8),
+    mistGeo: new THREE.SphereGeometry(0.24, 12, 10),
+    dropGeo: new THREE.CylinderGeometry(0.032, 0.044, 0.28, 8),
+    splashGeo: new THREE.RingGeometry(0.06, 0.12, 16),
     steamMat: new THREE.MeshBasicMaterial({ color: 0xfffaf1, transparent: true, opacity: 0.72, depthWrite: false }),
-    dropMat: new THREE.MeshBasicMaterial({ color: 0x72b6db, transparent: true, opacity: 0.9, depthWrite: false }),
+    mistMat: new THREE.MeshBasicMaterial({ color: 0xdbe9f6, transparent: true, opacity: 0.78, depthWrite: false }),
+    dropMat: new THREE.MeshBasicMaterial({ color: 0x52addb, transparent: true, opacity: 0.94, depthWrite: false }),
+    splashMat: new THREE.MeshBasicMaterial({ color: 0x8ad0ee, transparent: true, opacity: 0.75, side: THREE.DoubleSide, depthWrite: false }),
     zTex: makeGlyphTexture('Z', '#6a5187'),
     sparkTex: makeGlyphTexture('✦', '#d4952a'),
     heartTex: makeGlyphTexture('♥', '#d47486'),
@@ -171,9 +225,16 @@ function spawnEffectParticle(kind, origin, velocity, life, scale = 1) {
   if (kind === 'steam') {
     mat = assets.steamMat.clone();
     node = new THREE.Mesh(assets.steamGeo, mat);
+  } else if (kind === 'mist') {
+    mat = assets.mistMat.clone();
+    node = new THREE.Mesh(assets.mistGeo, mat);
   } else if (kind === 'drop') {
     mat = assets.dropMat.clone();
     node = new THREE.Mesh(assets.dropGeo, mat);
+  } else if (kind === 'splash') {
+    mat = assets.splashMat.clone();
+    node = new THREE.Mesh(assets.splashGeo, mat);
+    node.rotation.x = -Math.PI / 2;
   } else {
     const map = kind === 'zzz' ? assets.zTex : kind === 'heart' ? assets.heartTex : assets.sparkTex;
     mat = new THREE.SpriteMaterial({ map, transparent: true, opacity: 0.92, depthWrite: false });
@@ -186,12 +247,15 @@ function spawnEffectParticle(kind, origin, velocity, life, scale = 1) {
 }
 
 function updateParticles(dt, effect, pose) {
+  if (effect === 'shower') showerAfterglowTimer = 2.6;
+  else if (showerAfterglowTimer > 0) showerAfterglowTimer = Math.max(0, showerAfterglowTimer - dt);
+
   if (effect && !isReducedMotion()) {
     effectCooldown -= dt;
     if (effectCooldown <= 0) {
       if (effect === 'cook') {
         effectCooldown = 0.22;
-        spawnEffectParticle('steam', [-4.85 + (Math.random() - 0.5) * 0.25, 1.42, -3.61 + (Math.random() - 0.5) * 0.25], [(Math.random() - 0.5) * 0.15, 0.65, (Math.random() - 0.5) * 0.15], 1.15, 0.75 + Math.random() * 0.45);
+        spawnEffectParticle('steam', [-4.04 + (Math.random() - 0.5) * 0.22, 1.42, -3.98 + (Math.random() - 0.5) * 0.22], [(Math.random() - 0.5) * 0.15, 0.65, (Math.random() - 0.5) * 0.15], 1.15, 0.75 + Math.random() * 0.45);
       } else if (effect === 'paint') {
         effectCooldown = 0.28;
         spawnEffectParticle('spark', [1.85 + (Math.random() - 0.5) * 0.65, 1.54, -3.5 + (Math.random() - 0.5) * 0.4], [(Math.random() - 0.5) * 0.2, 0.48, (Math.random() - 0.5) * 0.2], 0.95, 0.42);
@@ -199,12 +263,15 @@ function updateParticles(dt, effect, pose) {
         effectCooldown = 0.58;
         spawnEffectParticle('zzz', [2.93 + (Math.random() - 0.5) * 0.25, 1.52, 0.65], [0.1, 0.46, -0.06], 1.5, 0.5);
       } else if (effect === 'shower') {
-        effectCooldown = 0.07;
-        for (let i = 0; i < 2; i++) {
-          spawnEffectParticle('drop', [-5.2 + (Math.random() - 0.5) * 0.45, 2.02, 1.7 + (Math.random() - 0.5) * 0.45], [0.05, -2.55, 0.05], 0.68, 1);
+        effectCooldown = 0.055;
+        for (let i = 0; i < 3; i++) {
+          spawnEffectParticle('drop', [-5.1 + (Math.random() - 0.5) * 0.46, 2.15, 1.9 + (Math.random() - 0.5) * 0.46], [0, -3.1, 0], 0.65, 1);
         }
-        if (Math.random() < 0.38) {
-          spawnEffectParticle('steam', [-4.95 + (Math.random() - 0.5) * 0.5, 0.9, 1.85 + (Math.random() - 0.5) * 0.5], [0, 0.55, 0], 1.1, 1.15);
+        if (Math.random() < 0.55) {
+          spawnEffectParticle('splash', [-5.1 + (Math.random() - 0.5) * 0.55, 0.132, 1.9 + (Math.random() - 0.5) * 0.55], [0, 0, 0], 0.45, 0.8 + Math.random() * 0.5);
+        }
+        if (Math.random() < 0.65) {
+          spawnEffectParticle('mist', [-5.05 + (Math.random() - 0.5) * 0.65, 0.85 + Math.random() * 0.85, 1.95 + (Math.random() - 0.5) * 0.65], [(Math.random() - 0.5) * 0.14, 0.62, (Math.random() - 0.5) * 0.14], 1.4, 0.95 + Math.random() * 0.45);
         }
       } else if (effect === 'read') {
         effectCooldown = 0.42;
@@ -215,7 +282,7 @@ function updateParticles(dt, effect, pose) {
         spawnEffectParticle('steam', [pose.x + 0.15, 1.38, pose.z + 0.25], [0, 0.42, 0], 0.85, 0.42);
       } else if (effect === 'eat') {
         effectCooldown = 0.36;
-        spawnEffectParticle('steam', [-3.62 + (Math.random() - 0.5) * 0.14, 1.12, -3.27 + (Math.random() - 0.5) * 0.14], [0, 0.42, 0], 0.9, 0.46);
+        spawnEffectParticle('steam', [-3.12 + (Math.random() - 0.5) * 0.14, 1.12, -3.66 + (Math.random() - 0.5) * 0.14], [0, 0.42, 0], 0.9, 0.46);
         spawnEffectParticle('heart', [pose.x + (Math.random() - 0.5) * 0.25, 1.98, pose.z], [0, 0.52, 0], 0.95, 0.3);
       } else if (effect === 'wave') {
         effectCooldown = 0.45;
@@ -226,16 +293,19 @@ function updateParticles(dt, effect, pose) {
     effectCooldown = 0;
   }
 
-  // Gentle ongoing warmth wisps from freshly served lunch or tea on the round table.
+  // Gentle ongoing warmth wisps from freshly served lunch, tea, or freshly used warm shower.
   if (!isReducedMotion() && mode === 'life' && !effect) {
     ambientFoodTimer -= dt;
     if (ambientFoodTimer <= 0) {
-      ambientFoodTimer = 0.85;
+      ambientFoodTimer = showerAfterglowTimer > 0 ? 0.35 : 0.85;
       if (sceneProps.mealMain?.visible) {
-        spawnEffectParticle('steam', [-3.62 + (Math.random() - 0.5) * 0.14, 1.12, -3.27 + (Math.random() - 0.5) * 0.14], [0, 0.34, 0], 1.0, 0.42);
+        spawnEffectParticle('steam', [-3.12 + (Math.random() - 0.5) * 0.14, 1.12, -3.66 + (Math.random() - 0.5) * 0.14], [0, 0.34, 0], 1.0, 0.42);
       }
       if (sceneProps.teaSet?.visible) {
         spawnEffectParticle('steam', [-0.8 + (Math.random() - 0.5) * 0.1, 0.94, 2.3 + (Math.random() - 0.5) * 0.1], [0, 0.36, 0], 0.95, 0.38);
+      }
+      if (showerAfterglowTimer > 0) {
+        spawnEffectParticle('mist', [-5.05 + (Math.random() - 0.5) * 0.55, 1.15 + Math.random() * 0.65, 1.95 + (Math.random() - 0.5) * 0.55], [0, 0.5, 0], 1.25, 0.85);
       }
     }
   }
@@ -253,12 +323,15 @@ function updateParticles(dt, effect, pose) {
     p.node.position.x += p.vx * dt;
     p.node.position.y += p.vy * dt;
     p.node.position.z += p.vz * dt;
-    if (p.kind === 'steam') {
-      p.node.scale.setScalar(p.baseScale * (0.75 + t * 1.15));
-      p.mat.opacity = 0.58 * (1 - t);
+    if (p.kind === 'steam' || p.kind === 'mist') {
+      p.node.scale.setScalar(p.baseScale * (0.75 + t * 1.25));
+      p.mat.opacity = (p.kind === 'mist' ? 0.72 : 0.58) * (1 - t);
     } else if (p.kind === 'drop') {
-      p.mat.opacity = 0.85 * (1 - t * 0.7);
-      if (p.node.position.y < 0.18) p.age = p.life;
+      p.mat.opacity = 0.92 * (1 - t * 0.5);
+      if (p.node.position.y < 0.16) p.age = p.life;
+    } else if (p.kind === 'splash') {
+      p.node.scale.setScalar(p.baseScale * (0.7 + t * 1.6));
+      p.mat.opacity = 0.7 * (1 - t);
     } else {
       p.node.scale.setScalar(p.baseScale * (0.85 + Math.sin(t * Math.PI) * 0.35));
       p.mat.opacity = t < 0.2 ? t / 0.2 : 1 - (t - 0.2) / 0.8;
@@ -283,7 +356,7 @@ function buildSceneStateProps({ kitchen, desk, shower, bed, sofa, table, windowG
   const kraftMat = new THREE.MeshStandardMaterial({ color: 0xc89a6f, roughness: 0.88 });
 
   // 1. Clickable plated brunch / lunch box on the kitchen counter.
-  const mealMain = group(kitchen, 0.58, 0.98, 0.26);
+  const mealMain = group(kitchen, 0.26, 0.98, 0.24);
   mealMain.userData.interaction = 'meal';
   mealMain.rotation.y = 0.08;
   addBox(mealMain, materials.oakLight, 0.5, 0.036, 0.36, 0, 0.018, 0);
@@ -328,20 +401,21 @@ function buildSceneStateProps({ kitchen, desk, shower, bed, sofa, table, windowG
   completedPainting.visible = false;
   sceneProps.completedPainting = completedPainting;
 
-  // 5. Showered bathroom state: tile water shimmer, bath towel & soap bottle.
+  // 5. Showered bathroom state: tile water shimmer, fresh towel & bath soap on bench.
   const showerState = group(shower, 0, 0, 0);
-  addCylinder(showerState, waterPoolMat, 0.34, 0.34, 0.01, -0.25, 0.125, -0.35, 22);
-  addCylinder(showerState, waterPoolMat, 0.22, 0.22, 0.01, 0.18, 0.125, 0.05, 18);
-  addBox(showerState, materials.lavender, 0.44, 0.07, 0.34, -0.34, 0.8, 0.75);
-  addBox(showerState, materials.cream, 0.36, 0.05, 0.26, -0.34, 0.85, 0.73);
-  addCylinder(showerState, materials.gold, 0.06, 0.06, 0.16, -0.52, 0.85, 0.62, 12);
+  addCylinder(showerState, waterPoolMat, 0.36, 0.36, 0.01, -0.25, 0.125, -0.35, 22);
+  addCylinder(showerState, waterPoolMat, 0.24, 0.24, 0.01, 0.18, 0.125, 0.05, 18);
+  addBox(showerState, materials.lavender, 0.44, 0.07, 0.34, -0.34, 0.62, 0.75);
+  addBox(showerState, materials.cream, 0.36, 0.05, 0.26, -0.34, 0.67, 0.73);
+  addCylinder(showerState, materials.gold, 0.055, 0.055, 0.15, -0.52, 0.67, 0.62, 12);
   showerState.visible = false;
   sceneProps.showerState = showerState;
 
-  // 6. Rested bed state: lavender sleep eye mask on pillow + cozy folded throw.
+  // 6. Rested bed state: lavender sleep eye mask on left pillow + cozy folded throw at foot-right.
   const bedState = group(bed, 0, 0, 0);
-  addBox(bedState, materials.lavenderDeep, 0.3, 0.035, 0.11, -0.72, 1.03, -0.96);
-  addBox(bedState, materials.pink, 0.92, 0.07, 0.65, -0.58, 0.955, 0.15).rotation.y = 0.08;
+  const eyeMask = addBox(bedState, materials.lavenderDeep, 0.3, 0.035, 0.11, -0.72, 1.01, -0.98);
+  sceneRefs.bedEyeMask = eyeMask;
+  addBox(bedState, materials.pink, 0.92, 0.07, 0.65, 0.64, 0.955, 0.92).rotation.y = 0.08;
   bedState.visible = false;
   sceneProps.bedState = bedState;
 
@@ -375,7 +449,7 @@ function buildSceneStateProps({ kitchen, desk, shower, bed, sofa, table, windowG
   souvenirJun.visible = false;
   sceneProps.souvenirJun = souvenirJun;
 
-  const souvenirEllis = group(kitchen, 1.18, 0.98, 0.28);
+  const souvenirEllis = group(kitchen, 0.98, 0.98, 0.28);
   addBox(souvenirEllis, kraftMat, 0.16, 0.24, 0.11, -0.1, 0.12, 0);
   addBox(souvenirEllis, materials.cream, 0.22, 0.11, 0.18, 0.12, 0.055, 0.02);
   addBox(souvenirEllis, materials.pink, 0.23, 0.015, 0.035, 0.12, 0.112, 0.02);
@@ -401,7 +475,7 @@ function syncSceneProps(immediate = false) {
   if (sceneProps.souvenirEllis) sceneProps.souvenirEllis.visible = Boolean(sc.souvenirs?.ellis);
 
   if (sceneProps.showerGlass) {
-    sceneProps.showerGlass.material.opacity = sc.showered ? 0.5 : 0.35;
+    sceneProps.showerGlass.material.opacity = sc.showered ? 0.54 : 0.35;
   }
   if (immediate) {
     for (const node of Object.values(sceneProps)) {
@@ -410,83 +484,155 @@ function syncSceneProps(immediate = false) {
   }
 }
 
-function updateAtmosphere(minute) {
+function updateAtmosphere(minute, immediate = false) {
   const hour = minute / 60;
   let period = 'morning';
   let weatherText = '晴日晨光';
-  let sunColor = 0xffe6b4;
-  let sunIntensity = 3.2;
+  let sunColorHex = 0xffe6b4;
+  let sunIntensity = 3.15;
   let sunPos = [-4, 10, 7];
-  let ambSky = 0xfff4df;
-  let ambGround = 0xbaa8c6;
-  let ambIntensity = 2.5;
+  let ambSkyHex = 0xfff4df;
+  let ambGroundHex = 0xbaa8c6;
+  let ambIntensity = 2.45;
   let fillIntensity = 1.1;
   let indoorGlow = 0;
+  let exposure = 1.75;
+  let sunOpacity = 1;
+  let moonOpacity = 0;
 
-  if (hour >= 12 && hour < 17) {
+  if (hour >= 11.5 && hour < 16.5) {
     period = 'afternoon';
     weatherText = '晴日午后';
-    sunColor = 0xfff0cc;
-    sunIntensity = 3.35;
+    sunColorHex = 0xfff1cf;
+    sunIntensity = 3.3;
     sunPos = [-1.5, 11.5, 6.5];
-    ambSky = 0xfff8eb;
-    ambGround = 0xc3b3cc;
-    ambIntensity = 2.6;
-  } else if (hour >= 17 && hour < 19.5) {
+    ambSkyHex = 0xfff8eb;
+    ambGroundHex = 0xc3b3cc;
+    ambIntensity = 2.55;
+  } else if (hour >= 16.5 && hour < 19) {
     period = 'dusk';
     weatherText = '温柔暮色';
-    sunColor = 0xffba82;
-    sunIntensity = 2.45;
-    sunPos = [4.5, 6.5, 7.5];
-    ambSky = 0xffdfc8;
-    ambGround = 0x9b86ab;
-    ambIntensity = 2.15;
-    fillIntensity = 1.25;
-    indoorGlow = 0.65;
-  } else if (hour >= 19.5 || hour < 6) {
+    const duskT = Math.min(1, Math.max(0, (hour - 16.5) / 2.5));
+    sunColorHex = 0xff9f68;
+    sunIntensity = 2.25 - duskT * 0.75;
+    sunPos = [5.5, 6.2 - duskT * 1.5, 7.5];
+    ambSkyHex = 0xf5c8b8;
+    ambGroundHex = 0x7e6d96;
+    ambIntensity = 1.7 - duskT * 0.45;
+    fillIntensity = 0.95;
+    indoorGlow = 0.45 + duskT * 0.45;
+    exposure = 1.62 - duskT * 0.14;
+    sunOpacity = 1 - duskT * 0.7;
+    moonOpacity = duskT * 0.55;
+  } else if (hour >= 19 || hour < 6) {
     period = 'night';
     weatherText = '暖灯夜色';
-    sunColor = 0xa7b9e6;
-    sunIntensity = 1.05;
-    sunPos = [3, 9, 6];
-    ambSky = 0x898fb8;
-    ambGround = 0x5c5373;
-    ambIntensity = 1.55;
-    fillIntensity = 0.85;
+    sunColorHex = 0x7690cc;
+    sunIntensity = 0.52;
+    sunPos = [3.5, 9.5, 6];
+    ambSkyHex = 0x4f5a8a;
+    ambGroundHex = 0x2b2842;
+    ambIntensity = 0.78;
+    fillIntensity = 0.42;
     indoorGlow = 1.0;
+    exposure = 1.38;
+    sunOpacity = 0;
+    moonOpacity = 1;
   }
+
+  atmosphereTarget.period = period;
+  atmosphereTarget.weatherText = weatherText;
+  atmosphereTarget.sunColor.setHex(sunColorHex);
+  atmosphereTarget.sunIntensity = sunIntensity;
+  atmosphereTarget.sunPos.set(...sunPos);
+  atmosphereTarget.ambSky.setHex(ambSkyHex);
+  atmosphereTarget.ambGround.setHex(ambGroundHex);
+  atmosphereTarget.ambIntensity = ambIntensity;
+  atmosphereTarget.fillIntensity = fillIntensity;
+  atmosphereTarget.indoorGlow = indoorGlow;
+  atmosphereTarget.exposure = exposure;
+  atmosphereTarget.sunOpacity = sunOpacity;
+  atmosphereTarget.moonOpacity = moonOpacity;
 
   const roomView = $('#room-view');
   if (roomView) roomView.dataset.period = period;
   const weatherPill = $('#weather-text');
   if (weatherPill) weatherPill.textContent = weatherText;
 
+  if (immediate || isReducedMotion()) {
+    applyAtmosphereStep(1);
+  }
+}
+
+function applyAtmosphereStep(factor) {
+  const c = atmosphereCurrent;
+  const t = atmosphereTarget;
+  c.sunColor.lerp(t.sunColor, factor);
+  c.ambSky.lerp(t.ambSky, factor);
+  c.ambGround.lerp(t.ambGround, factor);
+  c.sunPos.lerp(t.sunPos, factor);
+  c.sunIntensity += (t.sunIntensity - c.sunIntensity) * factor;
+  c.ambIntensity += (t.ambIntensity - c.ambIntensity) * factor;
+  c.fillIntensity += (t.fillIntensity - c.fillIntensity) * factor;
+  c.indoorGlow += (t.indoorGlow - c.indoorGlow) * factor;
+  c.exposure += (t.exposure - c.exposure) * factor;
+  c.sunOpacity += (t.sunOpacity - c.sunOpacity) * factor;
+  c.moonOpacity += (t.moonOpacity - c.moonOpacity) * factor;
+
+  if (renderer) renderer.toneMappingExposure = c.exposure;
   if (sceneRefs.sunLight) {
-    sceneRefs.sunLight.color.setHex(sunColor);
-    sceneRefs.sunLight.intensity = sunIntensity;
-    sceneRefs.sunLight.position.set(...sunPos);
+    sceneRefs.sunLight.color.copy(c.sunColor);
+    sceneRefs.sunLight.intensity = c.sunIntensity;
+    sceneRefs.sunLight.position.copy(c.sunPos);
   }
   if (sceneRefs.ambientLight) {
-    sceneRefs.ambientLight.color.setHex(ambSky);
-    sceneRefs.ambientLight.groundColor.setHex(ambGround);
-    sceneRefs.ambientLight.intensity = ambIntensity;
+    sceneRefs.ambientLight.color.copy(c.ambSky);
+    sceneRefs.ambientLight.groundColor.copy(c.ambGround);
+    sceneRefs.ambientLight.intensity = c.ambIntensity;
   }
-  if (sceneRefs.fillLight) {
-    sceneRefs.fillLight.intensity = fillIntensity;
-  }
-  if (sceneRefs.roomPointLight) {
-    sceneRefs.roomPointLight.intensity = indoorGlow * 2.4;
-  }
+  if (sceneRefs.fillLight) sceneRefs.fillLight.intensity = c.fillIntensity;
+
+  for (const pl of sceneRefs.pendantLights) pl.intensity = c.indoorGlow * 5.8;
+  if (sceneRefs.deskLight) sceneRefs.deskLight.intensity = c.indoorGlow * 3.5;
+  if (sceneRefs.bathLight) sceneRefs.bathLight.intensity = c.indoorGlow * 2.4;
+
   for (const bulb of sceneRefs.pendantBulbs) {
-    bulb.material.emissiveIntensity = 0.45 + indoorGlow * 1.4;
+    bulb.material.emissiveIntensity = 0.35 + c.indoorGlow * 1.85;
+  }
+  for (const shade of sceneRefs.pendantShades) {
+    shade.material.emissive.setHex(0xffd592);
+    shade.material.emissiveIntensity = c.indoorGlow * 0.45;
+  }
+  for (const mat of sceneRefs.staticLampMaterials) {
+    mat.emissive.setHex(0xffd78e);
+    mat.emissiveIntensity = c.indoorGlow > 0.15 ? 0.25 + c.indoorGlow * 1.15 : 0.05;
+  }
+  for (const mat of sceneRefs.movableLampMaterials) {
+    mat.emissive.setHex(0xffd896);
+    mat.emissiveIntensity = c.indoorGlow > 0.15 ? 0.25 + c.indoorGlow * 1.1 : 0.06;
+  }
+  for (const pl of sceneRefs.movableLampLights) {
+    pl.intensity = c.indoorGlow * 4.2;
   }
   for (const mat of sceneRefs.outsideWindows) {
-    mat.emissive.setHex(0xffd891);
-    mat.emissiveIntensity = indoorGlow > 0.5 ? indoorGlow * 0.95 : 0;
+    mat.emissive.setHex(0xffd888);
+    mat.emissiveIntensity = c.indoorGlow > 0.35 ? c.indoorGlow * 1.25 : 0;
   }
-  for (const mat of sceneRefs.lampMaterials) {
-    mat.emissive.setHex(0xffd896);
-    mat.emissiveIntensity = indoorGlow > 0.3 ? indoorGlow * 0.85 : 0.08;
+  if (sceneRefs.clockFaceMat) {
+    sceneRefs.clockFaceMat.emissive.setHex(0xfff1d6);
+    sceneRefs.clockFaceMat.emissiveIntensity = c.indoorGlow * 0.26;
+  }
+  if (sceneRefs.skySun) {
+    sceneRefs.skySun.visible = c.sunOpacity > 0.04;
+    sceneRefs.skySun.material.opacity = c.sunOpacity;
+  }
+  if (sceneRefs.skyMoon) {
+    sceneRefs.skyMoon.visible = c.moonOpacity > 0.04;
+    sceneRefs.skyMoon.material.opacity = c.moonOpacity;
+  }
+  for (const star of sceneRefs.skyStars) {
+    star.visible = c.moonOpacity > 0.25;
+    star.material.opacity = Math.max(0, (c.moonOpacity - 0.25) / 0.75) * 0.85;
   }
 }
 
@@ -507,10 +653,10 @@ function buildRoom() {
   const wallMat = new THREE.MeshStandardMaterial({ color: 0xeee6ee, roughness: .95, side: THREE.DoubleSide });
   const sideMat = new THREE.MeshStandardMaterial({ color: 0xe9dded, roughness: .95, side: THREE.DoubleSide });
   wallBack = group(roomGroup);
-  addBox(wallBack, wallMat, 3.7, 3.5, .17, -4.15, 1.75, -5.02);
-  addBox(wallBack, wallMat, 4.8, 3.5, .17, 3.6, 1.75, -5.02);
-  addBox(wallBack, wallMat, 3.5, .98, .17, -.05, .49, -5.02);
-  addBox(wallBack, wallMat, 3.5, .46, .17, -.05, 3.27, -5.02);
+  addBox(wallBack, wallMat, 4.2, 3.5, .17, -3.9, 1.75, -5.02);
+  addBox(wallBack, wallMat, 4.3, 3.5, .17, 3.85, 1.75, -5.02);
+  addBox(wallBack, wallMat, 3.5, 1.06, .17, -.05, .53, -5.02);
+  addBox(wallBack, wallMat, 3.5, .48, .17, -.05, 3.26, -5.02);
   wallLeft = group(roomGroup);
   addBox(wallLeft, sideMat, .17, 3.5, 10.25, -6.06, 1.75, 0);
   addBox(roomGroup, materials.white, 12.14, .13, .21, 0, .12, -4.89);
@@ -523,7 +669,7 @@ function buildRoom() {
   addBox(windowGroup, materials.white, .13, 2.0, .28, 1.82, 2.06, 0);
   addBox(windowGroup, materials.white, .1, 2.0, .2, 0, 2.06, .08);
   addBox(windowGroup, materials.white, 3.65, .09, .2, 0, 2.1, .08);
-  addBox(windowGroup, glass, 3.48, 1.82, .025, 0, 2.07, -.06, false);
+  addBox(windowGroup, glass, 3.54, 1.9, .025, 0, 2.05, -.04, false);
   addBox(windowGroup, materials.oakLight, 3.85, .13, .46, 0, 1.02, .2);
 
   const outside = group(roomGroup, 0, 0, -6.6);
@@ -541,21 +687,73 @@ function buildRoom() {
   addSphere(outside, materials.sage, .7, -2.7, 2.5, -.1);
   addSphere(outside, materials.sage, .6, -3.2, 2.2, -.1);
 
-  // Kitchen.
-  const kitchen = registerModel('stove', group(roomGroup, -4.2, 0, -3.53));
-  addBox(kitchen, materials.oakLight, 3.05, .85, 1.18, 0, .45, 0);
-  addBox(kitchen, materials.white, 3.12, .1, 1.24, 0, .93, 0);
-  addBox(kitchen, materials.oakDark, .03, .62, .04, -.45, .43, .61);
-  addBox(kitchen, materials.oakDark, .03, .62, .04, .52, .43, .61);
-  addCylinder(kitchen, materials.ink, .31, .31, .025, -.65, 1.00, -.08);
-  addCylinder(kitchen, materials.ink, .25, .25, .025, .16, 1.00, -.08);
-  addCylinder(kitchen, materials.gold, .38, .34, .22, -.65, 1.16, -.08);
-  sceneRefs.potLid = addCylinder(kitchen, materials.oakDark, .15, .15, .08, -.65, 1.29, -.08);
-  addBox(kitchen, materials.cream, .25, .5, .23, 1.05, 1.25, -.28);
-  addSphere(kitchen, materials.sage, .25, 1.05, 1.6, -.28);
-  addBox(roomGroup, materials.cream, 1.15, 2.52, 1.03, -5.22, 1.27, -3.72);
-  addBox(roomGroup, materials.white, 1.2, .05, 1.09, -5.22, 2.54, -3.72);
-  addBox(roomGroup, materials.oakDark, .14, .04, .04, -4.72, 1.93, -3.18);
+  // Sun, moon and twinkling stars visible outside the sunny window.
+  const sunDisc = new THREE.Mesh(
+    new THREE.SphereGeometry(0.46, 18, 14),
+    new THREE.MeshBasicMaterial({ color: 0xffe49c, transparent: true, opacity: 1 }),
+  );
+  sunDisc.position.set(-0.25, 3.05, -1.35);
+  outside.add(sunDisc);
+  sceneRefs.skySun = sunDisc;
+
+  const moonDisc = new THREE.Mesh(
+    new THREE.SphereGeometry(0.38, 18, 14),
+    new THREE.MeshBasicMaterial({ color: 0xfff3c8, transparent: true, opacity: 0 }),
+  );
+  moonDisc.position.set(-0.15, 2.95, -1.3);
+  moonDisc.visible = false;
+  outside.add(moonDisc);
+  sceneRefs.skyMoon = moonDisc;
+
+  sceneRefs.skyStars = [];
+  for (const [sx, sy, sr] of [[-1.95, 3.65, 0.055], [-0.85, 3.45, 0.045], [0.45, 3.7, 0.06], [1.65, 3.3, 0.05], [-2.55, 2.9, 0.045]]) {
+    const star = new THREE.Mesh(
+      new THREE.SphereGeometry(sr, 8, 6),
+      new THREE.MeshBasicMaterial({ color: 0xfff8dc, transparent: true, opacity: 0 }),
+    );
+    star.position.set(sx, sy, -1.45);
+    star.visible = false;
+    outside.add(star);
+    sceneRefs.skyStars.push(star);
+  }
+
+  // Wall clock & kitchen wall shelf mounted on wallBack.
+  createWallClock(wallBack);
+  const kitchenShelf = group(wallBack, -3.25, 2.28, -4.82);
+  addBox(kitchenShelf, materials.oak, 1.35, .07, .3, 0, 0, 0);
+  addCylinder(kitchenShelf, materials.cream, .09, .09, .18, -.35, .12, 0, 14);
+  addCylinder(kitchenShelf, materials.sage, .08, .07, .14, 0, .1, 0, 14);
+  addCylinder(kitchenShelf, materials.pink, .08, .08, .12, .35, .09, 0, 14);
+
+  // Kitchen workbench shifted right to leave a clean gap beside the corner refrigerator.
+  const kitchen = registerModel('stove', group(roomGroup, -3.38, 0, -3.9));
+  addBox(kitchen, materials.oakLight, 2.56, .85, 1.14, 0, .45, 0);
+  addBox(kitchen, materials.white, 2.64, .1, 1.2, 0, .93, 0);
+  addBox(kitchen, materials.oakDark, .03, .62, .04, -.52, .43, .59);
+  addBox(kitchen, materials.oakDark, .03, .62, .04, .48, .43, .59);
+  addBox(kitchen, materials.oak, .14, .03, .03, -.32, .68, .59);
+  addBox(kitchen, materials.oak, .14, .03, .03, .28, .68, .59);
+  addCylinder(kitchen, materials.ink, .3, .3, .025, -.66, 1.0, -.08);
+  addCylinder(kitchen, materials.ink, .24, .24, .025, .02, 1.0, -.08);
+  addCylinder(kitchen, materials.gold, .36, .32, .22, -.66, 1.16, -.08);
+  sceneRefs.potLid = addCylinder(kitchen, materials.oakDark, .15, .15, .08, -.66, 1.29, -.08);
+  addBox(kitchen, materials.cream, .24, .46, .22, .98, 1.23, -.28);
+  addSphere(kitchen, materials.sage, .24, .98, 1.56, -.28);
+
+  // Retro two-door cream refrigerator tucked cleanly into the left-back kitchen corner.
+  const fridge = group(roomGroup, -5.32, 0, -4.08);
+  for (const fx of [-.38, .38]) for (const fz of [-.36, .36]) addBox(fridge, materials.oakDark, .1, .08, .1, fx, .04, fz);
+  addBox(fridge, materials.cream, .96, 2.26, .88, 0, 1.21, 0);
+  addBox(fridge, materials.white, .98, .08, .9, 0, 2.38, 0);
+  addBox(fridge, materials.white, .92, .62, .06, 0, 1.97, .46);
+  addBox(fridge, materials.ink, .9, .02, .02, 0, 1.63, .455, false);
+  addBox(fridge, materials.white, .92, 1.48, .06, 0, .86, .46);
+  addBox(fridge, materials.oakDark, .045, .28, .045, .34, 1.95, .51);
+  addBox(fridge, materials.oakDark, .045, .44, .045, .34, 1.18, .51);
+  addBox(fridge, materials.pink, .16, .14, .016, -.14, 2.02, .498);
+  addSphere(fridge, materials.sage, .032, .08, 1.94, .498);
+  addCylinder(fridge, materials.cream, .13, .11, .2, -.16, 2.52, .06, 16);
+  addCylinder(fridge, materials.oak, .14, .14, .04, -.16, 2.63, .06, 16);
 
   // Painting corner.
   const desk = registerModel('desk', group(roomGroup, 2.2, 0, -3.4));
@@ -566,7 +764,12 @@ function buildRoom() {
   addBox(desk, materials.lavenderDeep, .7, .025, .05, -.35, 1.37, .22);
   addCylinder(desk, materials.pink, .12, .15, .2, .8, 1.42, .12);
   addBox(desk, materials.cream, .06, .6, .06, .8, 1.79, .12);
-  addSphere(desk, materials.gold, .16, .8, 2.11, .12);
+  const deskLampMat = new THREE.MeshStandardMaterial({ color: 0xd7b874, roughness: 0.45 });
+  sceneRefs.staticLampMaterials.push(deskLampMat);
+  addSphere(desk, deskLampMat, .16, .8, 2.11, .12);
+  sceneRefs.deskLight = new THREE.PointLight(0xffca7a, 0, 6.5, 1.6);
+  sceneRefs.deskLight.position.set(0.8, 2.02, 0.12);
+  desk.add(sceneRefs.deskLight);
   addBox(desk, materials.oakDark, .93, .1, .84, -.45, .47, 1.08);
   addLegs(desk, .34, .31, .45, .43);
   addBox(desk, materials.sage, .98, .14, .83, -.45, .58, 1.08);
@@ -579,25 +782,75 @@ function buildRoom() {
   for (const y of [.46, 1.04, 1.62, 2.19]) addBox(books, materials.oakDark, 1.04, .09, .75, 0, y, .05);
   for (let i = 0; i < 11; i++) addBox(books, [materials.lavenderDeep, materials.sage, materials.pink, materials.cream][i % 4], .12 + i % 3 * .03, .34 + i % 4 * .04, .44, -.42 + i * .078, .73 + (i % 2) * .59, .13);
 
-  // Bathroom with translucent screen.
+  // Complete Bathroom: tiled floor & curb, left ceramic tile wall, rain showerhead, caddy, bench & wooden bath mat.
   const shower = registerModel('shower', group(roomGroup, -4.83, 0, 2.38));
   addBox(shower, materials.tile, 1.88, .14, 2.15, 0, .05, 0);
+  addBox(shower, materials.white, 1.88, .06, .08, 0, .14, 1.04);
+  addBox(shower, materials.white, .08, .06, 2.15, -.9, .14, 0);
+  addCylinder(shower, materials.ink, .09, .09, .012, -.27, .122, -.48, 16);
+
+  // Tiled wall backing (toggled alongside wallLeft when camera orbits behind left wall).
+  const showerWall = group(shower, 0, 0, 0);
+  addBox(showerWall, new THREE.MeshStandardMaterial({ color: 0xf4efea, roughness: .85 }), .09, 2.44, 2.15, -.92, 1.24, 0);
+  addBox(showerWall, new THREE.MeshStandardMaterial({ color: 0xd6e6e8, roughness: .75 }), .105, .2, 2.15, -.92, 1.56, 0, false);
+  addBox(showerWall, materials.white, .12, .07, 2.18, -.92, 2.47, 0);
+  // Brass shower riser, curved arm & wide rain showerhead centered above Miri.
+  addCylinder(showerWall, materials.gold, .03, .03, 1.38, -.82, 1.58, -.48, 14);
+  addBox(showerWall, materials.gold, .58, .045, .045, -.54, 2.26, -.48);
+  addCylinder(showerWall, materials.gold, .075, .075, .035, -.82, 1.18, -.48, 14).rotation.z = Math.PI / 2;
+  addCylinder(showerWall, materials.gold, .17, .21, .045, -.27, 2.21, -.48, 22);
+  addCylinder(showerWall, new THREE.MeshStandardMaterial({ color: 0xb7dbe8, roughness: .4 }), .17, .17, .01, -.27, 2.185, -.48, 20);
+  // Wall caddy shelf with shampoo & body wash bottles.
+  addBox(showerWall, materials.white, .22, .035, .44, -.77, 1.15, .1);
+  addCylinder(showerWall, materials.sage, .045, .045, .16, -.77, 1.25, 0, 12);
+  addCylinder(showerWall, materials.pink, .042, .042, .14, -.77, 1.24, .18, 12);
+  // Warm bathroom sconce light.
+  const bathLampMat = new THREE.MeshStandardMaterial({ color: 0xffe8bb, roughness: .4 });
+  sceneRefs.staticLampMaterials.push(bathLampMat);
+  addBox(showerWall, materials.gold, .06, .08, .08, -.86, 2.08, .48);
+  addSphere(showerWall, bathLampMat, .1, -.78, 2.14, .48);
+  sceneRefs.bathLight = new THREE.PointLight(0xffcf88, 0, 5.5, 1.6);
+  sceneRefs.bathLight.position.set(-.68, 2.14, .48);
+  showerWall.add(sceneRefs.bathLight);
+  sceneRefs.showerWallGroup = showerWall;
+
+  // Translucent glass screen with framed rails & handle.
   const showerGlassMat = glass.clone();
   sceneProps.showerGlass = addBox(shower, showerGlassMat, .055, 2.38, 2.02, .88, 1.28, .05, false);
   addBox(shower, materials.white, .07, 2.44, .08, .88, 1.27, -1);
   addBox(shower, materials.white, .07, 2.44, .08, .88, 1.27, 1);
-  addCylinder(shower, materials.gold, .13, .13, 1.55, -.42, 1.3, -.71);
-  addSphere(shower, materials.gold, .29, -.42, 2.1, -.71);
-  addBox(shower, materials.cream, .7, .68, .52, -.34, .43, .75);
+  addBox(shower, materials.white, .08, .06, 2.08, .88, 2.46, .05);
+  addBox(shower, materials.white, .08, .06, 2.08, .88, .12, .05);
+  addCylinder(shower, materials.gold, .018, .018, .34, .88, 1.18, -.78, 10);
 
-  // Bed and cushions.
+  // Slatted oak shower bench with rolled towel & flat wooden bath mat outside entrance.
+  const showerBench = group(shower, -.34, 0, .75);
+  addLegs(showerBench, .27, .19, .54, .42);
+  addBox(showerBench, materials.oakLight, .68, .06, .48, 0, .56, 0);
+  addBox(showerBench, materials.cream, .56, .035, .36, 0, .26, 0);
+  addCylinder(showerBench, materials.white, .07, .07, .26, .06, .35, 0, 12).rotation.z = Math.PI / 2;
+  addBox(shower, materials.oakLight, .88, .025, .44, 0, .032, -1.35, false);
+
+  // Active 3D shower spray cone directly beneath the rain showerhead.
+  const sprayGroup = group(shower, -.27, 0, -.48);
+  const streamMat = new THREE.MeshBasicMaterial({ color: 0x5ab2df, transparent: true, opacity: .6, depthWrite: false });
+  sceneRefs.showerStreams = [];
+  for (let i = 0; i < 12; i++) {
+    const angle = (i / 12) * Math.PI * 2;
+    const radius = i % 3 === 0 ? 0.05 : 0.14;
+    const stream = new THREE.Mesh(new THREE.CylinderGeometry(0.013, 0.02, 1.92, 6), streamMat);
+    stream.position.set(Math.cos(angle) * radius, 1.18, Math.sin(angle) * radius);
+    stream.rotation.z = -Math.cos(angle) * 0.05;
+    stream.rotation.x = Math.sin(angle) * 0.05;
+    sprayGroup.add(stream);
+    sceneRefs.showerStreams.push(stream);
+  }
+  sprayGroup.visible = false;
+  sceneRefs.showerSpray = sprayGroup;
+
+  // Bed with rounded finial headboard, plush pillows, and animated pastel plaid duvet.
   const bed = registerModel('bed', group(roomGroup, 3.65, 0, 1.65));
-  addBox(bed, materials.oak, 3.1, .36, 3.1, 0, .33, 0);
-  addBox(bed, materials.oakDark, 3.18, 1.15, .18, 0, .81, -1.47);
-  addBox(bed, materials.cream, 2.84, .3, 2.82, 0, .65, .01);
-  addBox(bed, materials.lavender, 2.72, .16, 1.95, 0, .85, .42);
-  for (const x of [-.72, .72]) addBox(bed, materials.white, 1.12, .21, .6, x, .91, -1.02);
-  addBox(bed, materials.pink, 1.48, .08, .65, 0, .97, .98);
+  buildCozyBedModel(bed);
 
   // Sofa and round living room table.
   const sofa = group(roomGroup, -2.05, 0, 1.4);
@@ -623,17 +876,319 @@ function buildRoom() {
   addBox(roomGroup, materials.pink, .3, .44, .04, 4.55, 2.45, -4.69);
   addSphere(roomGroup, materials.gold, .27, 4.55, 2.72, -4.66);
   sceneRefs.pendantBulbs = [];
+  sceneRefs.pendantShades = [];
+  sceneRefs.pendantLights = [];
   for (const x of [-2.15, .72]) {
     addBox(roomGroup, materials.ink, .025, .48, .025, x, 3.35, -1);
-    addCylinder(roomGroup, materials.cream, .37, .19, .4, x, 3.05, -1);
-    const bulbMat = new THREE.MeshStandardMaterial({ color: 0xffe2aa, emissive: 0xf1bd73, emissiveIntensity: .5 });
+    const shadeMat = new THREE.MeshStandardMaterial({ color: 0xf8f1e4, roughness: 0.78 });
+    const shade = addCylinder(roomGroup, shadeMat, .37, .19, .4, x, 3.05, -1);
+    const bulbMat = new THREE.MeshStandardMaterial({ color: 0xffe2aa, emissive: 0xf1bd73, emissiveIntensity: .45 });
     const bulb = addSphere(roomGroup, bulbMat, .09, x, 2.79, -1);
+    const pl = new THREE.PointLight(0xffcf82, 0, 11, 1.5);
+    pl.position.set(x, 2.68, -1);
+    roomGroup.add(pl);
+    sceneRefs.pendantShades.push(shade);
     sceneRefs.pendantBulbs.push(bulb);
+    sceneRefs.pendantLights.push(pl);
   }
 
   buildPlacementGuides();
   buildSceneStateProps({ kitchen, desk, shower, bed, sofa, table, windowGroup });
   createMiri();
+}
+
+function makePlaidBlanketTexture() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 256;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#fcf4ea';
+  ctx.fillRect(0, 0, 256, 256);
+
+  const bands = [
+    [16, 44, 'rgba(241, 166, 178, 0.44)'],
+    [88, 28, 'rgba(181, 200, 169, 0.30)'],
+    [144, 44, 'rgba(238, 194, 154, 0.38)'],
+    [216, 24, 'rgba(205, 184, 218, 0.32)'],
+  ];
+  for (const [start, size, color] of bands) {
+    ctx.fillStyle = color;
+    ctx.fillRect(0, start, 256, size);
+    ctx.fillRect(start, 0, size, 256);
+  }
+  ctx.fillStyle = 'rgba(220, 128, 142, 0.38)';
+  for (const pos of [16, 60, 144, 188]) {
+    ctx.fillRect(0, pos, 256, 3);
+    ctx.fillRect(pos, 0, 3, 256);
+  }
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(1.5, 2.2);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+function createPlushPillowGeo(w, h, d) {
+  const geo = new THREE.BoxGeometry(w, h, d, 12, 6, 12);
+  const pos = geo.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    let x = pos.getX(i);
+    let y = pos.getY(i);
+    let z = pos.getZ(i);
+    const nx = x / (w / 2);
+    const ny = y / (h / 2);
+    const nz = z / (d / 2);
+    const radial = Math.max(0, 1 - 0.52 * nx * nx - 0.58 * nz * nz);
+    const pinch = 0.32 + 0.82 * Math.sqrt(radial);
+    const roundXZ = 1 - 0.08 * ny * ny - 0.05 * nx * nx * nz * nz;
+    x *= roundXZ;
+    z *= roundXZ;
+    y *= pinch;
+    pos.setXYZ(i, x, y, z);
+  }
+  geo.computeVertexNormals();
+  return geo;
+}
+
+function createQuiltClothGeo(w, h, d, isLeft) {
+  const geo = new THREE.BoxGeometry(w, h, d, 18, 2, 22);
+  const pos = geo.attributes.position;
+  const baseY = new Float32Array(pos.count);
+  const weights = new Float32Array(pos.count);
+  const smooth = v => v * v * (3 - 2 * v);
+
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i);
+    let y = pos.getY(i);
+    const z = pos.getZ(i);
+    const nx = x / (w / 2);
+    const nz = z / (d / 2);
+
+    let drape = 0.025 * (1 - 0.35 * nx * nx);
+    if (isLeft && nx < -0.78) {
+      const e = Math.min(1, (-0.78 - nx) / 0.22);
+      drape -= 0.18 * e * e;
+    } else if (!isLeft && nx > 0.78) {
+      const e = Math.min(1, (nx - 0.78) / 0.22);
+      drape -= 0.18 * e * e;
+    }
+    if (nz > 0.80) {
+      const ez = Math.min(1, (nz - 0.80) / 0.20);
+      drape -= 0.14 * ez * ez;
+    } else if (nz < -0.82) {
+      const ez = Math.min(1, (-0.82 - nz) / 0.18);
+      drape -= 0.025 * ez * ez;
+    }
+    y += drape;
+    pos.setY(i, y);
+    baseY[i] = y;
+
+    if (isLeft) {
+      const ux = Math.max(-1, Math.min(1, nx / 0.92));
+      const wx = Math.pow(Math.cos(ux * Math.PI * 0.5), 0.72);
+      let wz = 0;
+      if (nz < -0.2) {
+        const seg = Math.max(0, Math.min(1, (nz + 1) / 0.8));
+        wz = 0.42 + 0.58 * smooth(seg);
+      } else if (nz <= 0.28) {
+        wz = 1;
+      } else {
+        const seg = Math.max(0, Math.min(1, (nz - 0.28) / 0.6));
+        wz = 1 - smooth(seg);
+      }
+      weights[i] = wx * wz;
+    }
+  }
+  geo.computeVertexNormals();
+  return { geo, baseY, weights };
+}
+
+function createCuffClothGeo(w, radius, isLeft) {
+  const geo = new THREE.CylinderGeometry(radius, radius, w, 16, 18);
+  geo.rotateZ(Math.PI / 2);
+  const pos = geo.attributes.position;
+  const baseY = new Float32Array(pos.count);
+  const weights = new Float32Array(pos.count);
+
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i);
+    let y = pos.getY(i) * 0.85;
+    const z = pos.getZ(i) * 1.25;
+    const nx = x / (w / 2);
+    if (isLeft && nx < -0.78) {
+      const e = Math.min(1, (-0.78 - nx) / 0.22);
+      y -= 0.16 * e * e;
+    } else if (!isLeft && nx > 0.78) {
+      const e = Math.min(1, (nx - 0.78) / 0.22);
+      y -= 0.16 * e * e;
+    }
+    pos.setXYZ(i, x, y, z);
+    baseY[i] = y;
+    if (isLeft) {
+      const ux = Math.max(-1, Math.min(1, nx / 0.92));
+      weights[i] = 0.42 * Math.pow(Math.cos(ux * Math.PI * 0.5), 0.72);
+    }
+  }
+  geo.computeVertexNormals();
+  return { geo, baseY, weights };
+}
+
+function buildCozyBedModel(bed) {
+  // Chunky oak frame, corner legs & headboard posts topped with rounded ball finials.
+  addBox(bed, materials.oak, 3.1, 0.34, 3.1, 0, 0.34, 0);
+  for (const x of [-1.42, 1.42]) {
+    for (const z of [-1.42, 1.42]) addBox(bed, materials.oakDark, 0.18, 0.18, 0.18, x, 0.09, z);
+  }
+  addBox(bed, materials.oakDark, 2.94, 0.98, 0.14, 0, 0.88, -1.48);
+  addBox(bed, materials.oak, 2.62, 0.72, 0.05, 0, 0.92, -1.40, false);
+  for (const x of [-1.49, 1.49]) {
+    addCylinder(bed, materials.oak, 0.11, 0.11, 1.24, x, 0.78, -1.48, 16);
+    addSphere(bed, materials.oakLight, 0.145, x, 1.45, -1.48);
+    addCylinder(bed, materials.oak, 0.095, 0.095, 0.44, x, 0.4, 1.48, 14);
+    addSphere(bed, materials.oakLight, 0.115, x, 0.65, 1.48);
+  }
+
+  // Cream mattress sheet.
+  addBox(bed, materials.cream, 2.86, 0.3, 2.84, 0, 0.66, 0.02);
+
+  // Fluffy pillows (pastel pink pillow on left sleeper spot + warm cream right pillow).
+  const pinkPillowMat = new THREE.MeshStandardMaterial({ color: 0xf1b6c1, roughness: 0.86 });
+  const cuffPinkMat = new THREE.MeshStandardMaterial({ color: 0xf2aebc, roughness: 0.88 });
+  const quiltMat = new THREE.MeshStandardMaterial({ map: makePlaidBlanketTexture(), roughness: 0.9 });
+
+  const leftPillow = new THREE.Mesh(createPlushPillowGeo(1.06, 0.22, 0.58), pinkPillowMat);
+  leftPillow.position.set(-0.72, 0.89, -1.03);
+  leftPillow.rotation.x = 0.08;
+  leftPillow.castShadow = true;
+  leftPillow.receiveShadow = true;
+  bed.add(leftPillow);
+
+  const rightPillow = new THREE.Mesh(createPlushPillowGeo(1.06, 0.21, 0.58), materials.white);
+  rightPillow.position.set(0.72, 0.89, -1.03);
+  rightPillow.rotation.x = 0.08;
+  rightPillow.castShadow = true;
+  rightPillow.receiveShadow = true;
+  bed.add(rightPillow);
+
+  // Right-side quilt & cuff (stationary neatly-made side).
+  const rightCloth = createQuiltClothGeo(1.45, 0.14, 2.1, false);
+  const rightWing = new THREE.Mesh(rightCloth.geo, quiltMat);
+  rightWing.position.set(0.715, 0.88, 0.39);
+  rightWing.castShadow = true;
+  rightWing.receiveShadow = true;
+  bed.add(rightWing);
+
+  const rightCuff = createCuffClothGeo(1.44, 0.09, false);
+  const rightCuffMesh = new THREE.Mesh(rightCuff.geo, cuffPinkMat);
+  rightCuffMesh.position.set(0.71, 0.91, -0.59);
+  rightCuffMesh.castShadow = true;
+  rightCuffMesh.receiveShadow = true;
+  bed.add(rightCuffMesh);
+
+  // Left-side sleeper quilt & cuff pivoted at center seam so Miri can lift and tuck underneath.
+  const duvetPivot = group(bed, 0.02, 0.9, 0.39);
+  const leftCloth = createQuiltClothGeo(1.45, 0.14, 2.1, true);
+  const leftWing = new THREE.Mesh(leftCloth.geo, quiltMat);
+  leftWing.position.set(-0.735, -0.02, 0);
+  leftWing.castShadow = true;
+  leftWing.receiveShadow = true;
+  duvetPivot.add(leftWing);
+
+  const leftCuff = createCuffClothGeo(1.44, 0.09, true);
+  const leftCuffMesh = new THREE.Mesh(leftCuff.geo, cuffPinkMat);
+  leftCuffMesh.position.set(-0.73, 0.01, -0.98);
+  leftCuffMesh.castShadow = true;
+  leftCuffMesh.receiveShadow = true;
+  duvetPivot.add(leftCuffMesh);
+
+  sceneRefs.bedBlanketPivot = duvetPivot;
+  sceneRefs.bedClothState = {
+    clothGeo: leftCloth.geo,
+    clothBaseY: leftCloth.baseY,
+    clothWeights: leftCloth.weights,
+    cuffGeo: leftCuff.geo,
+    cuffBaseY: leftCuff.baseY,
+    cuffWeights: leftCuff.weights,
+    lastLift: 0,
+  };
+}
+
+function updateBedBlanket(pose) {
+  const pivot = sceneRefs.bedBlanketPivot;
+  const cloth = sceneRefs.bedClothState;
+  if (!pivot || !cloth) return;
+  const open = pose?.blanketOpen || 0;
+  const tuck = pose?.blanketTuck || 0;
+  const breath = pose?.blanketBreath || 0;
+
+  pivot.rotation.z = -open * 1.45;
+  pivot.rotation.x = open * 0.14;
+  pivot.position.y = 0.9 + open * 0.08;
+
+  const lift = tuck * 0.62 + breath * 0.03;
+  if (Math.abs(lift - cloth.lastLift) > 0.001) {
+    cloth.lastLift = lift;
+    const clothPos = cloth.clothGeo.attributes.position;
+    for (let i = 0; i < clothPos.count; i++) {
+      clothPos.setY(i, cloth.clothBaseY[i] + cloth.clothWeights[i] * lift);
+    }
+    clothPos.needsUpdate = true;
+    cloth.clothGeo.computeVertexNormals();
+
+    const cuffPos = cloth.cuffGeo.attributes.position;
+    for (let i = 0; i < cuffPos.count; i++) {
+      cuffPos.setY(i, cloth.cuffBaseY[i] + cloth.cuffWeights[i] * lift);
+    }
+    cuffPos.needsUpdate = true;
+    cloth.cuffGeo.computeVertexNormals();
+  }
+}
+
+function createWallClock(parent) {
+  const clock = group(parent, 2.85, 2.62, -4.90);
+  clock.userData.clock = true;
+  const bezel = addCylinder(clock, materials.oakDark, .44, .44, .065, 0, 0, 0, 32);
+  bezel.rotation.x = Math.PI / 2;
+  const faceMat = new THREE.MeshStandardMaterial({ color: 0xfffaf1, roughness: 0.65 });
+  sceneRefs.clockFaceMat = faceMat;
+  const face = addCylinder(clock, faceMat, .37, .37, .072, 0, 0, .004, 32);
+  face.rotation.x = Math.PI / 2;
+
+  for (let i = 0; i < 12; i++) {
+    const angle = (i / 12) * Math.PI * 2;
+    const major = i % 3 === 0;
+    const tick = addBox(
+      clock,
+      major ? materials.ink : materials.oak,
+      major ? 0.028 : 0.016,
+      major ? 0.068 : 0.036,
+      0.012,
+      Math.sin(angle) * 0.295,
+      Math.cos(angle) * 0.295,
+      0.042,
+      false,
+    );
+    tick.rotation.z = -angle;
+  }
+
+  const hourPivot = group(clock, 0, 0, 0.052);
+  addBox(hourPivot, materials.ink, 0.034, 0.18, 0.012, 0, 0.075, 0, false);
+  const minutePivot = group(clock, 0, 0, 0.062);
+  addBox(minutePivot, materials.lavenderDeep, 0.022, 0.26, 0.01, 0, 0.11, 0, false);
+  addSphere(clock, materials.gold, 0.03, 0, 0, 0.07);
+
+  sceneRefs.clockHourPivot = hourPivot;
+  sceneRefs.clockMinutePivot = minutePivot;
+  updateClockHands(clockDisplayTotal);
+}
+
+function updateClockHands(totalMinutes) {
+  if (!sceneRefs.clockHourPivot || !sceneRefs.clockMinutePivot) return;
+  const m = ((totalMinutes % 60) + 60) % 60;
+  const h = ((totalMinutes % 720) + 720) % 720;
+  sceneRefs.clockMinutePivot.rotation.z = -(m / 60) * Math.PI * 2;
+  sceneRefs.clockHourPivot.rotation.z = -(h / 720) * Math.PI * 2;
 }
 
 function buildPlacementGuides() {
@@ -902,9 +1457,17 @@ function applyMiriPose(pose) {
   miriRig.leftArmPivot.rotation.set(pose.leftArmRotX, pose.leftArmRotY, pose.leftArmRotZ);
   miriRig.rightArmPivot.rotation.set(pose.rightArmRotX, pose.rightArmRotY, pose.rightArmRotZ);
 
-  for (const eye of miriRig.eyes) eye.scale.y = pose.eyeScaleY;
+  for (const eye of miriRig.eyes) {
+    eye.scale.y = pose.eyeScaleY;
+    if (eye.children[1]) eye.children[1].visible = pose.eyeScaleY >= 0.4;
+  }
   for (const [key, node] of Object.entries(miriRig.props)) {
     node.visible = pose.prop === key;
+  }
+  updateBedBlanket(pose);
+  if (sceneRefs.bedEyeMask) {
+    const busyOnPillow = (pose.blanketOpen || 0) > 0.05 || (pose.blanketTuck || 0) > 0.05;
+    sceneRefs.bedEyeMask.visible = !busyOnPillow;
   }
 
   if (sceneRefs.potLid) {
@@ -936,9 +1499,13 @@ function createFurniture(id, parent) {
     addCylinder(piece, materials.gold, .045, .045, 1.62, 0, .9, 0);
     const shadeMat = new THREE.MeshStandardMaterial({ color: 0xf8f1e4, roughness: 0.78 });
     const bulbMat = new THREE.MeshStandardMaterial({ color: 0xffe4a8, roughness: 0.4 });
-    sceneRefs.lampMaterials.push(shadeMat, bulbMat);
+    sceneRefs.movableLampMaterials.push(shadeMat, bulbMat);
     addCylinder(piece, shadeMat, .37, .22, .51, 0, 1.95, 0);
     addSphere(piece, bulbMat, .13, 0, 1.63, 0);
+    const lampLight = new THREE.PointLight(0xffca7a, 0, 7.5, 1.5);
+    lampLight.position.set(0, 1.85, 0);
+    piece.add(lampLight);
+    sceneRefs.movableLampLights.push(lampLight);
   } else if (id === 'armchair') {
     addBox(piece, materials.oakDark, 1.1, .15, 1.1, 0, .27, 0);
     addBox(piece, materials.cream, 1.18, .53, 1.13, 0, .64, 0);
@@ -958,14 +1525,15 @@ function createFurniture(id, parent) {
 function updateMovableFurniture() {
   if (movableGroup) roomGroup.remove(movableGroup);
   movableNodes.clear();
-  sceneRefs.lampMaterials = [];
+  sceneRefs.movableLampMaterials = [];
+  sceneRefs.movableLampLights = [];
   movableGroup = group(roomGroup);
   for (const [id, cell] of Object.entries(state.furniture)) {
     const piece = createFurniture(id, movableGroup);
     const [x, z] = worldFromCell(cell.x, cell.z); piece.position.set(x, 0, z);
     movableNodes.set(id, piece);
   }
-  updateAtmosphere(state.minute);
+  updateAtmosphere(state.minute, true);
 }
 
 function showWalkRing(x, z) {
@@ -1003,9 +1571,6 @@ function initScene() {
   sceneRefs.fillLight = new THREE.DirectionalLight(0xd8d5f3, 1.1);
   sceneRefs.fillLight.position.set(7, 5, -6);
   scene.add(sceneRefs.fillLight);
-  sceneRefs.roomPointLight = new THREE.PointLight(0xffd796, 0, 14, 1.5);
-  sceneRefs.roomPointLight.position.set(-0.5, 2.6, 0.2);
-  scene.add(sceneRefs.roomPointLight);
 
   controls = new OrbitControls(camera, canvas);
   controls.target.set(0, 1.1, 0); controls.enablePan = false; controls.enableDamping = true; controls.dampingFactor = .08;
@@ -1013,7 +1578,7 @@ function initScene() {
   controls.update();
   buildRoom(); updateMovableFurniture(); createHotspots();
   syncSceneProps(true);
-  updateAtmosphere(state.minute);
+  updateAtmosphere(state.minute, true);
 
   const resize = () => {
     const rect = canvas.getBoundingClientRect();
@@ -1111,6 +1676,7 @@ function initScene() {
           break;
         }
         if (mode === 'life' && object.userData.miri && miriCtrl.state.phase === 'idle') { hoverKind = 'pointer'; break; }
+        if (mode === 'life' && object.userData.clock) { hoverKind = 'pointer'; break; }
         object = object.parent;
       }
       if (hoverKind) break;
@@ -1161,6 +1727,11 @@ function initScene() {
           toast('Miri 朝你挥了挥手。');
           return;
         }
+        if (mode === 'life' && object.userData.clock) {
+          const hour = Math.floor(state.minute / 60), minute = state.minute % 60;
+          toast(`墙上挂钟：第 ${state.day} 天 ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}（${atmosphereTarget.weatherText}）`);
+          return;
+        }
         if (object.userData.ground) {
           if (mode === 'life') {
             $('#interaction-card').hidden = true;
@@ -1187,32 +1758,30 @@ function initScene() {
     const prevPhase = miriCtrl.state.phase;
     const pose = miriCtrl.update(dt, isReducedMotion());
 
-    // When Miri finishes the active animation phase, reveal or consume the 3D prop on the scene!
+    // Once Miri actually begins performing the action (not while walking there), advance time & lighting smoothly.
     if (
-      propReveal.waitingAction &&
-      prevAction === propReveal.waitingAction &&
-      prevPhase === 'act' &&
-      miriCtrl.state.phase !== 'act'
+      pendingAction &&
+      miriCtrl.state.phase === 'act' &&
+      miriCtrl.state.activeAction === pendingAction.id
     ) {
-      const targetNode = sceneProps[propReveal.key];
-      const revealMode = propReveal.mode;
-      propReveal.waitingAction = null;
-      if (revealMode === 'consume') {
-        if (targetNode && !isReducedMotion()) {
-          propReveal.animating = true;
-          propReveal.progress = 0;
-        } else {
-          syncSceneProps(true);
-          propReveal.key = null;
-        }
-      } else {
-        syncSceneProps(false);
-        if (targetNode && !isReducedMotion()) {
-          targetNode.scale.setScalar(0.2);
-          propReveal.animating = true;
-          propReveal.progress = 0;
-        }
-      }
+      pendingAction.started = true;
+      const p = Math.max(0, Math.min(1, miriCtrl.state.timer / Math.max(0.1, miriCtrl.state.duration)));
+      const liveTotal = pendingAction.startTotal + (pendingAction.endTotal - pendingAction.startTotal) * p;
+      clockDisplayTotal = liveTotal;
+      clockTargetTotal = liveTotal;
+      updateClockHands(liveTotal);
+      renderClockHeader(Math.floor(liveTotal / 1440), Math.floor(liveTotal) % 1440);
+      updateAtmosphere(Math.floor(liveTotal) % 1440);
+    }
+
+    // Commit the pending action when Miri finishes performing it, then animate prop appear/consume.
+    if (
+      prevPhase === 'act' &&
+      miriCtrl.state.phase !== 'act' &&
+      pendingAction &&
+      prevAction === pendingAction.id
+    ) {
+      flushPendingAction(true);
     }
 
     if (propReveal.animating && propReveal.key && sceneProps[propReveal.key]) {
@@ -1238,6 +1807,41 @@ function initScene() {
 
     applyMiriPose(pose);
     updateParticles(dt, mode === 'life' ? pose.effect : null, pose);
+
+    // Animate 3D shower water spray streams while bathing.
+    if (sceneRefs.showerSpray) {
+      const spraying = mode === 'life' && pose.effect === 'shower';
+      sceneRefs.showerSpray.visible = spraying;
+      if (sceneProps.showerGlass) {
+        sceneProps.showerGlass.material.opacity = spraying || state.scene?.showered ? 0.54 : 0.35;
+      }
+      if (spraying && !isReducedMotion()) {
+        for (let i = 0; i < sceneRefs.showerStreams.length; i++) {
+          const s = sceneRefs.showerStreams[i];
+          const pulse = 0.85 + Math.sin(now * 0.025 + i * 1.1) * 0.15;
+          s.scale.set(pulse, 0.94 + Math.cos(now * 0.03 + i) * 0.06, pulse);
+        }
+      }
+    }
+
+    // Smoothly animate day-night lighting, twinkling night stars, and wall clock hands.
+    applyAtmosphereStep(isReducedMotion() ? 1 : Math.min(1, dt * 4.2));
+    if (!isReducedMotion()) {
+      for (let i = 0; i < sceneRefs.skyStars.length; i++) {
+        const star = sceneRefs.skyStars[i];
+        if (star.visible) star.scale.setScalar(0.85 + Math.sin(now * 0.004 + i * 1.4) * 0.25);
+      }
+    }
+    if (clockDisplayTotal < clockTargetTotal) {
+      if (isReducedMotion()) {
+        clockDisplayTotal = clockTargetTotal;
+      } else {
+        const diff = clockTargetTotal - clockDisplayTotal;
+        const step = Math.max(85, diff * 2.8) * dt;
+        clockDisplayTotal = Math.min(clockTargetTotal, clockDisplayTotal + step);
+      }
+      updateClockHands(clockDisplayTotal);
+    }
 
     if (mode === 'build' && movingFurniture) {
       const node = movableNodes.get(movingFurniture);
@@ -1269,6 +1873,7 @@ function initScene() {
 
     if (wallBack) wallBack.visible = camera.position.z > -1.5;
     if (wallLeft) wallLeft.visible = camera.position.x > -2.5;
+    if (sceneRefs.showerWallGroup) sceneRefs.showerWallGroup.visible = wallLeft ? wallLeft.visible : true;
     if (mode !== 'community') renderer.render(scene, camera);
     positionHotspots(pose);
     positionMiriStatus(pose);
@@ -1311,8 +1916,10 @@ function positionMiriStatus(pose) {
     return;
   }
   const rect = $('#room-canvas').getBoundingClientRect();
-  const yOffset = miriCtrl.state.activeInteraction === 'bed' && miriCtrl.state.phase === 'act' ? 0.95 : 2.32;
-  const anchor = new THREE.Vector3(pose.x, pose.y + yOffset, pose.z);
+  const inBedReclined = (miriCtrl.state.activeInteraction === 'bed' || miriCtrl.state.occupiedInteraction === 'bed') && pose.poseRotX < -0.5;
+  const anchor = inBedReclined
+    ? new THREE.Vector3(pose.x, pose.y + 1.66, pose.z - 0.98)
+    : new THREE.Vector3(pose.x, pose.y + 2.32, pose.z);
   const screen = anchor.project(camera);
   if (screen.z > 1 || screen.x < -1 || screen.x > 1 || screen.y < -1 || screen.y > 1) {
     badge.hidden = true;
@@ -1361,10 +1968,14 @@ function positionActiveCards() {
   }
 }
 
+function renderClockHeader(day, minute) {
+  const hour = Math.floor(minute / 60), min = minute % 60;
+  $('#day-label').textContent = `第 ${day} 天 · 晴`;
+  $('#time-label').textContent = `${String(hour).padStart(2,'0')}:${String(min).padStart(2,'0')} ${hour < 12 ? '上午' : hour < 18 ? '下午' : '夜晚'}`;
+}
+
 function render() {
-  const hour = Math.floor(state.minute / 60), minute = state.minute % 60;
-  $('#day-label').textContent = `第 ${state.day} 天 · 晴`;
-  $('#time-label').textContent = `${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')} ${hour < 12 ? '上午' : hour < 18 ? '下午' : '夜晚'}`;
+  renderClockHeader(state.day, state.minute);
   $('#money-label').textContent = state.money.toLocaleString('zh-CN');
   $('#goals-list').innerHTML = goalsMeta.map(([id, name, reward]) => `<div class="goal-item ${state.goals[id] ? 'done' : ''}"><span class="goal-check">${state.goals[id] ? '<svg><use href="#i-check"/></svg>' : ''}</span><span class="goal-text">${name}</span><span class="goal-reward">+${reward}</span></div>`).join('');
   $('#goals-progress').textContent = `${Object.values(state.goals).filter(Boolean).length} / 3 已完成`;
@@ -1375,6 +1986,7 @@ function render() {
   $('#skills-list').innerHTML = [['cooking','烹饪','◌',''],['creativity','创作','✳','purple']].map(([id,name,icon,style]) => `<div class="skill-row"><span class="skill-icon ${style}">${icon}</span><div class="skill-details"><div><span>${name}</span><small>Lv.${state.skills[id].level} · ${state.skills[id].xp}/100</small></div><div class="skill-bar"><span style="width:${state.skills[id].xp}%"></span></div></div></div>`).join('');
   renderShop(); renderNeighbors();
   if (selectedInteraction && !$('#interaction-card').hidden) renderInteractionCard(selectedInteraction);
+  clockTargetTotal = state.day * 1440 + state.minute;
   updateAtmosphere(state.minute);
 }
 function renderShop() {
@@ -1422,14 +2034,60 @@ function revealSpecForAction(actionId) {
   if (actionId === 'rest') return { key: 'bedState', mode: 'appear' };
   return null;
 }
+function flushPendingAction(animateProp = true) {
+  if (!pendingAction) return;
+  const finished = pendingAction;
+  pendingAction = null;
+  const committed = performAction(state, finished.id, finished.neighbor);
+  applyResult(committed);
+  if (committed.ok) {
+    const spec = revealSpecForAction(finished.id);
+    if (animateProp && spec && !isReducedMotion()) {
+      propReveal.key = spec.key;
+      propReveal.mode = spec.mode;
+      propReveal.waitingAction = null;
+      const targetNode = sceneProps[spec.key];
+      if (spec.mode === 'consume') {
+        if (targetNode) {
+          targetNode.visible = true;
+          propReveal.animating = true;
+          propReveal.progress = 0;
+        } else {
+          syncSceneProps(true);
+        }
+      } else {
+        syncSceneProps(true);
+        if (targetNode) {
+          targetNode.scale.setScalar(0.2);
+          propReveal.animating = true;
+          propReveal.progress = 0;
+        }
+      }
+    } else {
+      propReveal.key = null;
+      propReveal.animating = false;
+      syncSceneProps(true);
+    }
+  } else {
+    syncSceneProps(true);
+  }
+}
 function takeAction(id, neighbor) {
-  const result = performAction(state, id, neighbor);
-  applyResult(result);
-  if (!result.ok) {
+  if (pendingAction && pendingAction.id === id) {
+    toast('Miri 正在进行这项动作，请稍候。');
+    return;
+  }
+  if (pendingAction?.started) {
+    flushPendingAction(false);
+  }
+  const preview = performAction(state, id, neighbor);
+  if (!preview.ok) {
+    toast(preview.message);
     if (mode === 'life') miriCtrl.triggerReaction('oops');
     return;
   }
   if (id === 'chat') {
+    applyResult(preview);
     pendingChatWave = true;
     syncSceneProps(true);
     const pin = $(`.map-pin[data-neighbor="${neighbor}"]`);
@@ -1440,22 +2098,19 @@ function takeAction(id, neighbor) {
     }
     return;
   }
-  // If a previous prop was waiting to pop in/out, flush it immediately before starting the next action.
+
+  // Keep time frozen while walking/entering; start advancing time only once Miri begins the action itself.
   propReveal.waitingAction = null;
   propReveal.animating = false;
   syncSceneProps(true);
 
-  const spec = revealSpecForAction(id);
-  if (spec && !isReducedMotion()) {
-    propReveal.key = spec.key;
-    propReveal.mode = spec.mode;
-    propReveal.waitingAction = id;
-    syncSceneProps(false);
-  } else {
-    propReveal.key = null;
-    syncSceneProps(true);
-  }
-
+  pendingAction = {
+    id,
+    neighbor,
+    started: false,
+    startTotal: state.day * 1440 + state.minute,
+    endTotal: preview.state.day * 1440 + preview.state.minute,
+  };
   miriCtrl.startAction(id, state.furniture, isReducedMotion());
   const stage = Object.values(INTERACTION_STAGES).find(item => item.actionId === id);
   if (stage) showWalkRing(...stage.approach);
@@ -1471,16 +2126,20 @@ function renderInteractionCard(id) {
   const actions = id === 'stove' && state.scene?.meal === 'ready' ? [...meta.actions, 'eat'] : meta.actions;
   const buttonsHtml = actions.map(action => {
     const avail = getActionAvailability(state, action);
-    const tag = avail.doneToday
-      ? '今日已完成'
-      : action === 'eat'
-        ? '点击享用'
-        : ACTIONS[action].dailyLimit
-          ? '每日 1 次'
-          : ACTIONS[action].overnight
-            ? '开启明天'
-            : '可重复';
-    return `<button type="button" data-action="${action}" class="${avail.doneToday ? 'done-today' : ''}" ${avail.doneToday ? 'disabled' : ''}><span>${ACTIONS[action].name}</span><small class="action-tag">${tag}</small></button>`;
+    const isInProgress = pendingAction?.id === action;
+    const tag = isInProgress
+      ? '进行中…'
+      : avail.doneToday
+        ? '今日已完成'
+        : action === 'eat'
+          ? '点击享用'
+          : ACTIONS[action].dailyLimit
+            ? '每日 1 次'
+            : ACTIONS[action].overnight
+              ? '开启明天'
+              : '可重复';
+    const disabled = avail.doneToday || isInProgress;
+    return `<button type="button" data-action="${action}" class="${avail.doneToday ? 'done-today' : ''}" ${disabled ? 'disabled' : ''}><span>${ACTIONS[action].name}</span><small class="action-tag">${tag}</small></button>`;
   }).join('');
   const allDone = actions.every(action => getActionAvailability(state, action).doneToday);
   const note = allDone ? '<p class="card-note">今天的这项日常已完成，去床上“睡到明天清晨”后可再次体验。</p>' : '';
@@ -1585,6 +2244,8 @@ function setMode(next) {
   selectedInteraction = null; selectedFurniture = null;
   if (next !== 'life') {
     clearEffects();
+    if (pendingAction?.started) flushPendingAction(false);
+    pendingAction = null;
     propReveal.waitingAction = null;
     propReveal.animating = false;
     syncSceneProps(true);

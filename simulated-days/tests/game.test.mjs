@@ -172,3 +172,13 @@ test('旧版存档缺少 daily/scene 或使用旧数字 meal 字段时可无缝�
   data.set('simulated-days-v1', JSON.stringify(legacyNumericMeal));
   assert.equal(loadState(storage).scene.meal, 'ready');
 });
+
+test('连续执行日常动作会逐步将时间推进到傍晚与夜晚时段', () => {
+  let state = createInitialState(); // 09:00
+  for (const actionId of ['cook', 'eat', 'paint', 'tea', 'read', 'rest', 'read']) {
+    const res = performAction(state, actionId);
+    assert.equal(res.ok, true);
+    state = res.state;
+  }
+  assert.ok(state.minute >= 19 * 60, `多次互动后应进入夜晚时段，当前分钟=${state.minute}`);
+});

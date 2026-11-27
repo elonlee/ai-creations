@@ -41,7 +41,7 @@ export const CATALOG = {
 export const ACTIONS = {
   cook: {
     name: '做一份暖心早午餐',
-    minutes: 45,
+    minutes: 60,
     cost: 12,
     energyRequired: 8,
     needs: { energy: -7, fun: 4, hygiene: -4 },
@@ -54,14 +54,14 @@ export const ACTIONS = {
   },
   eat: {
     name: '吃掉桌上的早午餐',
-    minutes: 20,
+    minutes: 30,
     energyRequired: 0,
     needs: { hunger: 38, fun: 8, energy: 4 },
     dailyLimit: null,
   },
   paint: {
     name: '画一张街角速写',
-    minutes: 80,
+    minutes: 120,
     cost: 0,
     income: 42,
     energyRequired: 12,
@@ -75,7 +75,7 @@ export const ACTIONS = {
   },
   rest: {
     name: '小睡一会儿',
-    minutes: 130,
+    minutes: 150,
     energyRequired: 0,
     needs: { energy: 60, fun: 3 },
     dailyLimit: null,
@@ -90,7 +90,7 @@ export const ACTIONS = {
   },
   shower: {
     name: '洗个热水澡',
-    minutes: 35,
+    minutes: 45,
     energyRequired: 0,
     needs: { hygiene: 58, energy: 5 },
     dailyLimit: 1,
@@ -98,7 +98,7 @@ export const ACTIONS = {
   },
   read: {
     name: '读一本旧书',
-    minutes: 50,
+    minutes: 90,
     energyRequired: 3,
     needs: { fun: 26, energy: -3 },
     skill: 'creativity',
@@ -107,7 +107,7 @@ export const ACTIONS = {
   },
   tea: {
     name: '泡一壶花草茶',
-    minutes: 25,
+    minutes: 60,
     cost: 4,
     energyRequired: 0,
     needs: { fun: 14, energy: 8, hunger: 5 },
@@ -116,7 +116,7 @@ export const ACTIONS = {
   },
   chat: {
     name: '聊聊近况',
-    minutes: 45,
+    minutes: 60,
     energyRequired: 3,
     needs: { social: 32, fun: 9, energy: -4 },
     goal: 'chat',

@@ -414,13 +414,31 @@ small {
   transition:background .6s ease
 }
 .room-view[data-period="dusk"] {
-  background:radial-gradient(circle at 60% 27%,#ffe4c8 0,#eddbe6 48%,#d8cfe4 100%)
+  background:radial-gradient(circle at 60% 27%,#ffd8b8 0,#e5cce0 48%,#c4b8da 100%)
 }
 .room-view[data-period="night"] {
-  background:radial-gradient(circle at 60% 27%,#3d3955 0,#2d2940 52%,#211e30 100%)
+  background:radial-gradient(circle at 58% 24%,#2c3154 0,#1f233e 54%,#15172b 100%)
+}
+.room-view[data-period="night"]:before {
+  background:radial-gradient(ellipse at 55% 42%,#ffe5a81f,transparent 58%)
 }
 .room-view[data-period="night"] .scene-index {
-  color:#afa6bd
+  color:#b6aec9
+}
+.room-view[data-period="night"] .room-message {
+  background:#28243bc4;
+  color:#ede6f7;
+  border:1px solid #ffffff1c
+}
+.room-view[data-period="night"] .weather-pill {
+  background:#2d2842eb;
+  border-color:#ffffff24;
+  color:#f7d991
+}
+.room-view[data-period="night"] .location-pill {
+  background:#2d2842eb;
+  border-color:#ffffff24;
+  color:#f2ecf8
 }
 .room-view:before {
   content:'';

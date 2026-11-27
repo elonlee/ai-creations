@@ -219,3 +219,53 @@ test('建造模式跟随指针移动时正确钳制地板范围并对齐五乘�
   assert.equal(out.cellX, 0);
   assert.equal(out.cellZ, 4);
 });
+
+test('上床睡觉包含床边坐下掀被、躺平盖被与睡醒掀被下床的完整过程', () => {
+  const ctrl = createCharacterController(1.52, 1.45);
+  assert.equal(ctrl.startAction('sleep'), true);
+
+  // 1. 进入上床动作前段：坐到床沿并掀开被子一角
+  const enterRes = stepUntil(ctrl, st => st.phase === 'enter', 20);
+  assert.equal(enterRes.reached, true);
+
+  const enterFrames = [];
+  let actEntered = false;
+  for (let i = 0; i < 60; i++) {
+    const p = ctrl.update(0.03);
+    if (ctrl.state.phase === 'act') {
+      actEntered = true;
+      break;
+    }
+    enterFrames.push(p);
+  }
+  assert.equal(actEntered, true, '应在约 1.25 秒完成上床动作并进入安睡状态');
+  assert.ok(enterFrames.some(f => f.leftLegRotX < -1.0 && f.blanketOpen > 0.4), '上床前段应先曲腿坐上床沿并掀起被子');
+  assert.ok(enterFrames.some(f => f.poseRotX < -1.2 && f.blanketTuck > 0.5), '上床后段应躺下并将被子拉盖住身体');
+
+  // 2. 安睡进行中：被子平整盖实，呼吸起伏，闭眼安睡
+  const sleepA = ctrl.update(0.2);
+  const sleepB = ctrl.update(0.75);
+  assert.equal(sleepA.blanketOpen, 0);
+  assert.equal(sleepA.blanketTuck, 1);
+  assert.ok(sleepA.eyeScaleY < 0.25);
+  assert.notEqual(sleepA.blanketBreath.toFixed(3), sleepB.blanketBreath.toFixed(3), '睡眠中应有平稳的呼吸盖被起伏');
+
+  // 3. 睡醒起身阶段：先推开被子坐起，再从床沿跳下，被子恢复铺平
+  const exitStart = stepUntil(ctrl, st => st.phase === 'exit', 150);
+  assert.equal(exitStart.reached, true);
+  const exitFrames = [];
+  for (let i = 0; i < 60; i++) {
+    const p = ctrl.update(0.03);
+    if (ctrl.state.phase === 'idle') {
+      exitFrames.push(p);
+      break;
+    }
+    exitFrames.push(p);
+  }
+  assert.equal(ctrl.state.phase, 'idle');
+  assert.ok(exitFrames.some(f => f.blanketOpen > 0.4), '起床时应先推开被角');
+  const last = exitFrames[exitFrames.length - 1];
+  assert.equal(last.blanketOpen, 0);
+  assert.equal(last.blanketTuck, 0);
+  assert.equal(last.poseRotX, 0);
+});
