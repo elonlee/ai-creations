@@ -21,8 +21,8 @@ STAGING = ROOT / "assets" / ".blender-staging"
 STAGING.mkdir(exist_ok=True)
 
 files = sorted(ASSETS.glob("*.glb"))
-if len(files) != 34:
-    raise RuntimeError(f"Expected 34 assets, found {len(files)}")
+if len(files) != 37:
+    raise RuntimeError(f"Expected 37 assets, found {len(files)}")
 
 for number, source in enumerate(files, 1):
     bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -59,4 +59,4 @@ for number, source in enumerate(files, 1):
     print(f"[{number:02}/32] Blender export: {source.name}")
 
 STAGING.rmdir()
-print("34 Blender GLBs finalized")
+print("37 Blender GLBs finalized")

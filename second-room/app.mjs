@@ -32,13 +32,13 @@ let previousFrameMs = performance.now();
 let renderer, scene, overviewCamera, walkCamera, controls;
 let activeCamera, view = 'dollhouse', scenario = 'work', selectedRoom = null;
 let introProgress = reducedMotion ? 1 : 0;
-let furnitureGroup, wallGroup, windowGroup, doorGroup, pendantGroup, ceilingGroup, wallArtGroup;
+let furnitureGroup, wallGroup, windowGroup, doorGroup, pendantGroup, ceilingGroup, wallArtGroup, flexPaintGroup;
 let sun, ambient, hemi;
 const lamps = [], tvScreens = [], pcScreens = [], interactiveTargets = [];
 const lampOverrides = new Map();
 let lastDefaultLamps = null;
 let tvStateIndex = 1, pcStateIndex = 1;
-const wallParts = [], windowParts = [], doors = [], wallArtParts = [];
+const wallParts = [], windowParts = [], doors = [], wallArtParts = [], flexPaintParts = [];
 const staticObstacles = staticObstaclesFromWalls();
 const furnitureObstacles = [];
 const keys = new Set();
@@ -73,6 +73,8 @@ const glassMat = new THREE.MeshStandardMaterial({ color: 0xbdd0c7, roughness: 0.
 const windowMat = new THREE.MeshStandardMaterial({ color: 0xaab49e, roughness: 0.64 });
 const darkMat = new THREE.MeshStandardMaterial({ color: 0x46544a, roughness: 0.8 });
 const ceilingMat = new THREE.MeshStandardMaterial({ color: 0xf4f1e8, roughness: 0.96, side: THREE.FrontSide });
+const nurseryUpperMat = new THREE.MeshStandardMaterial({ color: 0xf5e5d2, roughness: 0.94 });
+const nurseryLowerMat = new THREE.MeshStandardMaterial({ color: 0xcfdcd0, roughness: 0.92 });
 
 function texture(kind) {
   const c = document.createElement('canvas');
@@ -380,20 +382,62 @@ function addCeiling() {
   scene.add(ceilingGroup);
 }
 
+function addNurseryPaintWalls() {
+  // Painted two-tone nursery wall panels (soft sage wainscoting + oak rail + warm cream-apricot upper)
+  const addBand = (cx, cz, len, horiz, baseY, fullTop, mat, mode) => {
+    const fullSpan = fullTop - baseY;
+    const m = box(flexPaintGroup, cx, baseY + fullSpan / 2, cz, horiz ? len : 0.008, fullSpan, horiz ? 0.008 : len, mat, 'flex');
+    m.castShadow = false;
+    flexPaintParts.push({ mesh: m, mode, baseY, fullTop, fullSpan });
+  };
+  const addPaintedSpan = (x1, z1, x2, z2, mode, sillOnly = false, headerOnly = false) => {
+    const horiz = Math.abs(x2 - x1) > Math.abs(z2 - z1);
+    const len = Math.hypot(x2 - x1, z2 - z1);
+    const cx = (x1 + x2) / 2, cz = (z1 + z2) / 2;
+    if (headerOnly) {
+      addBand(cx, cz, len, horiz, DOOR_HEIGHT, WALL_HEIGHT, nurseryUpperMat, mode);
+      return;
+    }
+    addBand(cx, cz, len, horiz, 0.08, 0.895, nurseryLowerMat, mode);
+    addBand(cx, cz, len, horiz, 0.895, 0.925, trimMat, mode);
+    if (!sillOnly) addBand(cx, cz, len, horiz, 0.925, WALL_HEIGHT, nurseryUpperMat, mode);
+  };
+
+  // North flex wall (Z = -0.036, Master-Flex door X = 1.67..2.51)
+  addPaintedSpan(0.965, -0.036, 1.67, -0.036, 'interior');
+  addPaintedSpan(1.67, -0.036, 2.51, -0.036, 'interior', false, true);
+  addPaintedSpan(2.51, -0.036, 4.905, -0.036, 'interior');
+  // West flex wall (X = 0.964, Entry-Flex door Z = 1.24..2.08)
+  addPaintedSpan(0.964, -0.036, 0.964, 1.24, 'interior');
+  addPaintedSpan(0.964, 1.24, 0.964, 2.08, 'interior', false, true);
+  addPaintedSpan(0.964, 2.08, 0.964, 3.555, 'interior');
+  // East flex wall (X = 4.906, window Z = 0.73..2.37)
+  addPaintedSpan(4.906, -0.036, 4.906, 0.73, 'front');
+  addPaintedSpan(4.906, 0.73, 4.906, 2.37, 'front', true);
+  addPaintedSpan(4.906, 0.73, 4.906, 2.37, 'front', false, true);
+  addPaintedSpan(4.906, 2.37, 4.906, 3.555, 'front');
+  // South flex wall (Z = 3.556)
+  addPaintedSpan(0.965, 3.556, 4.905, 3.556, 'front');
+}
+
 function buildArchitecture() {
   wallGroup = new THREE.Group();
   windowGroup = new THREE.Group();
   doorGroup = new THREE.Group();
   pendantGroup = new THREE.Group();
   wallArtGroup = new THREE.Group();
+  flexPaintGroup = new THREE.Group();
+  wallGroup.add(flexPaintGroup);
   scene.add(wallGroup, windowGroup, doorGroup, pendantGroup, wallArtGroup);
 
   addFloor();
   addCeiling();
   for (const seg of WALL_SEGMENTS) addWallSegment(seg);
+  addNurseryPaintWalls();
   for (const def of DOOR_DEFS) addDoor(def);
   for (const def of WINDOW_DEFS) addWindow(def);
   for (const def of WALL_ART_DEFS) addWallArt(def);
+  addNurseryWallAccents();
   const threshold = box(wallGroup, -0.35, 0.008, 3.65, 0.84, 0.016, 0.18, trimMat);
   threshold.castShadow = false;
 }
@@ -600,7 +644,7 @@ function artTexture(kind) {
 }
 
 function addWallArt(def) {
-  const { x, y, z, w, h, rotY, kind, frame, roomId, mode } = def;
+  const { x, y, z, w, h, rotY, kind, frame, roomId, mode, scenarioOnly = null } = def;
   const g = new THREE.Group();
   g.position.set(x, y, z);
   g.rotation.y = rotY;
@@ -621,7 +665,44 @@ function addWallArt(def) {
   canvasMesh.userData.roomId = roomId;
   g.add(canvasMesh);
 
-  wallArtParts.push({ group: g, mode, topY: y + h / 2 });
+  wallArtParts.push({ group: g, mode, topY: y + h / 2, scenarioOnly });
+}
+
+function addNurseryWallAccents() {
+  // Moon & cloud wall nightlight + low nursery prints (hidden automatically when walls cut below topY)
+  const nightGroup = new THREE.Group();
+  wallArtGroup.add(nightGroup);
+  const moonMat = new THREE.MeshStandardMaterial({ color: 0xffe8b0, emissive: 0xffd282, emissiveIntensity: 0.9, roughness: 0.4 });
+  const moon = new THREE.Mesh(new THREE.SphereGeometry(0.085, 16, 12), moonMat);
+  moon.scale.set(1, 1, 0.35);
+  moon.position.set(2.76, 1.07, -0.022);
+  moon.userData.roomId = 'flex';
+  const cloudL = new THREE.Mesh(new THREE.SphereGeometry(0.068, 14, 10), assetMaterial('white'));
+  cloudL.scale.set(1.2, 0.85, 0.4);
+  cloudL.position.set(2.69, 1.02, -0.018);
+  const cloudR = cloudL.clone();
+  cloudR.position.set(2.81, 1.01, -0.018);
+  nightGroup.add(moon, cloudL, cloudR);
+  wallArtParts.push({ group: nightGroup, mode: 'interior', topY: 1.16, scenarioOnly: 'future' });
+
+  addWallArt({ x: 1.32, y: 1.04, z: -0.032, w: 0.32, h: 0.38, rotY: 0, kind: 'family_pet', frame: 'oak', roomId: 'flex', mode: 'interior', scenarioOnly: 'future' });
+  addWallArt({ x: 0.972, y: 1.04, z: 0.58, w: 0.32, h: 0.38, rotY: Math.PI / 2, kind: 'arch', frame: 'oak', roomId: 'flex', mode: 'interior', scenarioOnly: 'future' });
+
+  // Pastel bunting garland hung on the North wall right above the kid's homework desk
+  const buntingGroup = new THREE.Group();
+  wallArtGroup.add(buntingGroup);
+  const colors = ['sage', 'ivory', 'brass', 'oak_light', 'sage', 'ivory', 'brass'];
+  box(buntingGroup, 3.76, 1.19, -0.026, 1.34, 0.008, 0.008, assetMaterial('oak'), 'flex');
+  for (let i = 0; i < 7; i++) {
+    const px = 3.16 + i * 0.20;
+    const drop = Math.sin((i / 6) * Math.PI) * 0.04;
+    const flag = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.09, 3), assetMaterial(colors[i]));
+    flag.rotation.x = Math.PI;
+    flag.position.set(px, 1.145 - drop, -0.022);
+    flag.userData.roomId = 'flex';
+    buntingGroup.add(flag);
+  }
+  wallArtParts.push({ group: buntingGroup, mode: 'interior', topY: 1.22, scenarioOnly: 'future' });
 }
 
 function screenTexture(device, modeId) {
@@ -900,14 +981,20 @@ function instantiate(name, x, z, rotation, roomId, y = 0) {
   furnitureGroup.add(object);
 
   if (isLamp) {
-    const lightY = name === 'floor_lamp' ? 1.44 : y + 0.34;
+    const lightY = name === 'floor_lamp' ? 1.34 : y + 0.34;
     const lp = new THREE.PointLight(0xffd296, 0, 3.0, 2);
     lp.position.set(x, lightY, z);
     furnitureGroup.add(lp);
     lamps.push({ id: lampId, label: lampLabel, isPendant: false, point: lp, bulbs: myBulbs, shades: myShades });
   }
 
-  if (!['floor_lamp', 'table_lamp', 'desk_lamp', 'rug', 'round_rug', 'mirror', 'upper_cabinet', 'tv', 'computer'].includes(name)) {
+  if (name === 'wardrobe' || name === 'bookcase' || name === 'mirror') {
+    object.userData.wallClip = { fullHeight: name === 'wardrobe' ? 2.08 : name === 'bookcase' ? 2.1 : 1.56, mode: 'interior' };
+  } else if (name === 'upper_cabinet') {
+    object.userData.sectionHide = true;
+  }
+
+  if (!['floor_lamp', 'table_lamp', 'desk_lamp', 'rug', 'round_rug', 'play_set', 'mirror', 'upper_cabinet', 'tv', 'computer'].includes(name)) {
     object.updateMatrixWorld(true);
     const b = new THREE.Box3().setFromObject(object);
     furnitureObstacles.push({ minX: b.min.x, maxX: b.max.x, minZ: b.min.z, maxZ: b.max.z });
@@ -958,6 +1045,28 @@ function addShoeCabinetDecor(cabinetObj, roomId) {
   cabinetObj.add(tray);
 }
 
+function addKidsBedDecor(bedObj, roomId) {
+  // Soft bolster cushion & cute tiny bear plush tucked onto the kid's bed
+  const bolster = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.42, 16), assetMaterial('ivory'));
+  bolster.rotation.x = Math.PI / 2;
+  bolster.position.set(0.18, 0.56, -0.45);
+  bolster.castShadow = true;
+  bolster.userData.roomId = roomId;
+  bedObj.add(bolster);
+  const bear = new THREE.Group();
+  bear.position.set(-0.22, 0.53, -0.42);
+  const body = new THREE.Mesh(new THREE.SphereGeometry(0.062, 12, 10), assetMaterial('oak_light'));
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.048, 12, 10), assetMaterial('oak_light'));
+  head.position.set(0, 0.088, 0.016);
+  const earL = new THREE.Mesh(new THREE.SphereGeometry(0.018, 10, 8), assetMaterial('oak'));
+  earL.position.set(-0.038, 0.128, 0.016);
+  const earR = earL.clone();
+  earR.position.x = 0.038;
+  for (const m of [body, head, earL, earR]) m.userData.roomId = roomId;
+  bear.add(body, head, earL, earR);
+  bedObj.add(bear);
+}
+
 function rebuildFurniture(kind) {
   disposeFurniture();
   furnitureGroup = new THREE.Group();
@@ -966,6 +1075,7 @@ function rebuildFurniture(kind) {
   for (const e of layoutEntries(kind)) {
     const obj = instantiate(...e);
     if (e[0] === 'shoe_cabinet' && obj) addShoeCabinetDecor(obj, e[4]);
+    if (kind === 'future' && obj && e[0] === 'bed_single') addKidsBedDecor(obj, e[4]);
   }
   updateLampGlow($('#time-slider').value);
   if (!reducedMotion) {
@@ -978,13 +1088,14 @@ function setScenario(kind) {
   if (!SCENARIOS[kind]) return;
   scenario = kind;
   rebuildFurniture(kind);
+  updateWalls();
   document.querySelectorAll('.scenario').forEach(btn => {
     const active = btn.dataset.scenario === kind;
     btn.classList.toggle('active', active);
     btn.setAttribute('aria-pressed', active);
   });
   if (selectedRoom === 'flex') showRoom('flex');
-  $('#asset-status').textContent = `方案 ${SCENARIOS[kind].index} / 03 · 34 件本地家具模型`;
+  $('#asset-status').textContent = `方案 ${SCENARIOS[kind].index} / 03 · 37 件本地家具模型`;
 }
 
 function showRoom(id) {
@@ -1118,7 +1229,32 @@ function updateWalls() {
   });
   for (const art of wallArtParts) {
     const cutH = cutHeightForMode(art.mode);
-    art.group.visible = cutH >= art.topY + 0.03;
+    art.group.visible = (!art.scenarioOnly || art.scenarioOnly === scenario) && cutH >= art.topY + 0.03;
+  }
+
+  flexPaintGroup.visible = scenario === 'future';
+  if (flexPaintGroup.visible) {
+    for (const p of flexPaintParts) {
+      const cutH = cutHeightForMode(p.mode);
+      const visible = cutH > p.baseY + 0.01;
+      p.mesh.visible = visible;
+      if (!visible) continue;
+      const span = Math.max(0.001, Math.min(cutH, p.fullTop) - p.baseY);
+      p.mesh.scale.y = span / p.fullSpan;
+      p.mesh.position.y = p.baseY + span / 2;
+    }
+  }
+
+  if (furnitureGroup) {
+    for (const obj of furnitureGroup.children) {
+      if (obj.userData.wallClip) {
+        const { fullHeight, mode } = obj.userData.wallClip;
+        const cutH = cutHeightForMode(mode);
+        obj.scale.y = view === 'walk' || view === 'top' ? 1 : Math.min(1, (cutH - 0.04) / fullHeight);
+      } else if (obj.userData.sectionHide) {
+        obj.visible = view !== 'section';
+      }
+    }
   }
 }
 
@@ -1311,7 +1447,7 @@ async function loadFurniture() {
     $('#loading-bar').style.width = `${Math.round(completed / names.length * 100)}%`;
     $('#loading-progress').textContent = `家具载入 ${completed} / ${names.length}`;
   }));
-  $('#asset-status').textContent = failed ? `${failed} 件家具载入失败` : '34 件本地家具模型';
+  $('#asset-status').textContent = failed ? `${failed} 件家具载入失败` : '37 件本地家具模型';
 }
 
 function bindUI() {

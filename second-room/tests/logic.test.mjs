@@ -130,7 +130,7 @@ test('interactive screen modes cycle cleanly and lamp overrides respect defaults
 test('all scenarios have zero wall or furniture collisions and walkable doorways', async () => {
   const walls = staticObstaclesFromWalls();
   const boundsCache = new Map();
-  const skipCollision = new Set(['rug', 'round_rug', 'table_lamp', 'desk_lamp', 'upper_cabinet', 'tv', 'computer']);
+  const skipCollision = new Set(['rug', 'round_rug', 'play_set', 'table_lamp', 'desk_lamp', 'upper_cabinet', 'tv', 'computer']);
 
   for (const kind of ['work', 'guest', 'future']) {
     const entries = layoutEntries(kind);
@@ -175,6 +175,22 @@ test('all scenarios have zero wall or furniture collisions and walkable doorways
       const deskBox = worldBox(byName.desk.bounds, byName.desk.entry[1], byName.desk.entry[2], byName.desk.entry[3], 0);
       assert.ok(pcBox.minX >= deskBox.minX && pcBox.maxX <= deskBox.maxX && pcBox.minZ >= deskBox.minZ && pcBox.maxZ <= deskBox.maxZ);
       assert.ok(Math.abs(pcBox.minY - deskBox.maxY) < 0.002);
+    }
+
+    if (kind === 'future') {
+      const flexLamp = entries.find(e => e[0] === 'table_lamp' && e[4] === 'flex');
+      const flexSide = entries.find(e => e[0] === 'bedside' && e[4] === 'flex');
+      const lampBox = worldBox(boundsCache.get('table_lamp'), flexLamp[1], flexLamp[2], flexLamp[3], flexLamp[5]);
+      const sideBox = worldBox(boundsCache.get('bedside'), flexSide[1], flexSide[2], flexSide[3], 0);
+      assert.ok(lampBox.minX >= sideBox.minX && lampBox.maxX <= sideBox.maxX && lampBox.minZ >= sideBox.minZ && lampBox.maxZ <= sideBox.maxZ);
+      assert.ok(Math.abs(lampBox.minY - sideBox.maxY) < 0.002);
+
+      const hwLamp = entries.find(e => e[0] === 'desk_lamp' && e[4] === 'flex');
+      const hwDesk = entries.find(e => e[0] === 'kids_desk' && e[4] === 'flex');
+      const hwLampBox = worldBox(boundsCache.get('desk_lamp'), hwLamp[1], hwLamp[2], hwLamp[3], hwLamp[5]);
+      const hwDeskBox = worldBox(boundsCache.get('kids_desk'), hwDesk[1], hwDesk[2], hwDesk[3], 0);
+      assert.ok(hwLampBox.minX >= hwDeskBox.minX && hwLampBox.maxX <= hwDeskBox.maxX && hwLampBox.minZ >= hwDeskBox.minZ && hwLampBox.maxZ <= hwDeskBox.maxZ);
+      assert.ok(Math.abs(hwLampBox.minY - 0.62) < 0.002);
     }
 
     // Check walk spawn and doorway centers are passable when doors are open

@@ -11,7 +11,7 @@ export const ROOMS = {
 export const SCENARIOS = {
   work: { name: '在家工作', en: 'WORK FROM HOME', index: '01', note: '一张宽桌、一排书架，专注与生活都有自己的位置。', items: ['工作长桌', '桌面电脑', '人体工学椅', '整墙书架', '阅读椅', '边几', '工作台灯'] },
   guest: { name: '朋友留宿', en: 'FRIENDS STAY OVER', index: '02', note: '白天是会客角落，夜里铺开一张舒适的床。', items: ['沙发床', '圆形茶几', '低矮边柜', '行李架', '落地灯', '地毯'] },
-  future: { name: '留给未来', en: 'ROOM TO GROW', index: '03', note: '此刻留白，让阅读、游戏和未来的想象慢慢发生。', items: ['单人床', '矮书柜', '儿童桌', '小椅子', '玩具架', '圆形地毯'] },
+  future: { name: '留给未来', en: 'ROOM TO GROW', index: '03', note: '刷上温柔双色墙漆，添上写作业的小书桌、小帐篷、地垫玩偶与绘本，把这里变成孩子的梦游乐园。', items: ['单人床', '床头柜', '台灯', '儿童书桌', '学习椅', '护眼台灯', '小帐篷', '玩偶与小火车', '矮书柜', '玩具架', '圆形地毯'] },
 };
 
 export const WALL_HEIGHT = 2.7;
@@ -163,12 +163,17 @@ const SCENARIO_FURNITURE = {
     ['rug', 3.52, 1.55, 0, 'flex'],
   ],
   future: [
-    ['bed_single', 4.35, 0.92, 0, 'flex'],
-    ['low_bookshelf', 1.75, 3.36, Math.PI, 'flex'],
-    ['kids_table', 2.55, 2.05, 0, 'flex'],
-    ['kids_chair', 2.55, 1.54, 0, 'flex'],
-    ['toy_shelf', 4.1, 3.36, Math.PI, 'flex'],
-    ['round_rug', 2.65, 1.75, 0, 'flex'],
+    ['kids_desk', 3.76, 0.28, 0, 'flex'],
+    ['kids_chair', 3.76, 0.82, Math.PI, 'flex'],
+    ['desk_lamp', 4.14, 0.14, 0, 'flex', 0.62],
+    ['bed_single', 3.94, 3.04, -Math.PI / 2, 'flex'],
+    ['bedside', 4.66, 2.24, -Math.PI / 2, 'flex'],
+    ['table_lamp', 4.66, 2.24, -Math.PI / 2, 'flex', 0.5],
+    ['low_bookshelf', 4.71, 1.25, -Math.PI / 2, 'flex'],
+    ['toy_shelf', 1.16, 2.86, Math.PI / 2, 'flex'],
+    ['play_tent', 2.22, 2.84, Math.PI * 0.85, 'flex'],
+    ['round_rug', 2.68, 1.56, 0, 'flex'],
+    ['play_set', 2.68, 1.56, -0.3, 'flex', 0.01],
   ],
 };
 

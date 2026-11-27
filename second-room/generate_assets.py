@@ -494,6 +494,37 @@ def make_chair(width, depth, seat_h, back_h, seat_mat="ivory", back_mat="oak_lig
     return parts
 
 
+def make_tent_panel(p_bl, p_br, p_tr, p_tl, thick=0.014, mat="ivory"):
+    """Build a closed outward-facing trapezoidal tent canvas slab from 4 outer corners."""
+    mid = tuple((p_bl[k] + p_br[k] + p_tr[k] + p_tl[k]) / 4.0 for k in range(3))
+    front = [p_bl, p_br, p_tr, p_tl]
+    n_out = _norm(_cross(_sub(front[1], front[0]), _sub(front[3], front[0])))
+    if n_out[0] * mid[0] + n_out[2] * mid[2] < 0:
+        front = [p_br, p_bl, p_tl, p_tr]
+        n_out = (-n_out[0], -n_out[1], -n_out[2])
+    back = [tuple(p[k] - n_out[k] * thick for k in range(3)) for p in front]
+    verts = front + back
+    pos, nrm, uv, idx = [], [], [], []
+    quads = [
+        [0, 1, 2, 3],
+        [7, 6, 5, 4],
+        [0, 4, 5, 1],
+        [1, 5, 6, 2],
+        [2, 6, 7, 3],
+        [3, 7, 4, 0],
+    ]
+    for q in quads:
+        pts = [verts[i] for i in q]
+        qn = _norm(_cross(_sub(pts[1], pts[0]), _sub(pts[2], pts[0])))
+        base = len(pos) // 3
+        for k, p in enumerate(pts):
+            pos.extend(p)
+            nrm.extend(qn)
+            uv.extend(((0, 0), (1, 0), (1, 1), (0, 1))[k])
+        idx.extend((base, base + 1, base + 2, base, base + 2, base + 3))
+    return mat, pos, nrm, uv, idx
+
+
 def book_row(x0, x1, shelf_top_y, seed=1, z_center=0.01, stack_end=False):
     """Fill a bookshelf bay cleanly with varied vertical books and optional horizontal stack."""
     palette = ("sage", "ivory", "dark", "oak", "stone", "brass", "white", "oak_light")
@@ -592,9 +623,9 @@ assets = {
     ],
     "floor_lamp": [
         cyl(0, 0.016, 0, 0.34, 0.032, 0.34, "stone", sides=28),
-        cyl(0, 0.74, 0, 0.028, 1.44, 0.028, "brass", sides=16),
-        shade(0, 1.52, 0, 0.40, 0.34, 0.30, "ivory", sides=28),
-        make_sphere(0, 1.48, 0, 0.05, 0.055, 0.05, "bulb"),
+        cyl(0, 0.68, 0, 0.028, 1.32, 0.028, "brass", sides=16),
+        shade(0, 1.40, 0, 0.40, 0.34, 0.30, "ivory", sides=28),
+        make_sphere(0, 1.36, 0, 0.05, 0.055, 0.05, "bulb"),
     ],
     "side_table": [
         cyl(0, 0.016, 0, 0.30, 0.032, 0.30, "stone", sides=24),
@@ -657,7 +688,7 @@ assets = {
         box(0, 0.385, 0.188, 0.07, 0.014, 0.014, "brass", bevel=0.003),
         box(0, 0.225, 0.188, 0.07, 0.014, 0.014, "brass", bevel=0.003),
     ],
-    "wardrobe": make_cabinet(1.80, 2.28, 0.58, body_mat="ivory", top_mat="oak", legs_h=0.08, doors=3, plinth=True),
+    "wardrobe": make_cabinet(1.80, 2.08, 0.58, body_mat="ivory", top_mat="oak", legs_h=0.08, doors=3, plinth=True),
     "table_lamp": [
         cyl(0, 0.022, 0, 0.16, 0.044, 0.16, "stone", sides=24),
         cyl(0, 0.16, 0, 0.022, 0.24, 0.022, "brass", sides=14),
@@ -775,7 +806,32 @@ assets = {
         ],
     ),
     "kids_table": make_table(0.90, 0.54, 0.52),
-    "kids_chair": make_chair(0.36, 0.34, 0.30, 0.58, seat_mat="sage", back_mat="sage"),
+    "kids_chair": make_chair(0.38, 0.36, 0.36, 0.68, seat_mat="sage", back_mat="sage"),
+    "kids_desk": [
+        *table_legs(1.02, 0.46, 0.584, d_bot=0.032, d_top=0.044, mat="oak"),
+        # Under-desk drawer box & dual pastel fronts (+Z)
+        box(0, 0.535, -0.01, 1.04, 0.095, 0.46, "oak_light", bevel=0.005),
+        box(-0.25, 0.535, 0.225, 0.48, 0.078, 0.015, "sage", bevel=0.004),
+        box(0.25, 0.535, 0.225, 0.48, 0.078, 0.015, "ivory", bevel=0.004),
+        box(-0.25, 0.535, 0.236, 0.07, 0.012, 0.012, "brass", bevel=0.002),
+        box(0.25, 0.535, 0.236, 0.07, 0.012, 0.012, "brass", bevel=0.002),
+        # Desktop (y=0.584..0.62)
+        box(0, 0.602, 0, 1.12, 0.036, 0.56, "oak_light", bevel=0.008),
+        # Low rear hutch shelf on left/center (-Z) leaving right side flat for desk_lamp
+        box(-0.18, 0.71, -0.20, 0.68, 0.18, 0.022, "oak_light", bevel=0.004),
+        box(-0.51, 0.71, -0.14, 0.024, 0.18, 0.14, "oak", bevel=0.004),
+        box(0.15, 0.71, -0.14, 0.024, 0.18, 0.14, "oak", bevel=0.004),
+        box(-0.18, 0.79, -0.14, 0.68, 0.022, 0.14, "oak", bevel=0.004),
+        # Upright storybooks & homework notebooks inside rear hutch + open workbook on desktop
+        box(-0.42, 0.70, -0.14, 0.035, 0.15, 0.11, "sage", bevel=0.002),
+        box(-0.37, 0.71, -0.14, 0.038, 0.17, 0.11, "ivory", bevel=0.002),
+        box(-0.32, 0.695, -0.14, 0.032, 0.14, 0.11, "brass", bevel=0.002),
+        box(-0.27, 0.705, -0.14, 0.036, 0.16, 0.11, "dark", bevel=0.002),
+        box(-0.04, 0.625, 0.06, 0.28, 0.010, 0.20, "white", bevel=0.002),
+        box(-0.04, 0.631, 0.06, 0.25, 0.004, 0.17, "ivory", bevel=0.001),
+        cyl(0.18, 0.656, 0.02, 0.056, 0.072, 0.056, "oak", sides=14),
+        box(0.18, 0.695, 0.02, 0.012, 0.038, 0.012, "sage", bevel=0.002),
+    ],
     "toy_shelf": make_bookshelf(
         1.06, 0.84, 0.36, shelves_y=(0.45,), leg_h=0.08, dividers=2,
         decor=[
@@ -791,8 +847,48 @@ assets = {
         ],
     ),
     "round_rug": [
-        cyl(0, 0.005, 0, 1.64, 0.010, 1.64, "sage", sides=36),
-        cyl(0, 0.0055, 0, 1.30, 0.010, 1.30, "ivory", sides=36),
+        cyl(0, 0.005, 0, 1.48, 0.010, 1.48, "sage", sides=36),
+        cyl(0, 0.0056, 0, 1.24, 0.010, 1.24, "ivory", sides=36),
+        cyl(0, 0.0062, 0, 0.82, 0.010, 0.82, "white", sides=36),
+    ],
+    "play_tent": [
+        # 4 wooden teepee poles grounded at y=0 and crossing at apex
+        strut((-0.48, 0.016, -0.48), (0.09, 1.44, 0.09), 0.028, 0.028, "oak"),
+        strut((0.48, 0.016, -0.48), (-0.09, 1.44, 0.09), 0.028, 0.028, "oak"),
+        strut((-0.48, 0.016, 0.48), (0.09, 1.44, -0.09), 0.028, 0.028, "oak"),
+        strut((0.48, 0.016, 0.48), (-0.09, 1.44, -0.09), 0.028, 0.028, "oak"),
+        # Back, left, right cream canvas walls + two sage front doorway flaps (+Z)
+        make_tent_panel((0.46, 0.02, -0.46), (-0.46, 0.02, -0.46), (-0.07, 1.24, -0.07), (0.07, 1.24, -0.07), mat="ivory"),
+        make_tent_panel((-0.46, 0.02, -0.46), (-0.46, 0.02, 0.46), (-0.07, 1.24, 0.07), (-0.07, 1.24, -0.07), mat="ivory"),
+        make_tent_panel((0.46, 0.02, 0.46), (0.46, 0.02, -0.46), (0.07, 1.24, -0.07), (0.07, 1.24, 0.07), mat="ivory"),
+        make_tent_panel((-0.46, 0.02, 0.46), (-0.22, 0.02, 0.46), (-0.03, 1.24, 0.07), (-0.07, 1.24, 0.07), mat="sage"),
+        make_tent_panel((0.22, 0.02, 0.46), (0.46, 0.02, 0.46), (0.07, 1.24, 0.07), (0.03, 1.24, 0.07), mat="sage"),
+        # Cozy quilted inner mat & floor cushion inside tent
+        cushion(0, 0.022, 0, 0.80, 0.032, 0.80, "sage"),
+        cushion(0, 0.075, -0.14, 0.36, 0.08, 0.28, "white", rx=0.12),
+        # Cute apex pennant flag
+        box(0, 1.38, 0.05, 0.14, 0.07, 0.012, "brass", bevel=0.002),
+    ],
+    "play_set": [
+        # Soft sage & ivory floor poufs on rug
+        cyl(-0.32, 0.075, -0.18, 0.42, 0.15, 0.42, "sage", sides=24),
+        cyl(-0.32, 0.156, -0.18, 0.34, 0.026, 0.34, "ivory", sides=24),
+        cyl(0.28, 0.055, -0.22, 0.38, 0.11, 0.38, "ivory", sides=24),
+        # Cute plush teddy bear sitting atop the sage pouf
+        make_sphere(-0.32, 0.245, -0.19, 0.068, 0.078, 0.062, "oak_light", rings=8, segs=12),
+        make_sphere(-0.32, 0.348, -0.17, 0.055, 0.052, 0.052, "oak_light", rings=8, segs=12),
+        make_sphere(-0.365, 0.395, -0.17, 0.020, 0.020, 0.014, "oak", rings=6, segs=10),
+        make_sphere(-0.275, 0.395, -0.17, 0.020, 0.020, 0.014, "oak", rings=6, segs=10),
+        make_sphere(-0.358, 0.21, -0.12, 0.026, 0.024, 0.044, "oak_light", rings=6, segs=10),
+        make_sphere(-0.282, 0.21, -0.12, 0.026, 0.024, 0.044, "oak_light", rings=6, segs=10),
+        make_sphere(-0.32, 0.344, -0.12, 0.018, 0.014, 0.016, "ivory", rings=6, segs=10),
+        # Wooden pull-along toy train on the play rug (grounded at y=0)
+        box(0.02, 0.055, 0.18, 0.14, 0.075, 0.085, "sage", bevel=0.005),
+        box(-0.02, 0.105, 0.18, 0.065, 0.055, 0.08, "oak_light", bevel=0.004),
+        cyl(0.06, 0.105, 0.18, 0.028, 0.04, 0.028, "brass", sides=12),
+        box(0.19, 0.05, 0.18, 0.12, 0.06, 0.08, "ivory", bevel=0.005),
+        box(0.34, 0.05, 0.18, 0.12, 0.06, 0.08, "oak_light", bevel=0.005),
+        *[cyl(wx, 0.018, wz, 0.036, 0.014, 0.036, "dark", sides=12, rx=math.pi / 2) for wx in (-0.02, 0.06, 0.15, 0.23, 0.30, 0.38) for wz in (0.135, 0.225)],
     ],
     "tv": [
         # Two splayed stand feet grounded at y=0
@@ -825,7 +921,7 @@ assets = {
     ],
 }
 
-assert len(assets) == 34
+assert len(assets) == 37
 for name, parts in assets.items():
     build_asset(name, parts)
 print(f"Generated {len(assets)} beveled GLB assets in {OUT}")
