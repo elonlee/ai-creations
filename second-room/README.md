@@ -24,7 +24,7 @@ python3 -m http.server 8765
 
 ## 素材与实现
 
-32 件家具以低面数 GLB 文件存于 `assets/furniture/`。`generate_assets.py` 先用几何图元建立家具；`blender_finalize.py` 再用 Blender 5.2.2 为边缘加一段倒角，并重新导出最终 GLB。网页加载的是 Blender 导出的文件。
+34 件家具以低面数 GLB 文件存于 `assets/furniture/`。`generate_assets.py` 先用几何图元建立家具；`blender_finalize.py` 再用 Blender 5.2.2 为边缘加一段倒角，并重新导出最终 GLB。网页加载的是静态导出的 GLB 文件。
 
 重建资产需要 Python 3 和可导入 `bpy` 的 Blender Python 环境。在仓库根目录依次执行：
 
@@ -33,7 +33,7 @@ python3 second-room/generate_assets.py
 /tmp/second-room-bpy/bin/python second-room/blender_finalize.py
 ```
 
-`generate_assets.py` 使用程序化倒角几何直接生成 32 件落地对齐、流形封闭的家具 GLB，也可继续执行 `blender_finalize.py` 用 Blender 二次倒角导出。`node --test second-room/tests/assets.test.mjs` 会检查 32 件文件的 GLB 结构、材质、引用完整性与落地包围盒。
+`generate_assets.py` 使用程序化倒角几何直接生成 34 件落地对齐、流形封闭的家具 GLB，也可继续执行 `blender_finalize.py` 用 Blender 二次倒角导出。`node --test second-room/tests/assets.test.mjs` 会检查 34 件文件的 GLB 结构、材质、引用完整性与落地包围盒。
 
 木纹、布料和石材纹理由浏览器里的 Canvas 程序生成，并应用到家具模型。Three.js 0.186.1、OrbitControls 和 GLTFLoader 以本地副本提供，许可见 `vendor/LICENSE-three.txt`。页面没有外部运行时请求。
 

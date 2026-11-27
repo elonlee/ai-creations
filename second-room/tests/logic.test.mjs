@@ -4,13 +4,22 @@ import { readFile } from 'node:fs/promises';
 import {
   AREA,
   DOOR_DEFS,
+  PC_MODES,
   ROOMS,
   SCENARIOS,
+  TV_MODES,
+  WALL_ART_DEFS,
+  WALL_HEIGHT,
+  WINDOW_BOTTOM,
+  WINDOW_DEFS,
+  WINDOW_TOP,
   canOccupy,
   doorObstacle,
   frameDelta,
   layoutEntries,
   lightAt,
+  nextScreenMode,
+  resolveLampState,
   roomAt,
   staticObstaclesFromWalls,
   walkStep,
@@ -93,10 +102,35 @@ test('walkStep strafes right for D (+1) and left for A (-1) relative to camera y
   }
 });
 
+test('wall art and family photos stay inside room bounds and clear of windows and doors', () => {
+  assert.ok(WALL_ART_DEFS.length >= 10);
+  for (const art of WALL_ART_DEFS) {
+    assert.ok(art.y - art.h / 2 >= 0.8 && art.y + art.h / 2 <= WALL_HEIGHT - 0.1);
+    assert.ok(roomAt(art.x, art.z)?.id === art.roomId, `Art outside ${art.roomId}: (${art.x},${art.z})`);
+    for (const win of WINDOW_DEFS) {
+      if (art.roomId === win.roomId && art.y + art.h / 2 > WINDOW_BOTTOM && art.y - art.h / 2 < WINDOW_TOP) {
+        const dist = win.orientation === 'x' ? Math.abs(art.x - win.x) : Math.abs(art.z - win.z);
+        const sameWall = win.orientation === 'x' ? Math.abs(art.z - win.z) < 0.2 : Math.abs(art.x - win.x) < 0.2;
+        if (sameWall) assert.ok(dist >= win.width / 2 + art.w / 2, `Art overlaps window in ${art.roomId}`);
+      }
+    }
+  }
+});
+
+test('interactive screen modes cycle cleanly and lamp overrides respect defaults', () => {
+  assert.equal(TV_MODES.length, 4);
+  assert.equal(PC_MODES.length, 4);
+  assert.equal(nextScreenMode(1, TV_MODES.length), 2);
+  assert.equal(nextScreenMode(3, TV_MODES.length), 0);
+  assert.equal(resolveLampState(false, undefined), false);
+  assert.equal(resolveLampState(false, true), true);
+  assert.equal(resolveLampState(true, false), false);
+});
+
 test('all scenarios have zero wall or furniture collisions and walkable doorways', async () => {
   const walls = staticObstaclesFromWalls();
   const boundsCache = new Map();
-  const skipCollision = new Set(['rug', 'round_rug', 'table_lamp', 'desk_lamp', 'upper_cabinet']);
+  const skipCollision = new Set(['rug', 'round_rug', 'table_lamp', 'desk_lamp', 'upper_cabinet', 'tv', 'computer']);
 
   for (const kind of ['work', 'guest', 'future']) {
     const entries = layoutEntries(kind);
@@ -127,6 +161,20 @@ test('all scenarios have zero wall or furniture collisions and walkable doorways
           a.box.maxZ > b.box.minZ + 0.01 && a.box.minZ < b.box.maxZ - 0.01;
         assert.equal(overlap, false, `${kind}: ${a.name} overlaps ${b.name}`);
       }
+    }
+
+    // Verify tabletop items sit cleanly within their host furniture footprint and height
+    const byName = Object.fromEntries(entries.map((e, idx) => [e[0], { entry: e, bounds: boundsCache.get(e[0]) }]));
+    const tvBox = worldBox(byName.tv.bounds, byName.tv.entry[1], byName.tv.entry[2], byName.tv.entry[3], byName.tv.entry[5]);
+    const consoleBox = worldBox(byName.media_console.bounds, byName.media_console.entry[1], byName.media_console.entry[2], byName.media_console.entry[3], 0);
+    assert.ok(tvBox.minX >= consoleBox.minX && tvBox.maxX <= consoleBox.maxX && tvBox.minZ >= consoleBox.minZ && tvBox.maxZ <= consoleBox.maxZ);
+    assert.ok(Math.abs(tvBox.minY - consoleBox.maxY) < 0.002);
+
+    if (kind === 'work') {
+      const pcBox = worldBox(byName.computer.bounds, byName.computer.entry[1], byName.computer.entry[2], byName.computer.entry[3], byName.computer.entry[5]);
+      const deskBox = worldBox(byName.desk.bounds, byName.desk.entry[1], byName.desk.entry[2], byName.desk.entry[3], 0);
+      assert.ok(pcBox.minX >= deskBox.minX && pcBox.maxX <= deskBox.maxX && pcBox.minZ >= deskBox.minZ && pcBox.maxZ <= deskBox.maxZ);
+      assert.ok(Math.abs(pcBox.minY - deskBox.maxY) < 0.002);
     }
 
     // Check walk spawn and doorway centers are passable when doors are open

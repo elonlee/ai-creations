@@ -31,6 +31,7 @@ MATERIALS = {
     "mirror": ([0.86, 0.89, 0.88, 1.0], 0.92, 0.08),
     "bulb": ([0.98, 0.92, 0.74, 1.0], 0.0, 0.30),
     "steel": ([0.62, 0.64, 0.63, 1.0], 0.75, 0.32),
+    "screen": ([0.14, 0.17, 0.16, 1.0], 0.42, 0.18),
 }
 
 
@@ -76,7 +77,10 @@ def _norm(v):
     return (v[0] / l, v[1] / l, v[2] / l) if l > 1e-12 else (0.0, 1.0, 0.0)
 
 
-def _box_uv(p, n):
+def _box_uv(p, n, half_extents=None):
+    if half_extents and n[2] > 0.5:
+        hx, hy, _ = half_extents
+        return ((p[0] + hx) / (2.0 * hx), (p[1] + hy) / (2.0 * hy))
     ax, ay, az = abs(n[0]), abs(n[1]), abs(n[2])
     if ax >= ay and ax >= az:
         return (p[2] + 0.5, p[1] + 0.5)
@@ -85,7 +89,7 @@ def _box_uv(p, n):
     return (p[0] + 0.5, p[1] + 0.5)
 
 
-def _emit_poly(verts, p_idx_list, mat_map, out_pos, out_nrm, out_uv, out_idx, m_rot, center):
+def _emit_poly(verts, p_idx_list, mat_map, out_pos, out_nrm, out_uv, out_idx, m_rot, center, unit_front_extents=None):
     pts = [verts[i] for i in p_idx_list]
     n_local = _norm(_cross(_sub(pts[1], pts[0]), _sub(pts[2], pts[0])))
     centroid = tuple(sum(p[k] for p in pts) / len(pts) for k in range(3))
@@ -98,7 +102,7 @@ def _emit_poly(verts, p_idx_list, mat_map, out_pos, out_nrm, out_uv, out_idx, m_
         pw = _apply_rot(p, m_rot)
         out_pos.extend((center[0] + pw[0], center[1] + pw[1], center[2] + pw[2]))
         out_nrm.extend(n_world)
-        out_uv.extend(_box_uv(p, n_local))
+        out_uv.extend(_box_uv(p, n_local, unit_front_extents))
     for k in range(1, len(pts) - 1):
         out_idx.extend((base, base + k, base + k + 1))
 
@@ -109,6 +113,7 @@ def make_bevel_box(cx, cy, cz, sx, sy, sz, mat="oak", bevel=0.008, rx=0.0, ry=0.
     m_rot = _rot_mat(rx, ry, rz)
     center = (cx, cy, cz)
     pos, nrm, uv, idx = [], [], [], []
+    unit_ext = (hx, hy, hz) if mat == "screen" else None
 
     if b <= 1e-5:
         verts = [(ox * hx, oy * hy, oz * hz) for ox in (-1, 1) for oy in (-1, 1) for oz in (-1, 1)]
@@ -123,7 +128,7 @@ def make_bevel_box(cx, cy, cz, sx, sy, sz, mat="oak", bevel=0.008, rx=0.0, ry=0.
             [vid(-1, -1, -1), vid(1, -1, -1), vid(1, -1, 1), vid(-1, -1, 1)],
         ]
         for q in quads:
-            _emit_poly(verts, q, None, pos, nrm, uv, idx, m_rot, center)
+            _emit_poly(verts, q, None, pos, nrm, uv, idx, m_rot, center, unit_ext)
         return mat, pos, nrm, uv, idx
 
     # 24 corner-inset vertices: 3 per octant (x-face, y-face, z-face)
@@ -166,7 +171,7 @@ def make_bevel_box(cx, cy, cz, sx, sy, sz, mat="oak", bevel=0.008, rx=0.0, ry=0.
                 polys.append([ix_map[k], iy_map[k], iz_map[k]])
 
     for p in polys:
-        _emit_poly(verts, p, None, pos, nrm, uv, idx, m_rot, center)
+        _emit_poly(verts, p, None, pos, nrm, uv, idx, m_rot, center, unit_ext)
     return mat, pos, nrm, uv, idx
 
 
@@ -489,6 +494,42 @@ def make_chair(width, depth, seat_h, back_h, seat_mat="ivory", back_mat="oak_lig
     return parts
 
 
+def book_row(x0, x1, shelf_top_y, seed=1, z_center=0.01, stack_end=False):
+    """Fill a bookshelf bay cleanly with varied vertical books and optional horizontal stack."""
+    palette = ("sage", "ivory", "dark", "oak", "stone", "brass", "white", "oak_light")
+    parts = []
+    x = x0 + 0.012
+    end = x1 - (0.20 if stack_end else 0.012)
+    idx = 0
+    s = seed * 1103515245 + 12345
+    def rnd():
+        nonlocal s
+        s = (s * 1664525 + 1013904223) & 0xFFFFFFFF
+        return s / 4294967296.0
+
+    while x + 0.042 <= end:
+        thick = 0.026 + rnd() * 0.024
+        if x + thick > end:
+            break
+        h = 0.19 + rnd() * 0.085
+        d = 0.18 + rnd() * 0.04
+        z = z_center - (0.22 - d) * 0.3
+        mat = palette[(idx + seed) % len(palette)]
+        parts.append(box(x + thick / 2.0, shelf_top_y + h / 2.0, z, thick - 0.003, h, d, mat, bevel=0.003))
+        x += thick + 0.003
+        idx += 1
+
+    if stack_end and x + 0.16 <= x1:
+        sx = x1 - 0.105
+        for k, (w, h, d, mat) in enumerate([
+            (0.17, 0.032, 0.22, "ivory"),
+            (0.16, 0.028, 0.21, "sage"),
+            (0.145, 0.026, 0.195, "dark"),
+        ]):
+            parts.append(box(sx, shelf_top_y + 0.015 + k * 0.030, z_center, w, h, d, mat, bevel=0.003))
+    return parts
+
+
 def make_bookshelf(width, height, depth, shelves_y, leg_h=0.08, dividers=1, decor=None):
     parts = [
         box(0, leg_h / 2.0, -0.005, width - 0.03, leg_h, depth - 0.03, "oak", bevel=0.004),
@@ -653,18 +694,17 @@ assets = {
     "bookcase": make_bookshelf(
         1.68, 2.10, 0.34, shelves_y=(0.48, 0.88, 1.28, 1.68), leg_h=0.08, dividers=1,
         decor=[
-            # Books resting cleanly inside shelf bays (z within [-0.12, +0.12])
-            box(-0.56, 0.59, 0.01, 0.05, 0.20, 0.19, "sage", bevel=0.003),
-            box(-0.50, 0.60, 0.01, 0.05, 0.22, 0.19, "ivory", bevel=0.003),
-            box(-0.44, 0.58, 0.01, 0.04, 0.18, 0.19, "dark", bevel=0.003),
-            box(0.32, 0.58, 0.0, 0.34, 0.18, 0.24, "ivory", bevel=0.006),
-            box(0.22, 0.99, 0.01, 0.05, 0.20, 0.19, "brass", bevel=0.003),
-            box(0.28, 1.01, 0.01, 0.05, 0.23, 0.19, "sage", bevel=0.003),
-            box(0.34, 0.98, 0.01, 0.04, 0.18, 0.19, "ivory", bevel=0.003),
-            box(-0.34, 1.38, 0.0, 0.32, 0.17, 0.24, "sage", bevel=0.006),
-            box(0.45, 1.79, 0.01, 0.05, 0.20, 0.19, "ivory", bevel=0.003),
-            box(0.51, 1.80, 0.01, 0.05, 0.22, 0.19, "dark", bevel=0.003),
-            box(-0.48, 1.78, 0.01, 0.06, 0.18, 0.19, "sage", bevel=0.003),
+            # All 5 shelf tiers (left bay [-0.81..-0.012], right bay [+0.012..+0.81]) packed with books
+            *book_row(-0.80, -0.02, 0.109, seed=11, stack_end=False),
+            *book_row(0.02, 0.80, 0.109, seed=17, stack_end=True),
+            *book_row(-0.80, -0.02, 0.493, seed=23, stack_end=True),
+            *book_row(0.02, 0.80, 0.493, seed=31, stack_end=False),
+            *book_row(-0.80, -0.02, 0.893, seed=41, stack_end=False),
+            *book_row(0.02, 0.80, 0.893, seed=47, stack_end=True),
+            *book_row(-0.80, -0.02, 1.293, seed=53, stack_end=True),
+            *book_row(0.02, 0.80, 1.293, seed=61, stack_end=False),
+            *book_row(-0.80, -0.02, 1.693, seed=71, stack_end=False),
+            *book_row(0.02, 0.80, 1.693, seed=79, stack_end=True),
         ],
     ),
     "reading_chair": [
@@ -754,9 +794,38 @@ assets = {
         cyl(0, 0.005, 0, 1.64, 0.010, 1.64, "sage", sides=36),
         cyl(0, 0.0055, 0, 1.30, 0.010, 1.30, "ivory", sides=36),
     ],
+    "tv": [
+        # Two splayed stand feet grounded at y=0
+        box(-0.40, 0.010, 0.0, 0.032, 0.020, 0.22, "dark", bevel=0.004),
+        box(0.40, 0.010, 0.0, 0.032, 0.020, 0.22, "dark", bevel=0.004),
+        box(-0.40, 0.060, -0.01, 0.028, 0.09, 0.028, "steel", bevel=0.004),
+        box(0.40, 0.060, -0.01, 0.028, 0.09, 0.028, "steel", bevel=0.004),
+        # Slim display chassis, rear housing, oak chin accent, and front screen glass (+Z)
+        box(0, 0.44, -0.01, 1.22, 0.70, 0.030, "dark", bevel=0.006),
+        box(0, 0.35, -0.034, 0.74, 0.42, 0.024, "dark", bevel=0.006),
+        box(0, 0.098, 0.006, 1.22, 0.016, 0.010, "oak", bevel=0.002),
+        box(0, 0.448, 0.006, 1.18, 0.65, 0.006, "screen", bevel=0.0),
+    ],
+    "computer": [
+        # Monitor stand base & neck
+        box(0, 0.007, -0.10, 0.22, 0.014, 0.16, "steel", bevel=0.004),
+        box(0, 0.095, -0.15, 0.044, 0.17, 0.024, "steel", bevel=0.004, rx=-0.10),
+        # 27" monitor chassis + front display (+Z)
+        box(0, 0.30, -0.10, 0.62, 0.36, 0.022, "dark", bevel=0.005),
+        box(0, 0.28, -0.116, 0.32, 0.20, 0.016, "dark", bevel=0.004),
+        box(0, 0.304, -0.088, 0.59, 0.33, 0.006, "screen", bevel=0.0),
+        # Keyboard + keycaps + wireless mouse in front (+Z)
+        box(-0.04, 0.009, 0.09, 0.34, 0.014, 0.12, "steel", bevel=0.003, rx=0.05),
+        box(-0.04, 0.017, 0.09, 0.32, 0.008, 0.105, "ivory", bevel=0.002, rx=0.05),
+        cushion(0.20, 0.013, 0.09, 0.062, 0.026, 0.102, "ivory"),
+        # Compact minimalist desktop tower on the right side
+        box(0.42, 0.12, -0.06, 0.11, 0.24, 0.21, "dark", bevel=0.006),
+        box(0.42, 0.12, 0.046, 0.085, 0.21, 0.008, "oak", bevel=0.002),
+        box(0.42, 0.19, 0.051, 0.016, 0.016, 0.006, "brass", bevel=0.001),
+    ],
 }
 
-assert len(assets) == 32
+assert len(assets) == 34
 for name, parts in assets.items():
     build_asset(name, parts)
 print(f"Generated {len(assets)} beveled GLB assets in {OUT}")

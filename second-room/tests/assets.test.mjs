@@ -3,10 +3,10 @@ import assert from 'node:assert/strict';
 import { readFile, readdir } from 'node:fs/promises';
 import { layoutEntries } from '../logic.mjs';
 
-test('the furniture collection contains 32 valid grounded local GLB assets', async () => {
+test('the furniture collection contains 34 valid grounded local GLB assets', async () => {
   const dir = new URL('../assets/furniture/', import.meta.url);
   const names = (await readdir(dir)).filter(name => name.endsWith('.glb'));
-  assert.equal(names.length, 32);
+  assert.equal(names.length, 34);
 
   const referenced = new Set(
     ['work', 'guest', 'future'].flatMap(kind => layoutEntries(kind).map(entry => `${entry[0]}.glb`)),

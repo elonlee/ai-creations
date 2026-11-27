@@ -4,8 +4,11 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import {
   DOOR_DEFS,
   DOOR_HEIGHT,
+  PC_MODES,
   ROOMS,
   SCENARIOS,
+  TV_MODES,
+  WALL_ART_DEFS,
   WALL_HEIGHT,
   WALL_SEGMENTS,
   WINDOW_BOTTOM,
@@ -16,6 +19,8 @@ import {
   frameDelta,
   layoutEntries,
   lightAt,
+  nextScreenMode,
+  resolveLampState,
   staticObstaclesFromWalls,
   walkStep,
 } from './logic.mjs';
@@ -27,10 +32,13 @@ let previousFrameMs = performance.now();
 let renderer, scene, overviewCamera, walkCamera, controls;
 let activeCamera, view = 'dollhouse', scenario = 'work', selectedRoom = null;
 let introProgress = reducedMotion ? 1 : 0;
-let furnitureGroup, wallGroup, windowGroup, doorGroup, pendantGroup, ceilingGroup;
+let furnitureGroup, wallGroup, windowGroup, doorGroup, pendantGroup, ceilingGroup, wallArtGroup;
 let sun, ambient, hemi;
-const pendantBulbs = [], lampBulbs = [], shadeMaterials = [], pointLights = [], lampPointLights = [];
-const wallParts = [], windowParts = [], doors = [];
+const lamps = [], tvScreens = [], pcScreens = [], interactiveTargets = [];
+const lampOverrides = new Map();
+let lastDefaultLamps = null;
+let tvStateIndex = 1, pcStateIndex = 1;
+const wallParts = [], windowParts = [], doors = [], wallArtParts = [];
 const staticObstacles = staticObstaclesFromWalls();
 const furnitureObstacles = [];
 const keys = new Set();
@@ -180,6 +188,8 @@ function assetMaterial(name) {
       materialCache.set(name, new THREE.MeshStandardMaterial({ color: 0xe6eeea, metalness: 0.88, roughness: 0.08, envMap: createReflectionEnv(), envMapIntensity: 1.35 }));
     } else if (name === 'steel') {
       materialCache.set(name, new THREE.MeshStandardMaterial({ color: 0xc8ccca, metalness: 0.78, roughness: 0.25, envMap: createReflectionEnv(), envMapIntensity: 1.0 }));
+    } else if (name === 'screen') {
+      materialCache.set(name, new THREE.MeshStandardMaterial({ color: 0x202725, metalness: 0.42, roughness: 0.18, envMap: createReflectionEnv(), envMapIntensity: 0.9 }));
     } else if (name === 'bulb') {
       materialCache.set(name, new THREE.MeshStandardMaterial({ color: 0xfff3d1, emissive: 0xffcf82, emissiveIntensity: 0.05, roughness: 0.35 }));
     } else {
@@ -375,33 +385,426 @@ function buildArchitecture() {
   windowGroup = new THREE.Group();
   doorGroup = new THREE.Group();
   pendantGroup = new THREE.Group();
-  scene.add(wallGroup, windowGroup, doorGroup, pendantGroup);
+  wallArtGroup = new THREE.Group();
+  scene.add(wallGroup, windowGroup, doorGroup, pendantGroup, wallArtGroup);
 
   addFloor();
   addCeiling();
   for (const seg of WALL_SEGMENTS) addWallSegment(seg);
   for (const def of DOOR_DEFS) addDoor(def);
   for (const def of WINDOW_DEFS) addWindow(def);
+  for (const def of WALL_ART_DEFS) addWallArt(def);
   const threshold = box(wallGroup, -0.35, 0.008, 3.65, 0.84, 0.016, 0.18, trimMat);
   threshold.castShadow = false;
 }
 
+function artTexture(kind) {
+  const key = `art:${kind}`;
+  if (materialCache.has(key)) return materialCache.get(key);
+  const c = document.createElement('canvas');
+  c.width = 256;
+  c.height = 320;
+  const ctx = c.getContext('2d');
+
+  // Soft cream paper mat & recessed inner border
+  ctx.fillStyle = '#f4f0e6';
+  ctx.fillRect(0, 0, 256, 320);
+  const mx = 26, my = 32, mw = 204, mh = 256;
+  ctx.strokeStyle = 'rgba(130, 122, 108, 0.25)';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(mx - 1, my - 1, mw + 2, mh + 2);
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(mx, my, mw, mh);
+  ctx.clip();
+
+  if (kind === 'botanical') {
+    ctx.fillStyle = '#ebe6da';
+    ctx.fillRect(mx, my, mw, mh);
+    ctx.strokeStyle = '#5c7464';
+    ctx.lineWidth = 3.5;
+    ctx.beginPath();
+    ctx.moveTo(128, 286);
+    ctx.quadraticCurveTo(118, 175, 134, 58);
+    ctx.stroke();
+    const leaves = [
+      [126, 224, -0.7, 26, 11], [130, 198, 0.65, 25, 10],
+      [124, 168, -0.65, 28, 11], [132, 142, 0.6, 26, 10],
+      [128, 112, -0.55, 24, 9], [134, 88, 0.5, 21, 9],
+    ];
+    for (const [lx, ly, ang, rx, ry] of leaves) {
+      ctx.save();
+      ctx.translate(lx + Math.sin(ang) * 18, ly - 6);
+      ctx.rotate(ang);
+      ctx.fillStyle = '#738b7a';
+      ctx.beginPath();
+      ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  } else if (kind === 'mountain') {
+    const g = ctx.createLinearGradient(0, my, 0, my + mh);
+    g.addColorStop(0, '#eae5d8');
+    g.addColorStop(1, '#dce0d6');
+    ctx.fillStyle = g;
+    ctx.fillRect(mx, my, mw, mh);
+    ctx.fillStyle = '#d3a673';
+    ctx.beginPath();
+    ctx.arc(174, 102, 24, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#8fa092';
+    ctx.beginPath();
+    ctx.moveTo(mx, 232);
+    ctx.lineTo(86, 146);
+    ctx.lineTo(152, 206);
+    ctx.lineTo(202, 160);
+    ctx.lineTo(mx + mw, 216);
+    ctx.lineTo(mx + mw, my + mh);
+    ctx.lineTo(mx, my + mh);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#566d5e';
+    ctx.beginPath();
+    ctx.moveTo(mx, 252);
+    ctx.lineTo(116, 182);
+    ctx.lineTo(186, 230);
+    ctx.lineTo(mx + mw, 196);
+    ctx.lineTo(mx + mw, my + mh);
+    ctx.lineTo(mx, my + mh);
+    ctx.closePath();
+    ctx.fill();
+  } else if (kind === 'arch') {
+    ctx.fillStyle = '#ede7dc';
+    ctx.fillRect(mx, my, mw, mh);
+    ctx.fillStyle = '#c89b6d';
+    ctx.beginPath();
+    ctx.arc(128, 152, 62, Math.PI, 0);
+    ctx.lineTo(190, 260);
+    ctx.lineTo(66, 260);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#6f8778';
+    ctx.beginPath();
+    ctx.arc(154, 198, 42, Math.PI, 0);
+    ctx.lineTo(196, 260);
+    ctx.lineTo(112, 260);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#f4efe6';
+    ctx.beginPath();
+    ctx.arc(92, 92, 18, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (kind === 'horizon') {
+    ctx.fillStyle = '#e7e4db';
+    ctx.fillRect(mx, my, mw, mh);
+    ctx.fillStyle = '#d4aa77';
+    ctx.beginPath();
+    ctx.arc(128, 134, 34, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#7e9386';
+    ctx.fillRect(mx, 174, mw, 52);
+    ctx.fillStyle = '#d1bd9c';
+    ctx.fillRect(mx, 226, mw, 62);
+  } else if (kind === 'family_trio') {
+    const g = ctx.createLinearGradient(0, my, 0, my + mh);
+    g.addColorStop(0, '#f3e3c3');
+    g.addColorStop(0.6, '#d9decb');
+    g.addColorStop(1, '#8ea289');
+    ctx.fillStyle = g;
+    ctx.fillRect(mx, my, mw, mh);
+    // Warm sunlit meadow & three family figures holding hands
+    ctx.fillStyle = '#758b77';
+    ctx.beginPath();
+    ctx.ellipse(128, 272, 130, 56, 0, 0, Math.PI * 2);
+    ctx.fill();
+    const drawPerson = (px, py, h, bodyColor, hairColor) => {
+      ctx.fillStyle = bodyColor;
+      ctx.beginPath();
+      ctx.roundRect(px - h * 0.16, py - h * 0.62, h * 0.32, h * 0.62, 8);
+      ctx.fill();
+      ctx.fillStyle = '#ecd0b4';
+      ctx.beginPath();
+      ctx.arc(px, py - h * 0.76, h * 0.14, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = hairColor;
+      ctx.beginPath();
+      ctx.arc(px, py - h * 0.80, h * 0.14, Math.PI, 0);
+      ctx.fill();
+    };
+    drawPerson(86, 246, 98, '#536c5e', '#3a352f');
+    drawPerson(168, 246, 92, '#c89b6e', '#473a2f');
+    drawPerson(127, 250, 62, '#f2ece0', '#3a352f');
+  } else if (kind === 'family_couple') {
+    const g = ctx.createLinearGradient(0, my, 0, my + mh);
+    g.addColorStop(0, '#e8d7be');
+    g.addColorStop(1, '#c5cfbe');
+    ctx.fillStyle = g;
+    ctx.fillRect(mx, my, mw, mh);
+    ctx.fillStyle = '#f6dfb0';
+    ctx.beginPath();
+    ctx.arc(128, 126, 44, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#8b9d8b';
+    ctx.fillRect(mx, 224, mw, 64);
+    for (const [px, h, col] of [[108, 96, '#4f6458'], [148, 88, '#bf8f65']]) {
+      ctx.fillStyle = col;
+      ctx.beginPath();
+      ctx.roundRect(px - 15, 238 - h * 0.65, 30, h * 0.65, 8);
+      ctx.fill();
+      ctx.fillStyle = '#eccdb0';
+      ctx.beginPath();
+      ctx.arc(px, 238 - h * 0.79, 13, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#3b342d';
+      ctx.beginPath();
+      ctx.arc(px, 238 - h * 0.82, 13, Math.PI, 0);
+      ctx.fill();
+    }
+  } else {
+    // family_pet: warm sunny afternoon by window with potted plant & pet
+    ctx.fillStyle = '#ebe3d3';
+    ctx.fillRect(mx, my, mw, mh);
+    ctx.fillStyle = '#f9f4e4';
+    ctx.fillRect(130, 56, 72, 100);
+    ctx.strokeStyle = '#9aa896';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(130, 56, 72, 100);
+    ctx.fillStyle = '#b98f61';
+    ctx.fillRect(mx, 224, mw, 64);
+    // Child & small dog/cat silhouette
+    ctx.fillStyle = '#657d6e';
+    ctx.beginPath();
+    ctx.roundRect(78, 158, 34, 72, 8);
+    ctx.fill();
+    ctx.fillStyle = '#eccdb0';
+    ctx.beginPath();
+    ctx.arc(95, 144, 14, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#c99b6a';
+    ctx.beginPath();
+    ctx.ellipse(152, 214, 18, 12, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(168, 198, 9, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.45, metalness: 0.04 });
+  materialCache.set(key, mat);
+  return mat;
+}
+
+function addWallArt(def) {
+  const { x, y, z, w, h, rotY, kind, frame, roomId, mode } = def;
+  const g = new THREE.Group();
+  g.position.set(x, y, z);
+  g.rotation.y = rotY;
+  wallArtGroup.add(g);
+
+  const fMat = assetMaterial(frame);
+  const thick = 0.022;
+  const border = 0.026;
+  // Backboard + 4 raised frame rails + recessed artwork canvas
+  box(g, 0, 0, 0.004, w, h, 0.008, fMat, roomId);
+  box(g, 0, h / 2 - border / 2, 0.013, w, border, thick, fMat, roomId);
+  box(g, 0, -h / 2 + border / 2, 0.013, w, border, thick, fMat, roomId);
+  box(g, -w / 2 + border / 2, 0, 0.013, border, h - border * 2, thick, fMat, roomId);
+  box(g, w / 2 - border / 2, 0, 0.013, border, h - border * 2, thick, fMat, roomId);
+
+  const canvasMesh = new THREE.Mesh(new THREE.PlaneGeometry(w - border * 2, h - border * 2), artTexture(kind));
+  canvasMesh.position.set(0, 0, 0.011);
+  canvasMesh.userData.roomId = roomId;
+  g.add(canvasMesh);
+
+  wallArtParts.push({ group: g, mode, topY: y + h / 2 });
+}
+
+function screenTexture(device, modeId) {
+  const key = `screen:${device}:${modeId}`;
+  if (materialCache.has(key)) return materialCache.get(key);
+  const c = document.createElement('canvas');
+  c.width = 512;
+  c.height = 288;
+  const ctx = c.getContext('2d');
+
+  if (modeId === 'off') {
+    const g = ctx.createLinearGradient(0, 0, 512, 288);
+    g.addColorStop(0, '#252c29');
+    g.addColorStop(1, '#181e1c');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, 512, 288);
+    ctx.fillStyle = 'rgba(165, 185, 170, 0.55)';
+    ctx.beginPath();
+    ctx.arc(486, 268, 4, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (device === 'tv' && modeId === 'ambient') {
+    const g = ctx.createLinearGradient(0, 0, 0, 288);
+    g.addColorStop(0, '#e8dcc5');
+    g.addColorStop(0.55, '#cad5c7');
+    g.addColorStop(1, '#789180');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, 512, 288);
+    ctx.fillStyle = '#e8aa66';
+    ctx.beginPath();
+    ctx.arc(368, 96, 38, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#607a6a';
+    ctx.beginPath();
+    ctx.moveTo(0, 240); ctx.lineTo(130, 150); ctx.lineTo(250, 206); ctx.lineTo(395, 140); ctx.lineTo(512, 198); ctx.lineTo(512, 288); ctx.lineTo(0, 288); ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,250,242,0.85)';
+    ctx.font = '600 26px Georgia, serif';
+    ctx.fillText('14:30', 36, 56);
+  } else if (device === 'tv' && modeId === 'cinema') {
+    ctx.fillStyle = '#15181b';
+    ctx.fillRect(0, 0, 512, 288);
+    const g = ctx.createLinearGradient(0, 32, 0, 256);
+    g.addColorStop(0, '#2a3c4a');
+    g.addColorStop(0.6, '#b87c52');
+    g.addColorStop(1, '#263038');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 32, 512, 224);
+    ctx.fillStyle = '#f2c179';
+    ctx.beginPath();
+    ctx.arc(256, 152, 42, 0, Math.PI * 2);
+    ctx.fill();
+    // Cozy silhouette train / bridge across sunset sea
+    ctx.fillStyle = '#1f252b';
+    ctx.fillRect(0, 182, 512, 74);
+    ctx.fillStyle = '#2d3740';
+    ctx.fillRect(88, 148, 336, 34);
+    for (let x = 104; x < 400; x += 28) {
+      ctx.fillStyle = '#ffd58b';
+      ctx.fillRect(x, 156, 16, 14);
+    }
+  } else if (device === 'tv' && modeId === 'dashboard') {
+    ctx.fillStyle = '#232f2b';
+    ctx.fillRect(0, 0, 512, 288);
+    ctx.fillStyle = '#31423c';
+    ctx.fillRect(28, 28, 220, 232);
+    ctx.fillRect(264, 28, 220, 108);
+    ctx.fillRect(264, 152, 220, 108);
+    ctx.fillStyle = '#efe9dc';
+    ctx.font = '600 30px sans-serif';
+    ctx.fillText('22°C 晴', 54, 92);
+    ctx.font = '18px sans-serif';
+    ctx.fillStyle = '#a9bfb1';
+    ctx.fillText('第二间房 · 73㎡', 54, 134);
+    ctx.fillText('室内空气 · 优', 54, 174);
+    ctx.fillText('照明模式 · 居家', 286, 86);
+    ctx.fillText('下一日程 · 阅读', 286, 210);
+  } else if (device === 'computer' && modeId === 'desktop') {
+    const g = ctx.createLinearGradient(0, 0, 512, 288);
+    g.addColorStop(0, '#c8d6ca');
+    g.addColorStop(1, '#e6dcc9');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, 512, 288);
+    ctx.fillStyle = 'rgba(255,254,250,0.85)';
+    ctx.fillRect(54, 42, 230, 154);
+    ctx.fillRect(304, 42, 154, 110);
+    ctx.fillStyle = '#536e5d';
+    ctx.fillRect(54, 42, 230, 22);
+    ctx.fillStyle = '#c49b6c';
+    ctx.fillRect(304, 42, 154, 22);
+    ctx.fillStyle = 'rgba(255,254,250,0.88)';
+    ctx.fillRect(140, 246, 232, 28);
+    for (let i = 0; i < 5; i++) {
+      ctx.fillStyle = ['#5d7866', '#c69a68', '#7a9085', '#4c5950', '#b8b3a6'][i];
+      ctx.fillRect(156 + i * 42, 251, 22, 18);
+    }
+  } else if (device === 'computer' && modeId === 'workspace') {
+    ctx.fillStyle = '#1f2624';
+    ctx.fillRect(0, 0, 512, 288);
+    ctx.fillStyle = '#28312e';
+    ctx.fillRect(0, 0, 116, 288);
+    ctx.fillStyle = '#efeadd';
+    ctx.fillRect(300, 16, 196, 256);
+    const lines = [
+      [136, 42, 120, '#89b498'], [148, 66, 98, '#d7b482'], [148, 88, 126, '#c7d1ca'],
+      [136, 118, 112, '#89b498'], [148, 142, 134, '#c7d1ca'], [148, 164, 88, '#d7b482'],
+      [136, 196, 104, '#89b498'], [148, 220, 124, '#c7d1ca'],
+    ];
+    for (const [lx, ly, lw, col] of lines) {
+      ctx.fillStyle = col;
+      ctx.fillRect(lx, ly, lw, 9);
+    }
+    ctx.fillStyle = '#4e6c5a';
+    ctx.fillRect(318, 36, 160, 28);
+    ctx.fillStyle = '#c59c6b';
+    ctx.fillRect(318, 82, 160, 64);
+    ctx.fillStyle = '#aeb9ad';
+    ctx.fillRect(318, 164, 132, 10);
+    ctx.fillRect(318, 184, 148, 10);
+  } else {
+    // floorplan
+    ctx.fillStyle = '#294037';
+    ctx.fillRect(0, 0, 512, 288);
+    ctx.strokeStyle = 'rgba(220, 232, 222, 0.2)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < 512; x += 24) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 288); ctx.stroke(); }
+    for (let y = 0; y < 288; y += 24) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(512, y); ctx.stroke(); }
+    ctx.strokeStyle = '#efeae0';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(86, 46, 340, 200);
+    ctx.beginPath();
+    ctx.moveTo(286, 46); ctx.lineTo(286, 246);
+    ctx.moveTo(86, 148); ctx.lineTo(286, 148);
+    ctx.moveTo(186, 148); ctx.lineTo(186, 246);
+    ctx.moveTo(286, 140); ctx.lineTo(426, 140);
+    ctx.stroke();
+    ctx.fillStyle = '#d7b482';
+    ctx.font = 'bold 20px Georgia, serif';
+    ctx.fillText('73 M² PLAN', 96, 34);
+  }
+
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  materialCache.set(key, tex);
+  return tex;
+}
+
+function applyScreenMaterial(mat, device, modeId) {
+  const tex = screenTexture(device, modeId);
+  mat.map = tex;
+  if (modeId === 'off') {
+    mat.emissive.setHex(0x000000);
+    mat.emissiveMap = null;
+    mat.emissiveIntensity = 0;
+  } else {
+    mat.emissive.setHex(0xffffff);
+    mat.emissiveMap = tex;
+    mat.emissiveIntensity = 0.72;
+  }
+  mat.needsUpdate = true;
+}
+
 function addPendant(x, z, roomId, radius = 0.22) {
+  const lampId = `pendant:${roomId}`;
   const shadeMat = assetMaterial('ivory').clone();
   shadeMat.side = THREE.DoubleSide;
-  shadeMat.userData.pendant = true;
-  shadeMaterials.push(shadeMat);
+  shadeMaterials_tag(shadeMat);
+
+  const labelMap = { living: '客厅吊灯', kitchen: '餐厨吊灯', entry: '玄关吊灯', master: '主卧吊灯', flex: '第二间房吊灯' };
+  const interactive = { type: 'lamp', id: lampId, label: labelMap[roomId] || '吊灯' };
 
   const shadeWall = new THREE.Mesh(new THREE.CylinderGeometry(radius * 0.72, radius, 0.21, 28, 1, true), shadeMat);
   shadeWall.position.set(x, 2.22, z);
   shadeWall.castShadow = true;
   shadeWall.userData.roomId = roomId;
+  shadeWall.userData.interactive = interactive;
   pendantGroup.add(shadeWall);
 
   const shadeTop = new THREE.Mesh(new THREE.CircleGeometry(radius * 0.72, 28), shadeMat);
   shadeTop.rotation.x = -Math.PI / 2;
   shadeTop.position.set(x, 2.325, z);
   shadeTop.userData.roomId = roomId;
+  shadeTop.userData.interactive = interactive;
   pendantGroup.add(shadeTop);
 
   const cord = box(pendantGroup, x, 2.51, z, 0.014, 0.38, 0.014, darkMat);
@@ -416,24 +819,35 @@ function addPendant(x, z, roomId, radius = 0.22) {
     new THREE.MeshStandardMaterial({ color: 0xf4e5b8, emissive: 0xffd89b, emissiveIntensity: 0.05 }),
   );
   bulb.position.set(x, 2.18, z);
+  bulb.userData.roomId = roomId;
+  bulb.userData.interactive = interactive;
   pendantGroup.add(bulb);
-  pendantBulbs.push(bulb);
 
   const point = new THREE.PointLight(0xffd5a1, 0, 5.2, 2);
   point.position.set(x, 2.04, z);
   scene.add(point);
-  pointLights.push(point);
+
+  interactiveTargets.push(shadeWall, shadeTop, bulb);
+  lamps.push({ id: lampId, label: interactive.label, isPendant: true, point, bulbs: [bulb], shades: [shadeMat] });
+}
+
+function shadeMaterials_tag(mat) {
+  mat.userData.pendant = true;
 }
 
 function disposeFurniture() {
   if (!furnitureGroup) return;
   scene.remove(furnitureGroup);
   furnitureGroup = null;
-  lampBulbs.length = 0;
-  lampPointLights.length = 0;
-  const keptShades = shadeMaterials.filter(m => m.userData.pendant);
-  shadeMaterials.length = 0;
-  shadeMaterials.push(...keptShades);
+  for (let i = lamps.length - 1; i >= 0; i--) {
+    if (!lamps[i].isPendant) lamps.splice(i, 1);
+  }
+  tvScreens.length = 0;
+  pcScreens.length = 0;
+  interactiveTargets.length = 0;
+  pendantGroup.traverse(o => {
+    if (o.isMesh && o.userData.interactive) interactiveTargets.push(o);
+  });
 }
 
 function instantiate(name, x, z, rotation, roomId, y = 0) {
@@ -444,32 +858,56 @@ function instantiate(name, x, z, rotation, roomId, y = 0) {
   object.rotation.y = rotation;
   object.userData.roomId = roomId;
   object.userData.asset = name;
+
   const isLamp = name === 'floor_lamp' || name === 'table_lamp' || name === 'desk_lamp';
+  const lampId = isLamp ? `${name}:${roomId}` : null;
+  const lampLabel = name === 'floor_lamp' ? '落地灯' : name === 'table_lamp' ? '床头台灯' : '工作台灯';
+  const interactive = isLamp
+    ? { type: 'lamp', id: lampId, label: lampLabel }
+    : name === 'tv' || name === 'computer'
+      ? { type: 'screen', device: name }
+      : null;
+
+  const myBulbs = [];
+  const myShades = [];
   object.traverse(o => {
     if (o.isMesh) {
       o.castShadow = true;
       o.receiveShadow = true;
       o.userData.roomId = roomId;
+      if (interactive) {
+        o.userData.interactive = interactive;
+        interactiveTargets.push(o);
+      }
       if (o.material === assetMaterial('bulb')) {
         o.material = o.material.clone();
-        lampBulbs.push(o);
+        myBulbs.push(o);
       } else if (isLamp && o.material === assetMaterial('ivory')) {
         o.material = o.material.clone();
-        shadeMaterials.push(o.material);
+        myShades.push(o.material);
+      } else if (o.material === assetMaterial('screen') && (name === 'tv' || name === 'computer')) {
+        o.material = o.material.clone();
+        if (name === 'tv') {
+          applyScreenMaterial(o.material, 'tv', TV_MODES[tvStateIndex].id);
+          tvScreens.push(o.material);
+        } else {
+          applyScreenMaterial(o.material, 'computer', PC_MODES[pcStateIndex].id);
+          pcScreens.push(o.material);
+        }
       }
     }
   });
   furnitureGroup.add(object);
 
-  if (name === 'floor_lamp' || name === 'table_lamp' || name === 'desk_lamp') {
+  if (isLamp) {
     const lightY = name === 'floor_lamp' ? 1.44 : y + 0.34;
-    const lp = new THREE.PointLight(0xffd296, 0, 2.8, 2);
+    const lp = new THREE.PointLight(0xffd296, 0, 3.0, 2);
     lp.position.set(x, lightY, z);
     furnitureGroup.add(lp);
-    lampPointLights.push(lp);
+    lamps.push({ id: lampId, label: lampLabel, isPendant: false, point: lp, bulbs: myBulbs, shades: myShades });
   }
 
-  if (!['floor_lamp', 'table_lamp', 'desk_lamp', 'rug', 'round_rug', 'mirror', 'upper_cabinet'].includes(name)) {
+  if (!['floor_lamp', 'table_lamp', 'desk_lamp', 'rug', 'round_rug', 'mirror', 'upper_cabinet', 'tv', 'computer'].includes(name)) {
     object.updateMatrixWorld(true);
     const b = new THREE.Box3().setFromObject(object);
     furnitureObstacles.push({ minX: b.min.x, maxX: b.max.x, minZ: b.min.z, maxZ: b.max.z });
@@ -477,12 +915,58 @@ function instantiate(name, x, z, rotation, roomId, y = 0) {
   return object;
 }
 
+function addTablePhotoFrame(parent, x, y, z, w, h, rotY, kind, frameMatName, roomId) {
+  const g = new THREE.Group();
+  g.position.set(x, y, z);
+  g.rotation.y = rotY;
+  parent.add(g);
+
+  const fMat = assetMaterial(frameMatName);
+  const tilt = new THREE.Group();
+  tilt.position.set(0, h / 2, 0.02);
+  tilt.rotation.x = -0.14;
+  g.add(tilt);
+
+  const border = 0.016;
+  const thick = 0.014;
+  box(tilt, 0, 0, 0, w, h, 0.006, fMat, roomId);
+  box(tilt, 0, h / 2 - border / 2, 0.005, w, border, thick, fMat, roomId);
+  box(tilt, 0, -h / 2 + border / 2, 0.005, w, border, thick, fMat, roomId);
+  box(tilt, -w / 2 + border / 2, 0, 0.005, border, h - border * 2, thick, fMat, roomId);
+  box(tilt, w / 2 - border / 2, 0, 0.005, border, h - border * 2, thick, fMat, roomId);
+
+  const photo = new THREE.Mesh(new THREE.PlaneGeometry(w - border * 2, h - border * 2), artTexture(kind));
+  photo.position.set(0, 0, 0.006);
+  photo.userData.roomId = roomId;
+  tilt.add(photo);
+
+  // Rear support leg resting on cabinet top
+  const leg = box(g, 0, h * 0.28, -0.024, 0.018, h * 0.58, 0.01, fMat, roomId);
+  leg.rotation.x = 0.28;
+}
+
+function addShoeCabinetDecor(cabinetObj, roomId) {
+  // Place 3 angled standing family photo frames + a key tray atop shoe_cabinet (y = 1.00 in local space)
+  addTablePhotoFrame(cabinetObj, 0.28, 1.0, -0.02, 0.19, 0.24, -0.16, 'family_trio', 'dark', roomId);
+  addTablePhotoFrame(cabinetObj, 0.04, 1.0, 0.01, 0.16, 0.20, 0.08, 'family_couple', 'oak', roomId);
+  addTablePhotoFrame(cabinetObj, -0.19, 1.0, -0.02, 0.17, 0.21, 0.22, 'family_pet', 'oak', roomId);
+  const tray = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.072, 0.022, 20), assetMaterial('stone'));
+  tray.position.set(-0.42, 1.011, 0.01);
+  tray.castShadow = true;
+  tray.receiveShadow = true;
+  tray.userData.roomId = roomId;
+  cabinetObj.add(tray);
+}
+
 function rebuildFurniture(kind) {
   disposeFurniture();
   furnitureGroup = new THREE.Group();
   scene.add(furnitureGroup);
   furnitureObstacles.length = 0;
-  for (const e of layoutEntries(kind)) instantiate(...e);
+  for (const e of layoutEntries(kind)) {
+    const obj = instantiate(...e);
+    if (e[0] === 'shoe_cabinet' && obj) addShoeCabinetDecor(obj, e[4]);
+  }
   updateLampGlow($('#time-slider').value);
   if (!reducedMotion) {
     furnitureGroup.scale.setScalar(0.001);
@@ -500,7 +984,7 @@ function setScenario(kind) {
     btn.setAttribute('aria-pressed', active);
   });
   if (selectedRoom === 'flex') showRoom('flex');
-  $('#asset-status').textContent = `方案 ${SCENARIOS[kind].index} / 03 · 32 件本地家具模型`;
+  $('#asset-status').textContent = `方案 ${SCENARIOS[kind].index} / 03 · 34 件本地家具模型`;
 }
 
 function showRoom(id) {
@@ -632,6 +1116,10 @@ function updateWalls() {
   pendantGroup.traverse(o => {
     if (o.userData.cord) o.visible = view === 'walk';
   });
+  for (const art of wallArtParts) {
+    const cutH = cutHeightForMode(art.mode);
+    art.group.visible = cutH >= art.topY + 0.03;
+  }
 }
 
 function updateWalkLook() {
@@ -645,18 +1133,44 @@ function updateWalkLook() {
 
 function updateLampGlow(hour) {
   const state = lightAt(hour);
-  pointLights.forEach(l => (l.intensity = state.lamps ? 3.2 : 0));
-  lampPointLights.forEach(l => (l.intensity = state.lamps ? 1.8 : 0));
-  pendantBulbs.forEach(b => (b.material.emissiveIntensity = state.lamps ? 3.2 : 0.05));
-  lampBulbs.forEach(b => (b.material.emissiveIntensity = state.lamps ? 2.8 : 0.05));
-  shadeMaterials.forEach(m => {
-    m.emissive.setHex(0xffcf88);
-    m.emissiveIntensity = state.lamps ? 0.36 : 0;
-  });
+  for (const lamp of lamps) {
+    const isOn = resolveLampState(state.lamps, lampOverrides.get(lamp.id));
+    lamp.point.intensity = isOn ? (lamp.isPendant ? (state.lamps ? 3.2 : 2.5) : (state.lamps ? 2.0 : 1.8)) : 0;
+    for (const b of lamp.bulbs) b.material.emissiveIntensity = isOn ? 3.4 : 0.05;
+    for (const s of lamp.shades) {
+      s.emissive.setHex(0xffcf88);
+      s.emissiveIntensity = isOn ? 0.45 : 0;
+    }
+  }
+}
+
+function toggleLamp(id) {
+  const state = lightAt($('#time-slider').value);
+  const next = !resolveLampState(state.lamps, lampOverrides.get(id));
+  lampOverrides.set(id, next);
+  updateLampGlow($('#time-slider').value);
+  const lamp = lamps.find(l => l.id === id);
+  if (lamp) $('#asset-status').textContent = `${lamp.label}已${next ? '开启' : '关闭'}`;
+}
+
+function cycleScreen(device) {
+  if (device === 'tv') {
+    tvStateIndex = nextScreenMode(tvStateIndex, TV_MODES.length);
+    const mode = TV_MODES[tvStateIndex];
+    for (const m of tvScreens) applyScreenMaterial(m, 'tv', mode.id);
+    $('#asset-status').textContent = `电视屏幕：${mode.label}`;
+  } else {
+    pcStateIndex = nextScreenMode(pcStateIndex, PC_MODES.length);
+    const mode = PC_MODES[pcStateIndex];
+    for (const m of pcScreens) applyScreenMaterial(m, 'computer', mode.id);
+    $('#asset-status').textContent = `电脑屏幕：${mode.label}`;
+  }
 }
 
 function updateLighting(hour) {
   const state = lightAt(hour);
+  if (lastDefaultLamps !== null && lastDefaultLamps !== state.lamps) lampOverrides.clear();
+  lastDefaultLamps = state.lamps;
   document.body.classList.toggle('night-mode', state.lamps);
   const h = Number(hour), hh = Math.floor(h), mm = Math.round((h - hh) * 60).toString().padStart(2, '0');
   $('#time-output').textContent = `${hh}:${mm} ${state.label}`;
@@ -683,18 +1197,32 @@ function resize() {
   walkCamera.updateProjectionMatrix();
 }
 
+function isVisibleInTree(obj) {
+  for (let cur = obj; cur; cur = cur.parent) {
+    if (!cur.visible) return false;
+  }
+  return true;
+}
+
 function handlePick(event) {
   const rect = canvas.getBoundingClientRect();
   pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
   pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
   raycaster.setFromCamera(pointer, activeCamera);
-  const hits = raycaster.intersectObjects([doorGroup, furnitureGroup, scene], true);
+  const hits = raycaster.intersectObjects([doorGroup, furnitureGroup, pendantGroup, scene], true);
   for (const hit of hits) {
     const object = hit.object;
+    if (!isVisibleInTree(object)) continue;
     if (view === 'walk' && object.userData.door) {
       const door = object.userData.door;
       door.userData.open = !door.userData.open;
       door.rotation.y = door.userData.open ? door.userData.swing * Math.PI * 0.52 : 0;
+      return;
+    }
+    if (object.userData.interactive) {
+      const act = object.userData.interactive;
+      if (act.type === 'lamp') toggleLamp(act.id);
+      else if (act.type === 'screen') cycleScreen(act.device);
       return;
     }
     if (view !== 'walk' && object.userData.roomId) {
@@ -702,6 +1230,16 @@ function handlePick(event) {
       return;
     }
   }
+}
+
+function updateHoverCursor(event) {
+  const rect = canvas.getBoundingClientRect();
+  pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+  pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera(pointer, activeCamera);
+  const targets = view === 'walk' ? [doorGroup, ...interactiveTargets] : interactiveTargets;
+  const hits = raycaster.intersectObjects(targets, true).filter(h => isVisibleInTree(h.object));
+  canvas.style.cursor = hits.length ? 'pointer' : '';
 }
 
 function updateWalk(delta) {
@@ -737,10 +1275,12 @@ function animate() {
     introProgress = Math.min(1, introProgress + delta / 3.3);
     wallGroup.scale.y = 0.01 + 0.99 * THREE.MathUtils.smoothstep(introProgress, 0.06, 0.7);
     windowGroup.scale.y = 0.01 + 0.99 * THREE.MathUtils.smoothstep(introProgress, 0.22, 0.86);
+    if (wallArtGroup) wallArtGroup.scale.setScalar(0.001 + 0.999 * THREE.MathUtils.smoothstep(introProgress, 0.52, 0.96));
     if (furnitureGroup) furnitureGroup.scale.setScalar(0.001 + 0.999 * THREE.MathUtils.smoothstep(introProgress, 0.47, 1));
   } else {
     wallGroup.scale.y = 1;
     windowGroup.scale.y = 1;
+    if (wallArtGroup) wallArtGroup.scale.setScalar(1);
   }
   if (furnitureGroup?.userData.born && introProgress >= 1) {
     const t = Math.min(1, (performance.now() - furnitureGroup.userData.born) / 430);
@@ -771,7 +1311,7 @@ async function loadFurniture() {
     $('#loading-bar').style.width = `${Math.round(completed / names.length * 100)}%`;
     $('#loading-progress').textContent = `家具载入 ${completed} / ${names.length}`;
   }));
-  $('#asset-status').textContent = failed ? `${failed} 件家具载入失败` : '32 件本地家具模型';
+  $('#asset-status').textContent = failed ? `${failed} 件家具载入失败` : '34 件本地家具模型';
 }
 
 function bindUI() {
@@ -788,12 +1328,15 @@ function bindUI() {
     if (view === 'walk') canvas.setPointerCapture(e.pointerId);
   });
   canvas.addEventListener('pointermove', e => {
-    if (view !== 'walk' || !last) return;
-    const dx = e.clientX - last.x, dy = e.clientY - last.y;
-    walkCamera.userData.yaw -= dx * 0.004;
-    walkCamera.userData.pitch = THREE.MathUtils.clamp(walkCamera.userData.pitch - dy * 0.003, -1.2, 1.2);
-    last = { x: e.clientX, y: e.clientY };
-    updateWalkLook();
+    if (view === 'walk' && last) {
+      const dx = e.clientX - last.x, dy = e.clientY - last.y;
+      walkCamera.userData.yaw -= dx * 0.004;
+      walkCamera.userData.pitch = THREE.MathUtils.clamp(walkCamera.userData.pitch - dy * 0.003, -1.2, 1.2);
+      last = { x: e.clientX, y: e.clientY };
+      updateWalkLook();
+    } else if (!last) {
+      updateHoverCursor(e);
+    }
   });
   canvas.addEventListener('pointerup', e => {
     if (start && Math.hypot(e.clientX - start.x, e.clientY - start.y) < 5) handlePick(e);

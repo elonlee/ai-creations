@@ -1,7 +1,7 @@
 export const AREA = 73;
 
 export const ROOMS = {
-  living: { id: 'living', name: '客厅', en: 'LIVING ROOM', area: 22.7, size: '5.9 × 3.85 m', bounds: [-5, 0.9, -3.65, 0.2], items: ['三人沙发', '橡木茶几', '电视矮柜', '落地灯', '边几'] },
+  living: { id: 'living', name: '客厅', en: 'LIVING ROOM', area: 22.7, size: '5.9 × 3.85 m', bounds: [-5, 0.9, -3.65, 0.2], items: ['三人沙发', '橡木茶几', '电视矮柜', '液晶电视', '落地灯', '边几'] },
   kitchen: { id: 'kitchen', name: '餐厨', en: 'DINING & KITCHEN', area: 10.2, size: '2.9 × 3.45 m', bounds: [-5, -2.1, 0.2, 3.65], items: ['料理台', '吊柜', '四人餐桌', '餐椅 × 4'] },
   entry: { id: 'entry', name: '玄关与过道', en: 'ENTRY & HALL', area: 10.4, size: '3.0 × 3.45 m', bounds: [-2.1, 0.9, 0.2, 3.65], items: ['鞋柜', '换鞋凳', '玄关镜'] },
   master: { id: 'master', name: '主卧', en: 'MAIN BEDROOM', area: 14.5, size: '4.1 × 3.55 m', bounds: [0.9, 5, -3.65, -0.1], items: ['双人床', '床头柜 × 2', '衣柜', '台灯'] },
@@ -9,7 +9,7 @@ export const ROOMS = {
 };
 
 export const SCENARIOS = {
-  work: { name: '在家工作', en: 'WORK FROM HOME', index: '01', note: '一张宽桌、一排书架，专注与生活都有自己的位置。', items: ['工作长桌', '人体工学椅', '整墙书架', '阅读椅', '边几', '工作台灯'] },
+  work: { name: '在家工作', en: 'WORK FROM HOME', index: '01', note: '一张宽桌、一排书架，专注与生活都有自己的位置。', items: ['工作长桌', '桌面电脑', '人体工学椅', '整墙书架', '阅读椅', '边几', '工作台灯'] },
   guest: { name: '朋友留宿', en: 'FRIENDS STAY OVER', index: '02', note: '白天是会客角落，夜里铺开一张舒适的床。', items: ['沙发床', '圆形茶几', '低矮边柜', '行李架', '落地灯', '地毯'] },
   future: { name: '留给未来', en: 'ROOM TO GROW', index: '03', note: '此刻留白，让阅读、游戏和未来的想象慢慢发生。', items: ['单人床', '矮书柜', '儿童桌', '小椅子', '玩具架', '圆形地毯'] },
 };
@@ -85,11 +85,40 @@ export const DOOR_DEFS = [
   { hingeX: -0.74, hingeZ: 3.65, orientation: 'x', swing: 1, roomId: 'entry', mode: 'front', wallThick: 0.18, entrance: true },
 ];
 
+export const WALL_ART_DEFS = [
+  // Living room West wall (exterior 1.92m in dollhouse, full 2.70m in walk)
+  { x: -4.9, y: 1.44, z: -1.95, w: 0.54, h: 0.68, rotY: Math.PI / 2, kind: 'botanical', frame: 'oak', roomId: 'living', mode: 'exterior' },
+  { x: -4.9, y: 1.44, z: -1.25, w: 0.54, h: 0.68, rotY: Math.PI / 2, kind: 'mountain', frame: 'oak', roomId: 'living', mode: 'exterior' },
+  // Living room North wall family photo gallery (exterior)
+  { x: -1.0, y: 1.48, z: -3.55, w: 0.4, h: 0.48, rotY: 0, kind: 'family_couple', frame: 'oak', roomId: 'living', mode: 'exterior' },
+  { x: -0.42, y: 1.46, z: -3.55, w: 0.5, h: 0.62, rotY: 0, kind: 'family_trio', frame: 'dark', roomId: 'living', mode: 'exterior' },
+  { x: 0.16, y: 1.48, z: -3.55, w: 0.4, h: 0.48, rotY: 0, kind: 'family_pet', frame: 'oak', roomId: 'living', mode: 'exterior' },
+  // Living room South TV wall (interior, visible in walk)
+  { x: -4.22, y: 1.56, z: 0.13, w: 0.44, h: 0.56, rotY: Math.PI, kind: 'horizon', frame: 'oak', roomId: 'living', mode: 'interior' },
+
+  // Kitchen dining wall (exterior)
+  { x: -4.9, y: 1.44, z: 0.78, w: 0.44, h: 0.52, rotY: Math.PI / 2, kind: 'arch', frame: 'oak', roomId: 'kitchen', mode: 'exterior' },
+
+  // Entry hallway above bench (interior, visible in walk)
+  { x: 0.83, y: 1.48, z: 2.6, w: 0.38, h: 0.48, rotY: -Math.PI / 2, kind: 'family_trio', frame: 'oak', roomId: 'entry', mode: 'interior' },
+  { x: 0.83, y: 1.48, z: 3.1, w: 0.38, h: 0.48, rotY: -Math.PI / 2, kind: 'family_pet', frame: 'oak', roomId: 'entry', mode: 'interior' },
+
+  // Master bedroom North wall (exterior) & West wall (interior, visible in walk)
+  { x: 1.38, y: 1.48, z: -3.55, w: 0.42, h: 0.52, rotY: 0, kind: 'horizon', frame: 'oak', roomId: 'master', mode: 'exterior' },
+  { x: 0.97, y: 1.52, z: -2.65, w: 0.48, h: 0.56, rotY: Math.PI / 2, kind: 'family_couple', frame: 'dark', roomId: 'master', mode: 'interior' },
+
+  // Second room walls (visible in walk)
+  { x: 3.25, y: 1.78, z: 3.55, w: 0.42, h: 0.5, rotY: Math.PI, kind: 'family_trio', frame: 'oak', roomId: 'flex', mode: 'front' },
+  { x: 3.85, y: 1.78, z: 3.55, w: 0.42, h: 0.5, rotY: Math.PI, kind: 'botanical', frame: 'oak', roomId: 'flex', mode: 'front' },
+  { x: 0.97, y: 1.52, z: 2.75, w: 0.46, h: 0.56, rotY: Math.PI / 2, kind: 'arch', frame: 'oak', roomId: 'flex', mode: 'interior' },
+];
+
 const COMMON_FURNITURE = [
-  // Living room: sofa under North window sill (facing +Z), coffee table in center, media console on South wall (facing -Z)
+  // Living room: sofa under North window sill (facing +Z), coffee table in center, media console + TV on South wall (facing -Z)
   ['sofa', -3.1, -3.05, 0, 'living'],
   ['coffee_table', -3.1, -1.95, 0, 'living'],
   ['media_console', -3.1, -0.09, Math.PI, 'living'],
+  ['tv', -3.1, -0.06, Math.PI, 'living', 0.48],
   ['floor_lamp', -4.58, -3.15, 0, 'living'],
   ['side_table', -1.65, -3.15, 0, 'living'],
 
@@ -118,6 +147,7 @@ const COMMON_FURNITURE = [
 const SCENARIO_FURNITURE = {
   work: [
     ['desk', 3.55, 3.2, Math.PI, 'flex'],
+    ['computer', 3.5, 3.24, Math.PI, 'flex', 0.76],
     ['office_chair', 3.55, 2.48, 0, 'flex'],
     ['bookcase', 3.85, 0.15, 0, 'flex'],
     ['reading_chair', 1.56, 2.98, 2.45, 'flex'],
@@ -215,6 +245,28 @@ export function walkStep(yaw, forward, sideways, distance) {
     dx: (Math.sin(yaw) * forward - Math.cos(yaw) * sideways) * distance / norm,
     dz: (Math.cos(yaw) * forward + Math.sin(yaw) * sideways) * distance / norm,
   };
+}
+
+export const TV_MODES = [
+  { id: 'off', label: '待机息屏' },
+  { id: 'ambient', label: '日系风景壁纸' },
+  { id: 'cinema', label: '电影剧照' },
+  { id: 'dashboard', label: '家居看板' },
+];
+
+export const PC_MODES = [
+  { id: 'off', label: '待机息屏' },
+  { id: 'desktop', label: '极简桌面' },
+  { id: 'workspace', label: '代码与笔记' },
+  { id: 'floorplan', label: '73㎡ 户型图纸' },
+];
+
+export function nextScreenMode(currentIndex, total) {
+  return (currentIndex + 1) % total;
+}
+
+export function resolveLampState(defaultOn, override) {
+  return typeof override === 'boolean' ? override : defaultOn;
 }
 
 export function frameDelta(previousMs, currentMs) {
