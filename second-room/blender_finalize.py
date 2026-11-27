@@ -1,4 +1,4 @@
-"""Bevel and export the 32 generated furniture assets with Blender's glTF exporter.
+"""Weld coincident vertices, soften edges with Blender's bevel, and export the 32 GLBs.
 
 Run with Blender Python (for example the `bpy` wheel for Python 3.13):
     python blender_finalize.py
@@ -12,6 +12,7 @@ import os
 import struct
 from pathlib import Path
 
+import bmesh
 import bpy
 
 ROOT = Path(__file__).parent
@@ -29,13 +30,19 @@ for number, source in enumerate(files, 1):
     for obj in bpy.data.objects:
         if obj.type != "MESH":
             continue
-        # One bevel segment softens the edges without turning the collection
-        # into high-poly geometry. Thin pieces clamp their own bevel width.
+        # Merge coincident face corners so Blender's bevel acts on real manifold edges.
+        bm = bmesh.new()
+        bm.from_mesh(obj.data)
+        bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-4)
+        bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+        bm.to_mesh(obj.data)
+        bm.free()
+
         bevel = obj.modifiers.new("Soft edges", "BEVEL")
-        bevel.width = 0.008
+        bevel.width = 0.005
         bevel.segments = 1
         bevel.limit_method = "ANGLE"
-        bevel.angle_limit = 0.35
+        bevel.angle_limit = 0.52
         bevel.loop_slide = True
         bpy.ops.object.select_all(action="DESELECT")
         obj.select_set(True)

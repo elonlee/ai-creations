@@ -33,7 +33,7 @@ python3 second-room/generate_assets.py
 /tmp/second-room-bpy/bin/python second-room/blender_finalize.py
 ```
 
-上面的第二条命令假设已按 [GENERATION.md](GENERATION.md) 在 `/tmp/second-room-bpy` 安装 `bpy==5.2.2`。第一条命令会覆盖最终 GLB，因此要继续执行第二条命令。`node --test second-room/tests/assets.test.mjs` 会检查 32 件文件的 GLB 结构和 Blender 导出标记。
+`generate_assets.py` 使用程序化倒角几何直接生成 32 件落地对齐、流形封闭的家具 GLB，也可继续执行 `blender_finalize.py` 用 Blender 二次倒角导出。`node --test second-room/tests/assets.test.mjs` 会检查 32 件文件的 GLB 结构、材质、引用完整性与落地包围盒。
 
 木纹、布料和石材纹理由浏览器里的 Canvas 程序生成，并应用到家具模型。Three.js 0.186.1、OrbitControls 和 GLTFLoader 以本地副本提供，许可见 `vendor/LICENSE-three.txt`。页面没有外部运行时请求。
 
