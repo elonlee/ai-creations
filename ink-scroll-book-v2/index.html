@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light" data-layout="horizontal" data-mode="read">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ede8dc">
+  <meta name="description" content="《山水有归处 · 重装版》：一部以宋韵活水墨演绎的江南行旅长卷，随雨声、石桥、云壑与归舟寻得心安处。">
+  <title>山水有归处 · 松烟行旅长卷</title>
+  <link rel="preload" href="../ink-scroll-book/assets/mountains.jpg" as="image">
+  <link rel="stylesheet" href="./style.css">
+  <script type="module" src="./reader.mjs"></script>
+  <script type="module" src="./music.mjs"></script>
+</head>
+<body>
+  <svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">
+    <defs>
+      <filter id="seal-stone" x="-8%" y="-8%" width="116%" height="116%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.16" numOctaves="2" seed="11" result="noise"/>
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.35" xChannelSelector="R" yChannelSelector="G"/>
+      </filter>
+    </defs>
+  </svg>
+
+  <a class="skip-link" href="#opening">跳到正文</a>
+
+  <!-- Living Ink Panoramic Stage -->
+  <canvas id="ink-stage" aria-hidden="true"></canvas>
+  <div class="paper-grain" aria-hidden="true"></div>
+  <div class="scroll-mounting" aria-hidden="true">
+    <span class="scroll-roller scroll-roller--left"><i class="scroll-roller__jade"></i></span>
+    <span class="scroll-roller scroll-roller--right"><i class="scroll-roller__jade"></i></span>
+  </div>
+
+  <header class="site-header">
+    <div class="header-left">
+      <a class="brand" href="#opening" aria-label="山水有归处，回到卷首">
+        <span class="brand__seal" aria-hidden="true">山<br>水</span>
+        <span class="brand__name">山水有归处<small>松烟行旅 · 重装长卷</small></span>
+      </a>
+      <a class="back-gallery" href="../" title="返回作品集首页">← 画廊</a>
+    </div>
+
+    <div class="header-tools" role="toolbar" aria-label="长卷阅读工具">
+      <button type="button" class="tool-btn" data-toggle-night aria-pressed="false" title="切换晴昼宣纸 / 夜读松烟 (N)">
+        <i aria-hidden="true">☾</i><span>夜读</span>
+      </button>
+      <button type="button" class="tool-btn" data-toggle-layout aria-pressed="false" title="切换现代横排 / 古卷竖排乌丝栏 (V)">
+        <i aria-hidden="true">䷀</i><span>竖排</span>
+      </button>
+      <button type="button" class="tool-btn tool-btn--accent" data-toggle-panorama aria-pressed="false" title="收起文字，自由拖拽浏览三景长卷 (P)">
+        <i aria-hidden="true">◈</i><span>赏画</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="reading-progress" aria-hidden="true">
+    <span class="reading-progress__fill" role="progressbar" aria-label="阅读进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></span>
+  </div>
+
+  <nav class="chapter-nav" aria-label="卷目导航">
+    <ol>
+      <li><a href="#opening" aria-current="location"><span class="chapter-nav__number">一</span><span class="chapter-nav__name">入卷</span></a></li>
+      <li><a href="#rain"><span class="chapter-nav__number">二</span><span class="chapter-nav__name">听雨</span></a></li>
+      <li><a href="#bridge"><span class="chapter-nav__number">三</span><span class="chapter-nav__name">过桥</span></a></li>
+      <li><a href="#mountain"><span class="chapter-nav__number">四</span><span class="chapter-nav__name">寻山</span></a></li>
+      <li><a href="#return"><span class="chapter-nav__number">五</span><span class="chapter-nav__name">归舟</span></a></li>
+      <li><a href="#colophon"><span class="chapter-nav__number">六</span><span class="chapter-nav__name">跋</span></a></li>
+    </ol>
+  </nav>
+
+  <!-- Panorama Inspect HUD (visible only in 赏画 mode) -->
+  <aside class="panorama-hud" aria-label="全景赏画控制">
+    <div class="panorama-hud__top">
+      <div class="panorama-hud__title">
+        <span class="panorama-badge">净卷赏画</span>
+        <small>拖拽画卷或滚动滚轮横览三景 · 点击水面可生涟漪</small>
+      </div>
+      <button type="button" class="tool-btn tool-btn--accent" data-panorama-exit>返卷阅读 <span aria-hidden="true">✕</span></button>
+    </div>
+
+    <div class="panorama-hud__bottom">
+      <div class="panorama-controls">
+        <button type="button" class="pano-btn" data-panorama-prev aria-label="向左平推画卷">←</button>
+        <button type="button" class="pano-btn" data-panorama-zoom-out aria-label="缩小画卷">－</button>
+        <span class="pano-zoom-label" data-panorama-zoom-label>1.08×</span>
+        <button type="button" class="pano-btn" data-panorama-zoom-in aria-label="放大画卷">＋</button>
+        <button type="button" class="pano-btn" data-panorama-next aria-label="向右平推画卷">→</button>
+      </div>
+      <div class="panorama-minimap-wrap" title="点击缩略长卷任意位置快速跳转">
+        <canvas id="panorama-minimap" width="300" height="58" aria-label="三景拼接长卷缩略图"></canvas>
+        <div class="panorama-minimap-labels" aria-hidden="true">
+          <span>听雨石桥</span>
+          <span>群峰飞瀑</span>
+          <span>暮江归舟</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main id="book">
+    <section class="chapter chapter--opening is-visible" id="opening" aria-labelledby="opening-title">
+      <div class="chapter__inner opening-layout">
+        <div class="opening-copy">
+          <p class="eyebrow"><span class="eyebrow__line"></span> 江南山水手卷 · 壹至陆</p>
+          <p class="opening-kicker">一纸初展，云水入眼</p>
+          <h1 id="opening-title" class="opening-title">山水<span>有归处</span></h1>
+          <p class="opening-intro">总有人把远行当作答案。直到摊开一纸未干的淡墨，才发觉山在画外，人在水外，而心事早已沿着水脉，替自己寻好了落脚处。</p>
+          <div class="opening-actions">
+            <a class="ink-button" href="#rain">
+              <span>起笔入画</span>
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v17m0 0-6-6m6 6 6-6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+            <span class="opening-tip">轻点纸面可见涟漪 · 右上可切夜读、竖排与赏画</span>
+          </div>
+        </div>
+
+        <div class="scroll-clasp" aria-hidden="true">
+          <div class="title-slip"><span>山水有归处</span><i>松烟行旅记</i></div>
+          <span class="jade-knot"></span>
+        </div>
+        <p class="opening-side-note" aria-hidden="true">卷首 · 一念化山川</p>
+      </div>
+      <div class="chapter__footer"><span>UNFOLD THE HANDSCROLL</span><span class="chapter__footer-line"></span><span>壹 / 陆</span></div>
+    </section>
+
+    <section class="chapter chapter--rain" id="rain" aria-labelledby="rain-title">
+      <div class="chapter__inner chapter__inner--left">
+        <div class="story-folio">
+          <div class="chapter-heading"><span class="chapter-heading__number">贰</span><span class="chapter-heading__line"></span><span class="chapter-heading__label">听雨 · SPRING DRIZZLE</span></div>
+          <div class="story-block">
+            <span class="story-block__tag">竹檐听雨</span>
+            <h2 id="rain-title"><span class="title-line">雨先垂入翠竹间</span><span class="title-line">一点清声湿旧檐</span></h2>
+            <p class="story-block__lead">城门在身后合上时，天色刚好微潮。</p>
+            <p>起初只是几丝斜风，把柳梢吹得比人声更低。细雨织过水面，每一滴都在旧波未平处另起圆纹，像谁在素宣上轻轻点墨，不问去向，只顾晕开。</p>
+            <p>檐下立住的片刻里，平日紧攥着的许多名字和念头，竟顺着青瓦水线一并滴落。天地忽然变得极小，小到只容得下几丛翠竹，与一场不肯赶路的春雨。</p>
+            <div class="story-block__aside"><span>「</span>世界喧哗久了，原来只欠一场落进心坎的细雨。<span>」</span></div>
+          </div>
+
+          <div class="margin-note">
+            <button type="button" class="margin-note__trigger" data-margin-toggle aria-expanded="false">
+              <span class="margin-note__seal">批</span> 展读眉批 · 听竹微吟
+            </button>
+            <div class="margin-note__body" hidden>
+              <p>苏轼写「莫听穿林打叶声，何妨吟啸且徐行」。雨声本无喜悲，听得久了，连风过竹节的微响，也成了替人作答的余韵。此时可开启左下「声景」，听檐雨逐卷渐起。</p>
+            </div>
+          </div>
+
+          <a class="next-chapter" href="#bridge"><span>涉水而过 · 过桥</span><span aria-hidden="true">↓</span></a>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter chapter--bridge" id="bridge" aria-labelledby="bridge-title">
+      <div class="chapter__inner bridge-layout">
+        <div class="bridge-folio">
+          <div class="bridge-image" role="img" aria-label="细雨中的江南石拱桥，竹柳垂岸，远处村舍隐在雾中">
+            <span class="bridge-image__caption" data-bridge-caption>细雨初霁 · 石桥东望</span>
+          </div>
+          <div class="bridge-hotspots" role="group" aria-label="画境局部细观">
+            <button type="button" class="spot-chip" data-bridge-spot="willow" aria-pressed="false">柳岸细雨</button>
+            <button type="button" class="spot-chip" data-bridge-spot="arch" aria-pressed="true">石桥拱影</button>
+            <button type="button" class="spot-chip" data-bridge-spot="village" aria-pressed="false">雾中白墙</button>
+          </div>
+        </div>
+
+        <div class="bridge-copy story-folio">
+          <div class="chapter-heading"><span class="chapter-heading__number">叁</span><span class="chapter-heading__line"></span><span class="chapter-heading__label">过桥 · ACROSS THE ARCH</span></div>
+          <div class="story-block">
+            <span class="story-block__tag">石桥分水</span>
+            <h2 id="bridge-title"><span class="title-line">石桥横跨碧波前</span><span class="title-line">两岸春风一水连</span></h2>
+            <p class="story-block__lead">青石板被雨润出深色，每一步都像踩在宋画墨痕里。</p>
+            <p>站在桥脊最高处往下看，拱洞把天光裁成半轮圆月。一只乌篷船贴着水影悄悄穿过去，竹篙点破倒影的瞬间，白墙黛瓦在波纹里晃了一晃，又悄然拼回原样。</p>
+            <p>来时总以为过桥是为了告别此岸；站在桥心才明白，人一生的许多犹豫本不必急着分出前后——有些风吹过之后，桥身自会替你记住去留。</p>
+          </div>
+          <a class="next-chapter" href="#mountain"><span>沿径入岫 · 寻山</span><span aria-hidden="true">↓</span></a>
+        </div>
+      </div>
+      <span class="chapter-stamp chapter-stamp--quiet" aria-hidden="true">渡<br>心</span>
+    </section>
+
+    <section class="chapter chapter--mountain" id="mountain" aria-labelledby="mountain-title">
+      <div class="chapter__inner chapter__inner--left">
+        <div class="story-folio">
+          <div class="chapter-heading"><span class="chapter-heading__number">肆</span><span class="chapter-heading__line"></span><span class="chapter-heading__label">寻山 · INTO THE MIST</span></div>
+          <div class="story-block">
+            <span class="story-block__tag">云壑寻松</span>
+            <h2 id="mountain-title"><span class="title-line">苍崖飞瀑挂轻烟</span><span class="title-line">行到松林已忘言</span></h2>
+            <p class="story-block__lead">石阶在松影里拐过几个弯，风声便换了口音。</p>
+            <p>湿凉的苔藓爬满岩壁，远处飞瀑垂在青石之间，听不见轰鸣，只有细白的水汽顺风漫过来，洇湿衣襟。群岚一层浅似一层，浓墨在近处立住，淡墨在半空散作了烟。</p>
+            <p>人总想攀到最高处，好把整座山收进眼底。可真正立到松风底下才懂：山从不把全貌交到任何人手里，它肯留给你半段石径、几缕穿林云气，已是极大的慷慨。</p>
+          </div>
+
+          <div class="margin-note">
+            <button type="button" class="margin-note__trigger" data-margin-toggle aria-expanded="false">
+              <span class="margin-note__seal">批</span> 展读眉批 · 山不言答
+            </button>
+            <div class="margin-note__body" hidden>
+              <p>王摩诘所谓「行到水穷处，坐看云起时」。水走到尽头并不算绝境，云正是在人停下脚步的地方，才肯缓缓生出来。</p>
+            </div>
+          </div>
+
+          <a class="next-chapter" href="#return"><span>顺流而返 · 归舟</span><span aria-hidden="true">↓</span></a>
+        </div>
+      </div>
+      <div class="vertical-poem" aria-hidden="true">万壑无言处，松风替我答。</div>
+    </section>
+
+    <section class="chapter chapter--return" id="return" aria-labelledby="return-title">
+      <div class="chapter__inner chapter__inner--right">
+        <div class="story-folio story-folio--right">
+          <div class="chapter-heading"><span class="chapter-heading__number">伍</span><span class="chapter-heading__line"></span><span class="chapter-heading__label">归舟 · AT DUSK</span></div>
+          <div class="story-block">
+            <span class="story-block__tag">暮江归舟</span>
+            <h2 id="return-title"><span class="title-line">半江残照暖轻烟</span><span class="title-line">风慢孤舟水自闲</span></h2>
+            <p class="story-block__lead">日影贴近山脊，把一江水染成了温润的旧纸色。</p>
+            <p>暮色里那点淡朱红并不刺眼，只轻轻点在远峰眉梢，又在水面拖出一道细碎的金橘色波痕。芦苇在岸石旁微微低头，孤舟泊在画心偏左的地方，桨声早已收进袖底。</p>
+            <p>出发时眼里只有彼岸，回程却连水草、浅滩，以及半天不肯散去的晚霞都一一看进了怀里。原来到过最远的地方之后，最难得的不过是一叶安稳的小舟，与满江不催人的暮色。</p>
+          </div>
+
+          <div class="margin-note">
+            <button type="button" class="margin-note__trigger" data-margin-toggle aria-expanded="false">
+              <span class="margin-note__seal">批</span> 展读眉批 · 渔火微茫
+            </button>
+            <div class="margin-note__body" hidden>
+              <p>古画里留白越多，心越容易靠岸。若切至右上「夜读」，整片江面会暗作松烟青墨，只留孤舟旁一点微暖余晖，随水纹明灭。</p>
+            </div>
+          </div>
+
+          <a class="next-chapter" href="#colophon"><span>收卷作跋 · 跋</span><span aria-hidden="true">↓</span></a>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter chapter--colophon" id="colophon" aria-labelledby="colophon-title">
+      <div class="chapter__inner colophon-layout">
+        <div class="chapter-heading chapter-heading--center"><span class="chapter-heading__number">陆</span><span class="chapter-heading__line"></span><span class="chapter-heading__label">卷末 · COLOPHON</span></div>
+        <span class="colophon-mark" aria-hidden="true">归</span>
+        <h2 id="colophon-title">跋</h2>
+        <p class="colophon-quote"><span class="quote-line">山川不问行人面</span><span class="quote-line">却把雨声与晚烟</span><span class="quote-line">留到合卷眉睫间</span></p>
+        <p class="colophon-text">一卷读罢，笔墨止于留白。真正留在纸外的，是往后某个阴雨午后、某座小桥、某阵吹过窗口的风——你忽然认出，那正是画里曾走过的山水。</p>
+
+        <p class="stamped-note" data-stamped-note hidden></p>
+        <p class="stamped-date" data-stamped-date></p>
+        <div class="colophon-seal is-zhuwen" data-stamped-seal aria-label="卷末朱红印章"></div>
+
+        <!-- Interactive Seal & Keepsake Studio -->
+        <section class="colophon-studio" aria-label="自题一跋与钤印留念">
+          <div class="studio-head">
+            <span class="studio-title">余墨自题 · 钤印留念</span>
+            <small>择一方印、题一句跋，封存于本地浏览器，也可裁卷成笺</small>
+          </div>
+
+          <div class="studio-presets" role="group" aria-label="推荐印文">
+            <button type="button" class="preset-chip" data-seal-preset="山水有归" aria-pressed="true">山水有归</button>
+            <button type="button" class="preset-chip" data-seal-preset="听雨客" aria-pressed="false">听雨客</button>
+            <button type="button" class="preset-chip" data-seal-preset="云壑行" aria-pressed="false">云壑行</button>
+            <button type="button" class="preset-chip" data-seal-preset="一苇渡" aria-pressed="false">一苇渡</button>
+            <button type="button" class="preset-chip" data-seal-preset="心泊处" aria-pressed="false">心泊处</button>
+          </div>
+
+          <div class="studio-fields">
+            <label class="studio-field">
+              <span>刻一印（1–4字）</span>
+              <input type="text" maxlength="4" value="山水有归" data-seal-input placeholder="山水有归">
+            </label>
+
+            <div class="studio-field">
+              <span>印式</span>
+              <div class="radio-row">
+                <label class="radio-pill"><input type="radio" name="seal-style" value="zhuwen" checked><span>朱文印</span></label>
+                <label class="radio-pill"><input type="radio" name="seal-style" value="baiwen"><span>白文印</span></label>
+              </div>
+            </div>
+          </div>
+
+          <label class="studio-field studio-field--full">
+            <span>卷尾余韵题跋（选填）</span>
+            <input type="text" maxlength="60" data-colophon-note placeholder="题一句此时心境，如：今日听雨过桥，万念俱泊归舟">
+          </label>
+
+          <div class="studio-actions">
+            <button type="button" class="studio-btn studio-btn--primary" data-stamp-seal>钤印落纸</button>
+            <button type="button" class="studio-btn" data-export-keepsake>裁卷留笺 (PNG)</button>
+          </div>
+          <p class="studio-status" data-seal-status role="status" aria-live="polite"></p>
+
+          <div class="keepsake-preview" data-keepsake-wrap hidden>
+            <img data-keepsake-img alt="生成的《山水有归处》长卷留笺预览">
+            <a class="studio-btn studio-btn--primary" data-keepsake-download href="#" download="山水有归处-留笺.png">保存高清长卷书签</a>
+          </div>
+        </section>
+
+        <div class="colophon-footer-links">
+          <a class="back-to-top" href="#opening"><span aria-hidden="true">↑</span> 收卷重读</a>
+          <a class="compare-v1" href="../ink-scroll-book/">对比原版卷一 ↗</a>
+        </div>
+
+        <p class="music-credit">古琴演奏：Charlie Huang · <a href="https://commons.wikimedia.org/wiki/File:Guqin-Yangguan_Sandie.ogg" target="_blank" rel="noopener noreferrer">《阳关三叠》</a>、<a href="https://commons.wikimedia.org/wiki/File:Guqin-Zuiyu_Changwan.ogg" target="_blank" rel="noopener noreferrer">《醉渔唱晚》</a><br>录音转码为 MP3，按 <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 3.0</a> 使用</p>
+        <p class="colophon-credit">《山水有归处 · 重装版》 · 活水墨全景长卷电子书</p>
+      </div>
+    </section>
+  </main>
+
+  <div class="page-indicator" aria-hidden="true">
+    <span data-page-count>01</span>
+    <span class="page-indicator__slash">/</span>
+    <span>06</span>
+    <em class="page-indicator__name" data-chapter-label>入卷</em>
+  </div>
+
+  <audio data-music-audio preload="none"></audio>
+  <div class="music-player" role="group" aria-label="古琴与声景控制">
+    <div class="music-player__main">
+      <button class="music-toggle" data-music-toggle type="button" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 18.5V5.8L19 3v12.6M9 18.5c0 1.4-1.4 2.5-3.1 2.5S3 19.9 3 18.5 4.4 16 6.1 16 9 17.1 9 18.5Zm10-2.9c0 1.4-1.4 2.5-3.1 2.5S13 18 13 16.6s1.4-2.5 3.1-2.5 2.9 1.1 2.9 2.5Z" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span data-music-label>开启音乐</span>
+        <span class="music-toggle__bars" aria-hidden="true"><i></i><i></i><i></i></span>
+      </button>
+      <span class="music-player__title" data-music-title>古琴 · 阳关三叠</span>
+      <button class="music-next" data-music-next type="button" aria-label="切换下一首古琴曲" title="切换下一首古琴曲">换曲</button>
+      <button class="ambient-toggle" data-ambient-toggle type="button" aria-pressed="false" title="随章节变化细雨、松风与江波声景">声景</button>
+    </div>
+    <div class="guqin-strings" role="group" aria-label="轻拨七弦试音">
+      <button type="button" data-guqin-string="0" title="一弦 · 宫"><i></i></button>
+      <button type="button" data-guqin-string="1" title="二弦 · 商"><i></i></button>
+      <button type="button" data-guqin-string="2" title="三弦 · 角"><i></i></button>
+      <button type="button" data-guqin-string="3" title="四弦 · 徵"><i></i></button>
+      <button type="button" data-guqin-string="4" title="五弦 · 羽"><i></i></button>
+      <button type="button" data-guqin-string="5" title="六弦 · 少宫"><i></i></button>
+      <button type="button" data-guqin-string="6" title="七弦 · 少商"><i></i></button>
+    </div>
+  </div>
+
+  <span class="sr-only" data-music-status role="status" aria-live="polite"></span>
+  <span class="sr-only" data-ui-status role="status" aria-live="polite"></span>
+</body>
+</html>

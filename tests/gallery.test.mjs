@@ -12,6 +12,7 @@ const links = [
   './minigames/Solitaire.html', './minigames/Galaxian.html', './minigames/Snake.html',
   './minigames/Breakout.html', './minigames/Tetris.html', './minigames/Castlevania.html',
   './cat-music-demo/', './changfeng-zhuan-godot/web/', './godot-test/web/',
+  './ink-scroll-book-v2/',
 ];
 
 test('首页的每个作品链接都有可点击的缩略图卡片', () => {

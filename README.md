@@ -4,7 +4,7 @@
 
 ## 浏览作品首页
 
-根目录的 [index.html](index.html) 用缩略图卡片展示 17 个作品入口。前置条件是 Python 3 和现代浏览器。在仓库根目录运行：
+根目录的 [index.html](index.html) 用缩略图卡片展示 18 个作品入口。前置条件是 Python 3 和现代浏览器。在仓库根目录运行：
 
 ```sh
 python3 -m http.server 8767
@@ -23,6 +23,7 @@ python3 -m http.server 8767
 | [江南园林小景](jiangnan-garden/index.html) | 可旋转、平移和缩放视角的体素风格园林。 | 使用支持 WebGL 的浏览器打开入口页面。 |
 | [第二间房](second-room/README.md) | 73㎡ 两室一厅的三种布置方案、四种视角和日照变化。 | 查看目录中的 README，使用本地 HTTP 服务运行。 |
 | [山水有归处](ink-scroll-book/README.md) | 六段滚动叙事组成的水墨长卷电子书。 | 查看目录中的 README，使用本地 HTTP 服务阅读。 |
+| [山水有归处 · 重装版](ink-scroll-book-v2/README.md) | 活水墨全景画布、古琴七弦与声景、竖排乌丝栏及自题钤印留笺的长卷 v2。 | 查看目录中的 README，在仓库根目录启动本地 HTTP 服务阅读。 |
 | [模拟时光](simulated-days/README.md) | 在紫蓝巷陪 Miri 做饭、画画、布置小屋并认识邻居的生活模拟。 | 查看目录中的 README，使用本地 HTTP 服务运行。 |
 | [雨窗手记](rain-window/README.md) | 在雨窗前记录日常，可调夜景、雨滴、文字和雨雷声。 | 查看目录中的 README，使用本地 HTTP 服务运行。 |
 | [小小丰收](little-harvest/README.md) | 36 张原创手绘果蔬闪卡，支持滑动切换与英文发音。 | 查看目录中的 README，使用本地 HTTP 服务运行。 |
