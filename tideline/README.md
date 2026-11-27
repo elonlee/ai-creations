@@ -22,4 +22,4 @@ node --test tideline/tests/scene.test.mjs
 
 浏览器启用“减少动态效果”时，背景停止持续动画，但滚动仍会切换场景。若 Canvas 不可用，深色背景和完整叙事文字仍可阅读。
 
-提示词、制作方式和验证范围见 [GENERATION.md](GENERATION.md)。
+制作方式与验证范围见 [GENERATION.md](GENERATION.md)。

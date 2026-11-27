@@ -1,48 +1,29 @@
 # Cat Music 静态播放器制作说明
 
-这个作品把 `gamdl-player` 的音乐播放器前端改写为可以单独运行的静态页面。入口是 [index.html](index.html)，运行步骤见 [README.md](README.md)。页面中的样例资料不会访问真实音乐库。
+这个作品将 `gamdl-player` 前端播放器界面改写为可独立运行的静态演示页面。入口是 [index.html](index.html)，运行步骤见 [README.md](README.md)。页面中的示例资料仅用于界面演示，不连接真实音乐库或后端接口。
 
-## 需求与制作方式
+## 设计与实现
 
-用户的原始要求是：
+页面结构参考 `gamdl-player` 的顶部播放栏、左侧资料库、专辑网格与右侧滑出详情布局，使用原生 HTML、CSS 和 JavaScript ES 模块重新编写。封面与首页缩略图由本地 CSS 和 SVG 绘制，未使用外部图片、字体或音乐生成模型。
 
-> 帮我把这个项目的前端页面, 做为 ai-creations项目中的的一个项目, 生成静态页面, mock一些歌曲和专辑信息, 最好也能从网上找一个开放免费的mp3文件
-
-页面布局参考了 `gamdl-player` 仓库在 `0422282` 提交时的播放器：顶部播放区、左侧资料库、专辑网格和右侧滑出的详情。静态版使用原生 HTML、CSS 和 JavaScript ES 模块重新编写，没有复制原项目的打包文件，也不调用其 FastAPI 接口。四张专辑中的作品名和十首没有音频的歌曲是界面示例，不对应真实发行作品。封面和首页缩略图使用本地 CSS、SVG 绘制。
-
-初版完成后，浏览器检查发现深色模式的主标题颜色不够亮。调整了深色主题下的文字继承，再检查手机布局和专辑详情。
-
-用户随后指出静态版缺少专辑大图和播放特效。现在可以从顶部的小封面或专辑详情打开大图。大图页提供四种视觉特效和关闭选项；动画随真实录音的播放、暂停切换。特效使用 CSS 绘制，不读取音频频谱。没有录音的示例专辑只展示大图。
-
-用户又指出播放列表的状态图标和样式与原版不同。检查发现，静态版刷新播放按钮时也重写了待播列表条目，导致曲名和封面消失。现在只更新真正的播放按钮。歌曲列表与待播列表参考原版 `PlayingIndicator`，用三根红色短条表示当前曲目；播放时跳动，暂停时静止。当前行使用中性底色，待播列表的其他曲目显示序号。
-
-用户随后要求去掉歌曲行右侧的播放与暂停按钮，改为双击歌曲行切换状态。真实歌曲行现在只保留收藏按钮；示例歌曲仍显示“仅展示”。双击收藏按钮不会触发歌曲播放；双击没有音频的示例歌曲会提示无法播放。
-
-用户接着要求增加可切换的实时频谱和波形。现在保留原有四种 CSS 动画，并加入两种读取音频的画布特效。浏览器的 `AnalyserNode` 在本地提供频域和时域采样；画布最多每秒绘制 30 帧，暂停、关闭大图或切走标签页时停止绘制。首次选择实时模式后，音频会经过 Web Audio 节点再送到扬声器。音频数据不会上传。
-
-用户随后要求把当前播放器布局同步到静态版。顶部区域现在按原项目的顺序排列品牌、播放控制、当前曲目和工具按钮。封面、曲名与进度条组成同一组；播放时在曲名下方绘制小频谱，悬停或键盘聚焦时显示歌手与专辑。静态版沿用已有的音频分析节点，切换封面大图时只绘制大图特效，关闭大图后恢复小频谱。手机窄屏把曲目信息移到第二行。
-
-代码、示例资料、SVG 插画和本文档由 Codex（基于 GPT-6）辅助完成。当前会话没有可核验的模型变体 ID 或推理参数，因此不标注更具体的模型名称。设计检查参考了本地 `ui-ux-pro-max` 技能；音频检索使用公开网页资料。没有使用图像生成模型或音乐生成模型。
+- 专辑大图页提供四种 CSS 视觉特效与两种基于 Web Audio API `AnalyserNode` 的本地实时频谱/波形特效，支持在播放时驱动顶部小频谱或封面大图动效（最多 30fps，暂停或关闭时停止绘制）。
+- 播放控制支持双击歌曲行播放/暂停、收藏、搜索、深浅主题切换及待播列表状态指示；收藏与主题保存在本地 `localStorage`。
 
 ## 音频来源
 
 | 本地文件 | 来源与授权 | 处理 |
 | --- | --- | --- |
-| `assets/chopin-waltz.mp3` | [WaltzB.46InEFlatMajor.mp3](https://commons.wikimedia.org/wiki/File:WaltzB.46InEFlatMajor.mp3)，Wikimedia Commons 页面标为 CC0 1.0；页面写明作品来自 Musopen，曲作者为 Frédéric Chopin，未明确标出演奏者。 | 从 Wikimedia Commons 下载原 MP3，未编辑；时长约 2 分 24 秒，SHA-256：`48d13922cda2c73c0272afe4bdc0ffe10fad6070219d0f3bd21bcb7fcabc5615`。 |
-| `assets/shumi-marista-piano.mp3` | [Shumi-Marista Piano Instrumental.ogg](https://commons.wikimedia.org/wiki/File:Shumi-Marista_Piano_Instrumental.ogg)，Parchokhalq 自行上传并标为 CC0 1.0。 | 下载原 Ogg 后用 `ffmpeg -codec:a libmp3lame -b:a 160k` 转成 MP3；时长约 48 秒，SHA-256：`ceda33991682059e037241e24d73ae7df7842b0162492c73a8b4c0096b4faaed`。 |
+| `assets/chopin-waltz.mp3` | [WaltzB.46InEFlatMajor.mp3](https://commons.wikimedia.org/wiki/File:WaltzB.46InEFlatMajor.mp3)，Wikimedia Commons 页面标为 CC0 1.0；作品来自 Musopen，曲作者为 Frédéric Chopin。 | 从 Wikimedia Commons 下载原 MP3，未编辑；时长约 2 分 24 秒，SHA-256：`48d13922cda2c73c0272afe4bdc0ffe10fad6070219d0f3bd21bcb7fcabc5615`。 |
+| `assets/shumi-marista-piano.mp3` | [Shumi-Marista Piano Instrumental.ogg](https://commons.wikimedia.org/wiki/File:Shumi-Marista_Piano_Instrumental.ogg)，Parchokhalq 上传并标为 CC0 1.0。 | 下载原 Ogg 后用 `ffmpeg -codec:a libmp3lame -b:a 160k` 转成 MP3；时长约 48 秒，SHA-256：`ceda33991682059e037241e24d73ae7df7842b0162492c73a8b4c0096b4faaed`。 |
 
-CC0 是作者在来源页声明放弃相关权利的开放许可。这里仍保留来源链接，方便核对录音和授权。第二首的本地 MP3 是格式转换结果，不是新创作的录音。页面不会向 Wikimedia Commons 实时请求音频。
+页面仅读取上述本地 MP3 文件，不向 Wikimedia Commons 实时请求音频。
 
 ## 文件与限制
 
-- [model.mjs](model.mjs) 保存专辑、歌曲、搜索、切歌与特效切换规则；[visualizer.mjs](visualizer.mjs) 计算频谱柱高和波形坐标；[app.mjs](app.mjs) 负责界面、浏览器音频控制和画布绘制。
-- 收藏和主题只存在当前浏览器的 `localStorage`；不同设备之间不会同步。
-- 真实录音只有两首，其他歌曲不能播放。静态版没有 Apple Music 下载、文件扫描、歌词、播放列表同步或后端 API。
-- 浏览器可能限制未由用户主动触发的播放。需要双击歌曲行或使用播放器控制后才会发声。
-- 实时频谱和波形需要浏览器支持 Web Audio API。前四种 CSS 动画不读取音频数据。
+- [model.mjs](model.mjs) 管理专辑、歌曲、搜索、切歌与特效状态；[visualizer.mjs](visualizer.mjs) 计算频谱柱高与波形坐标；[app.mjs](app.mjs) 负责界面渲染、音频播放与画布绘制。
+- 真实录音仅两首，其余专辑与曲目为界面示例，无法播放；不包含下载、文件扫描、歌词或后端服务。
+- 需通过点击播放按钮或双击曲目触发播放以符合浏览器自动播放限制；实时频谱需浏览器支持 Web Audio API。
 
 ## 验证
 
-`node --test cat-music-demo/tests/*.test.mjs tests/gallery.test.mjs` 检查资料关联、音频文件、搜索、切歌、播放列表状态、特效切换、顶部布局和音频数据映射。`node --check` 检查三个模块语法。
-
-以本地 HTTP 服务打开页面后，已在浏览器验证两首本地 MP3 能播放并切换，双击歌曲行能播放和暂停。专辑详情、歌曲列表和收藏列表均无行尾播放按钮。原有四种特效仍可切换；实时频谱和波形在播放时画布内容持续变化，暂停后保持静止。示例专辑的大图页不显示播放控制。之前还验证过专辑详情关闭后列表位置不变、375px 手机宽度没有横向溢出，以及浅色和深色模式可读。浏览器控制台未见脚本错误。这些检查不覆盖不同浏览器和所有设备。
+`node --test cat-music-demo/tests/*.test.mjs tests/gallery.test.mjs` 检查资料关联、音频文件、搜索、切歌、播放列表状态、特效切换、顶部布局与音频数据映射；`node --check` 检查三个模块语法。此前已在本地 HTTP 服务下完成双曲播放切换、特效切换、浅深主题对比度与 375px 窄屏无横向溢出验证，控制台无报错。

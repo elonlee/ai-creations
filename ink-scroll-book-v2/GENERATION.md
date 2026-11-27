@@ -2,13 +2,6 @@
 
 本目录为《山水有归处》的 v2 重装版本，保留原版 [`../ink-scroll-book/`](../ink-scroll-book/README.md) 完整不动，重新构建了活水墨全景画布、三种阅读模式、七弦拨韵与山川声景、以及自题钤印留笺功能。
 
-## 用户提示词
-
-> 看一下山水有归处这个项目, 如果让你来重装, 你会给我什么惊喜? 重做一份我看看
-> 保留原来的版本, 新建一个v2版本
-> 可以把整体文案重新生成吗? 不用参考原文, 就用你擅长的风格和理解
-> 每卷首的标题, 是不是可以优化一下排版和文字. 比如对齐和押韵
-
 ## 技术构成与文件说明
 
 - [index.html](index.html)：长卷语义结构、SVG 印石滤镜、装裱轴头、工具栏、净卷赏画 HUD、过桥画境细观、卷末自题钤印工坊与七弦琴匣。
@@ -20,7 +13,7 @@
 
 ## 素材复用
 
-页面直接复用 `../ink-scroll-book/assets/` 中的三幅水墨画（`mountains.jpg`、`rain-bridge.jpg`、`return-boat.jpg`）和两段 Charlie Huang 古琴录音（`yangguan-sandie.mp3`、`zuiyu-changwan.mp3`，按 CC BY-SA 3.0 使用）。画作与录音生成与来源记录详见 [../ink-scroll-book/GENERATION.md](../ink-scroll-book/GENERATION.md)。
+页面直接复用 `../ink-scroll-book/assets/` 中的三幅水墨画（`mountains.jpg`、`rain-bridge.jpg`、`return-boat.jpg`）和两段 Charlie Huang 古琴录音（`yangguan-sandie.mp3`、`zuiyu-changwan.mp3`，按 CC BY-SA 3.0 使用）。画作与录音生成和来源记录详见 [../ink-scroll-book/GENERATION.md](../ink-scroll-book/GENERATION.md)。
 
 ## 测试验证
 

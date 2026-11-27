@@ -20,12 +20,12 @@
   "layoutEdits": [
     {
       "key": "hero_v2",
-      "path": "/Users/elon/.codex/generated_images/01a14956-db73-7d31-9c3c-e11c833c3cd9/exec-73be9bea-207d-4973-a9d1-a8efe6f68180.png",
+      "path": "exec-73be9bea-207d-4973-a9d1-a8efe6f68180.png",
       "prompt": "Edit this production sprite atlas. Preserve character identity, the detailed pixel art, the NORTHWEST facing camera and the eight poses, but FIX THE GRID LAYOUT for game use. Output a WIDE 2:1 image with exactly FOUR columns and TWO rows of EQUAL SQUARE cells, e.g. 2048x1024 with 512x512 cells. EACH entire character including weapon must fit inside its OWN square cell. Leave a completely empty transparent gutter of at least 40 pixels on every cell edge. Do not allow any part of a sword, robe, ponytail or arm to overlap a neighboring cell. All eight people are the SAME SCALE, body height about 320 pixels in a512cell. Feet at cell-local(256,448). Do not draw grids or text. Keep 4x2 row-major order: ready, crouch anticipation, running step, overhead windup / committed slash lunging northwest, follow-through recovery, spellcast sword mudra, hurt recoil. Keep crisp detailed 1995 DOS pixel art, slender adult proportion, rear three-quarter view with white-blue hanfu and black ponytail. Transparent background. The ONLY required change is even grid placement, ample clear gutters, consistent scale and feet alignment."
     },
     {
       "key": "enemy_v2",
-      "path": "/Users/elon/.codex/generated_images/01a14956-db73-7d31-9c3c-e11c833c3cd9/exec-60287c1e-f813-45aa-b538-eac5360696dc.png",
+      "path": "exec-60287c1e-f813-45aa-b538-eac5360696dc.png",
       "prompt": "Edit this game enemy atlas to fix spacing ONLY. Preserve this exact detailed stone-and-root guardian identity, pixel art textures, four poses, southeast facing isometric camera. EXACTLY TWO COLUMNS and TWO ROWS of equal square cells on a square PNG. Shrink each complete creature including arms antlers and toes to fit within the central 78% of its own cell, leaving wide fully transparent gutters all around every cell. At1024x1024 each512cell: feet centered at x256 y450, same scale in allframes, tallest horn y70. No creature may touch or cross the horizontal/vertical boundary between cells. Row-major idle, raised throwing arm / hurt recoil, kneeling defeat. True alpha background, no drawn grid, no labels, no scenery. This is an atlas layout correction, not a new creature."
     }
   ],
