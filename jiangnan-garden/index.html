@@ -24,11 +24,16 @@
   h1{font-family:"Songti SC","STSong","Noto Serif CJK SC",serif;font-size:34px;font-weight:500;letter-spacing:.12em;line-height:1.22;margin:0 0 8px}.roman{font-family:Georgia,serif;font-size:11px;letter-spacing:.22em;color:#89978d;margin:0 0 20px}.intro{font-size:12px;color:#68776f;line-height:1.85;margin:0 0 20px;max-width:240px}
   .divider{height:1px;background:var(--line);margin-bottom:18px}.section-title{font-size:11px;letter-spacing:.19em;font-weight:700;color:#71857a;margin:0 0 11px}.button-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.button-grid button{min-height:40px;border:1px solid #cad5cb;background:rgba(255,253,248,.92);border-radius:7px;color:#334c40;font-size:12px;font-weight:600;cursor:pointer;transition:background .2s,border-color .2s,box-shadow .2s;white-space:nowrap}.button-grid button:hover{background:#eaf1ea;border-color:#799887;box-shadow:0 3px 10px rgba(42,80,59,.07)}.button-grid button:focus-visible{outline:2px solid #31584d;outline-offset:2px}.button-grid button.wide{grid-column:span 2;background:#31584d;color:white;border-color:#31584d}.button-grid button.wide:hover{background:#26473c}.button-grid button:active{transform:translateY(1px)}
   .shortcut{margin-top:20px;border-top:1px solid var(--line);padding-top:16px}.hint{display:grid;grid-template-columns:70px 1fr;gap:7px;font-size:11px;color:#75827a;line-height:1.65;margin:4px 0}.hint strong{color:#385448;font-weight:600}.foot{margin-top:auto;padding-top:20px;font-family:Georgia,serif;font-size:10px;letter-spacing:.13em;color:#9aa99d}
-  .scene-label{position:absolute;z-index:3;right:32px;top:25px;text-align:right;pointer-events:none}.scene-label b{display:block;font-size:11px;letter-spacing:.23em;color:#7b8e82}.scene-label span{display:block;font-family:Georgia,serif;font-size:11px;letter-spacing:.1em;color:#9aa89f;margin-top:5px}.badge{position:absolute;z-index:3;right:27px;bottom:24px;background:rgba(248,250,246,.82);border:1px solid #dce5db;border-radius:20px;padding:8px 13px;color:#60766a;font-size:11px;backdrop-filter:blur(8px);pointer-events:none}
+  .time-switch{position:absolute;z-index:4;right:27px;top:24px;display:flex;gap:3px;padding:3px;border:1px solid #ced8cf;border-radius:999px;background:#f5f7f1;box-shadow:0 4px 16px rgba(25,39,37,.14)}
+  .time-switch button{min-width:64px;min-height:44px;padding:0 12px;border:0;border-radius:999px;background:transparent;color:#394f43;font:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:background .2s,color .2s}
+  .time-switch button:hover{background:#e0e9df}.time-switch button[aria-pressed="true"]{background:#31584d;color:#fff}.time-switch button[data-time="night"][aria-pressed="true"]{background:#293b56}
+  .time-switch button[data-time="morning"][aria-pressed="true"]{background:#82523c}
+  .time-switch button:focus-visible{outline:2px solid #31584d;outline-offset:2px}
+  .badge{position:absolute;z-index:3;right:27px;bottom:24px;background:rgba(248,250,246,.94);border:1px solid #dce5db;border-radius:20px;padding:8px 13px;color:#40584b;font-size:12px;backdrop-filter:blur(8px);pointer-events:none}
   #error{display:none;position:absolute;inset:0;align-items:center;justify-content:center;padding:30px;text-align:center;color:#6f4235;font-size:15px;background:#e8ebe8}
-  @media(max-width:700px){.panel{left:12px;right:12px;top:auto;bottom:12px;width:auto;height:auto;max-height:244px;padding:14px 16px 16px;box-shadow:0 12px 32px rgba(38,54,48,.14)}.panel.is-hidden{transform:translateY(calc(100% + 24px))}.panel-top{margin-bottom:8px}.eyebrow span:last-child,.roman,.intro,.divider,.shortcut,.foot{display:none}h1{font-size:21px;margin:0 0 10px}.section-title{margin:0 0 8px}.button-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.button-grid button{min-height:38px;font-size:11px;padding:0 2px}.button-grid button.wide{grid-column:span 2}.panel-tab{left:14px;top:auto;bottom:16px;transform:translateY(8px)}.panel-tab.is-visible{transform:translateY(0)}.scene-label{right:17px;top:16px}.badge{right:14px;bottom:18px;font-size:10px}}
+  @media(max-width:700px){.panel{left:12px;right:12px;top:auto;bottom:12px;width:auto;height:auto;max-height:244px;padding:14px 16px 16px;box-shadow:0 12px 32px rgba(38,54,48,.14)}.panel.is-hidden{transform:translateY(calc(100% + 24px))}.panel-top{margin-bottom:8px}.eyebrow span:last-child,.roman,.intro,.divider,.shortcut,.foot{display:none}h1{font-size:21px;margin:0 0 10px}.section-title{margin:0 0 8px}.button-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.button-grid button{min-height:38px;font-size:11px;padding:0 2px}.button-grid button.wide{grid-column:span 2}.panel-tab{left:14px;top:auto;bottom:16px;transform:translateY(8px)}.panel-tab.is-visible{transform:translateY(0)}.time-switch{right:14px;top:14px}.badge{right:14px;bottom:auto;top:72px}}
   @media(max-width:390px){.button-grid button{font-size:10px}}
-  @media(prefers-reduced-motion:reduce){.panel,.panel-tab,.panel-ctrl,.button-grid button{transition:none}}
+  @media(prefers-reduced-motion:reduce){.panel,.panel-tab,.panel-ctrl,.button-grid button,.time-switch button{transition:none}}
 </style>
 </head>
 <body>
@@ -52,10 +57,15 @@
     <button type="button" data-action="up">视角上抬</button><button type="button" data-action="down">视角下俯</button>
     <button type="button" class="wide" data-action="pitch">默认俯仰</button>
   </div>
-  <div class="shortcut"><p class="section-title">自由漫游 / EXPLORE</p><div class="hint"><strong>左键拖拽</strong><span>旋转与俯仰</span></div><div class="hint"><strong>右键拖拽</strong><span>平移画面</span></div><div class="hint"><strong>滚动滚轮</strong><span>放大与缩小</span></div></div>
+  <div class="shortcut"><p class="section-title">自由漫游 / EXPLORE</p><div class="hint"><strong>左键拖拽</strong><span>旋转与俯仰</span></div><div class="hint"><strong>右键拖拽</strong><span>画面跟随鼠标</span></div><div class="hint"><strong>滚动滚轮</strong><span>放大与缩小</span></div></div>
   <div class="foot">江南园林 · VOXEL STUDY / 001</div>
 </aside>
-<div class="scene-label"><b>四时有景 · 步移景异</b><span>JIANGNAN GARDEN</span></div><div class="badge">俯瞰模式 · 拖动探索</div>
+<div class="time-switch" role="group" aria-label="庭院时段">
+  <button type="button" data-time="morning" aria-pressed="false">清晨</button>
+  <button type="button" data-time="noon" aria-pressed="true">正午</button>
+  <button type="button" data-time="night" aria-pressed="false">夜晚</button>
+</div>
+<div class="badge">点按正屋木门、池水、石灯</div>
 <div id="error">当前浏览器无法显示 3D 场景。请使用支持 WebGL 的浏览器打开此文件。</div>
 <script>
 console.warn('Scripts "build/three.js" and "build/three.min.js" are deprecated with r150+, and will be removed with r160. Please use ES Modules or alternatives: https://threejs.org/docs/index.html#manual/en/introduction/Installation'),
@@ -82,14 +92,55 @@ renderer.toneMappingExposure=1.18;
 renderer.shadowMap.enabled=true;
 renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 host.appendChild(renderer.domElement);
-const scene=new THREE.Scene();scene.background=new THREE.Color(0xe8ebe8);
-const ambient=new THREE.HemisphereLight(0xf9fcff,0x849789,1.23);scene.add(ambient);
-const sun=new THREE.DirectionalLight(0xffedcf,2.1);sun.position.set(-10,20,13);sun.castShadow=true;
+const scene=new THREE.Scene();scene.background=new THREE.Color();
+const ambient=new THREE.HemisphereLight();scene.add(ambient);
+const sun=new THREE.DirectionalLight();sun.castShadow=true;
 sun.shadow.mapSize.set(2048,2048);
 sun.shadow.camera.left=-14;sun.shadow.camera.right=14;sun.shadow.camera.top=13;sun.shadow.camera.bottom=-13;
 sun.shadow.camera.near=1;sun.shadow.camera.far=44;sun.shadow.bias=-0.00025;sun.shadow.normalBias=.012;sun.shadow.radius=2.6;
 sun.target.position.set(0,0,0);scene.add(sun.target);scene.add(sun);
-const fill=new THREE.DirectionalLight(0xd9e8ef,.32);fill.position.set(10,8,-10);scene.add(fill);
+const fill=new THREE.DirectionalLight();fill.position.set(10,8,-10);scene.add(fill);
+const lightColors=[scene.background,ambient.color,ambient.groundColor,sun.color,fill.color];
+function lighting(colors,position,ambient,key,fill,lantern){
+ return {colors:colors.map(hex=>new THREE.Color(hex)),position:new THREE.Vector3(...position),ambient,key,fill,lantern};
+}
+// Colors are background, sky, ground, main light and fill in that order.
+const timeLighting={
+ morning:lighting([0xe9ded2,0xfff1df,0x9a8878,0xffc889,0xe5eafa],[-17,11,12],.94,1.85,.24,0),
+ noon:lighting([0xe8ebe8,0xf9fcff,0x849789,0xfff3dc,0xd9e8ef],[-6,24,7],1.23,2.1,.32,0),
+ night:lighting([0x172439,0x9ebcf7,0x61768e,0xb7ceff,0x7eacf2],[13,15,-10],.48,.64,.17,1),
+};
+const lerp=THREE.MathUtils.lerp;
+const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
+let timeOfDay='noon',transitionProgress=1,lanternLevel=0;
+let fromLighting=timeLighting.noon;
+function applyLighting(from,to,blend){
+ lightColors.forEach((color,index)=>color.lerpColors(from.colors[index],to.colors[index],blend));
+ ambient.intensity=lerp(from.ambient,to.ambient,blend);
+ sun.intensity=lerp(from.key,to.key,blend);
+ if(blend===1)sun.position.copy(to.position);
+ else sun.position.lerpVectors(from.position,to.position,blend);
+ fill.intensity=lerp(from.fill,to.fill,blend);
+ lanternLevel=lerp(from.lantern,to.lantern,blend);
+}
+applyLighting(fromLighting,fromLighting,1);
+const timeButtons=document.querySelectorAll('[data-time]');
+for(const button of timeButtons)button.addEventListener('click',()=>{
+ if(button.dataset.time===timeOfDay)return;
+ fromLighting={
+  colors:lightColors.map(color=>color.clone()),position:sun.position.clone(),
+  ambient:ambient.intensity,key:sun.intensity,fill:fill.intensity,lantern:lanternLevel,
+ };
+ timeOfDay=button.dataset.time;
+ transitionProgress=0;
+ for(const option of timeButtons)option.setAttribute('aria-pressed',String(option===button));
+});
+function updateLighting(delta){
+ if(transitionProgress===1)return;
+ transitionProgress=reducedMotion.matches?1:Math.min(transitionProgress+delta/1.25,1);
+ applyLighting(fromLighting,timeLighting[timeOfDay],THREE.MathUtils.smoothstep(transitionProgress,0,1));
+}
+
 const C={base:0xd5dad2,baseEdge:0xbfc9bf,lawn:0x8fa989,lawn2:0x91aa8a,path:0xd8d2c0,path2:0xc3bdaa,wall:0xf5f1e8,wallShade:0xe3e0d7,tile:0x303c3c,tileLight:0x405052,wood:0x624b3d,woodDark:0x46372e,water:0x679c9b,water2:0x83b7b0,waterDark:0x4f8587,stone:0x92988a,stone2:0xb3b4a5,leaf:0x547e57,leaf2:0x759765,leaf3:0x385e49,bamboo:0x5c9060,peach:0xe7aabb,peachLight:0xf4c5cf,peachDeep:0xd88fa3,lotus:0xf3dfe3,paper:0xf2ebd9,lantern:0xf5d696};
 const mats=new Map(),geos=new Map();
 function mat(c,opacity=1){const key=c+':'+opacity;if(!mats.has(key))mats.set(key,new THREE.MeshLambertMaterial({color:c,transparent:opacity<1,opacity,depthWrite:opacity===1}));return mats.get(key)}
@@ -151,9 +202,42 @@ box(0,0.148,6.55,1.54,0.096,0.64,C.path);
 box(0,0.06,6.81,1.66,0.12,0.24,C.stone2);
 
 // Main House (rear-left): 3-bay timber frame, stepped gable infill, watertight double-slope roof.
+const doorHinges=[];
+let doorOpen=false;
+function houseDoors(cx,z,width){
+ const doors=new THREE.Group();
+ doors.name='house-doors';
+ doors.position.set(cx,0,z);
+ doors.userData.activate=()=>{doorOpen=!doorOpen};
+ scene.add(doors);
+ for(const side of [-1,1]){
+  groupBox(doors,side*width/2,1.22,.035,.10,1.66,.14,C.woodDark);
+  const hinge=new THREE.Group();
+  hinge.position.x=side*(width/2-.026);
+  doors.add(hinge);
+  doorHinges.push({hinge,openAngle:side*1.66});
+  const leafX=-side*(width/4-.026);
+  groupBox(hinge,leafX,1.20,.049,width/2-.046,1.52,.10,C.wood);
+  for(const y of [.58,1.49,1.84])groupBox(hinge,leafX,y,.108,width/2-.046,.078,.035,C.woodDark);
+  groupBox(hinge,leafX,1.67,.104,width/2-.12,.26,.026,0x927964);
+  for(const dx of [-.11,0,.11])groupBox(hinge,leafX+dx,1.67,.124,.027,.26,.024,C.woodDark);
+  groupBox(hinge,side*(.10-width/2),1.10,.132,.062,.095,.05,0xdfba70);
+ }
+ groupBox(doors,0,2.01,.035,width+.10,.11,.14,C.woodDark);
+ groupBox(doors,0,.378,.035,width,.055,.19,C.woodDark);
+ // Recessed floor and back are reachable even when both leaves swing away.
+ groupBox(doors,0,.37,-.33,width,.05,.68,C.wood);
+ groupBox(doors,0,1.22,-.67,width,1.74,.04,0x4e4136);
+}
 function house(cx,cz,w,d){
+ const doorWidth=1.08,frontZ=cz+d/2,recess=.72,sideWallWidth=(w-doorWidth)/2;
  box(cx,0.23,cz,w+.44,0.26,d+.44,C.stone2);
- box(cx,1.28,cz,w,1.84,d,C.wall);
+ box(cx,1.28,cz-recess/2,w,1.84,d-recess,C.wall);
+ for(const side of [-1,1]){
+  box(cx+side*(doorWidth/2+sideWallWidth/2),1.28,frontZ-recess/2,sideWallWidth,1.84,recess,C.wall);
+  box(cx+side*(doorWidth/2+sideWallWidth/2),.41,frontZ-.02,sideWallWidth+.08,.12,.20,C.wood);
+ }
+ box(cx,2.10,frontZ-recess/2,doorWidth,.20,recess,C.wall);
  // Four front & rear timber columns forming 3 bays + side pilasters.
  const bay=w/3-0.14;
  for(const x of [cx-w/2+0.14,cx-bay/2,cx+bay/2,cx+w/2-0.14]){
@@ -164,7 +248,8 @@ function house(cx,cz,w,d){
   }
  }
  for(const sx of [-1,1])box(cx+sx*(w/2-0.01),1.26,cz,0.15,1.80,0.15,C.woodDark);
- for(const z of [cz-d/2+0.02,cz+d/2-0.02]){box(cx,2.17,z,w+.16,0.14,0.18,C.woodDark);box(cx,0.41,z,w+.16,0.12,0.20,C.wood)}
+ for(const z of [cz-d/2+0.02,frontZ-0.02])box(cx,2.17,z,w+.16,0.14,0.18,C.woodDark);
+ box(cx,.41,cz-d/2+.02,w+.16,.12,.20,C.wood);
  for(const x of [cx-w/2+0.02,cx+w/2-0.02])box(x,2.19,cz,0.18,0.14,d+.04,C.woodDark);
  // Lattice windows on left/right front bays, plus back & east courtyard windows.
  function latticeWindow(wx,wy,wz,alongX=true){
@@ -187,11 +272,7 @@ function house(cx,cz,w,d){
  latticeWindow(cx+1.45,1.38,cz-d/2-0.02,true);
  latticeWindow(cx+w/2+0.02,1.36,cz-0.38,false);
  // Center double doors & front stone steps.
- box(cx,1.15,cz+d/2+0.04,1.14,1.54,0.10,C.woodDark);
- box(cx-0.25,1.13,cz+d/2+0.065,0.48,1.42,0.07,C.wood);
- box(cx+0.25,1.13,cz+d/2+0.065,0.48,1.42,0.07,C.wood);
- box(cx-0.07,1.10,cz+d/2+0.11,0.05,0.09,0.04,0xd4b26b);
- box(cx+0.07,1.10,cz+d/2+0.11,0.05,0.09,0.04,0xd4b26b);
+ houseDoors(cx,frontZ,doorWidth);
  box(cx,0.19,cz+d/2+0.36,1.52,0.18,0.32,C.stone2);
  box(cx,0.152,cz+d/2+0.64,1.76,0.104,0.32,C.path);
  // Solid eaves soffit + stepped gable core + watertight pitched dark-tile roof slopes + ridge (zero coplanar ribs).
@@ -304,16 +385,18 @@ function pavilion(cx,cz){
 pavilion(5.85,-3.85);
 
 // Lotus Pond (centered at 1.60, 1.55) with properly oriented stone bank coping.
+const pondX=1.60,pondZ=1.55,cellSize=.44,waterY=.155;
 const pond=[];
 for(let ix=-7;ix<=7;ix++)for(let iz=-5;iz<=5;iz++){
- let x=1.60+ix*0.44,z=1.55+iz*0.44;
+ let x=pondX+ix*cellSize,z=pondZ+iz*cellSize;
  let inside=(ix/7.2)**2+(iz/5.2)**2<1.02+(rand(ix*47+iz*19)-0.5)*0.12;
  if(inside)pond.push([x,z,ix,iz]);
 }
 const waterSet=new Set(pond.map(p=>p[2]+','+p[3]));
 for(const [x,z,ix,iz] of pond){
  box(x,0.105,z,0.44,0.06,0.44,C.waterDark,1,false,true);
- box(x,0.145,z,0.44,0.02,0.44,rand(ix*39+iz*87)>0.64?C.water2:C.water,1,false,true);
+ const surface=box(x,waterY-.01,z,cellSize,.02,cellSize,rand(ix*39+iz*87)>0.64?C.water2:C.water,1,false,true);
+ surface.userData.activate=touchPond;
  for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){
   if(!waterSet.has((ix+dx)+','+(iz+dz))){
    // Orient coping along the shoreline: swap width & depth for X vs Z edges, stagger heights to prevent corner z-fighting.
@@ -418,42 +501,53 @@ box(-2.56,0.19,2.25,0.36,0.18,0.98,C.path);
 box(5.42,0.25,2.15,0.36,0.30,0.98,C.stone2);
 box(5.76,0.19,2.15,0.36,0.18,0.98,C.path);
 
-// Continuous connected garden stone footpath network (non-colliding slab heights prevent coplanar z-fighting).
-const pathCoords=[],placedSlabs=[];
-let pathIdx=0;
-function addPath(pts,step=0.38,sw=0.66,sd=0.66){
- for(let i=0;i<pts.length-1;i++){
-  let [x1,z1]=pts[i],[x2,z2]=pts[i+1],dist=Math.hypot(x2-x1,z2-z1),n=Math.max(1,Math.ceil(dist/step));
-  for(let k=0;k<=n;k++){
-   let t=k/n,px=x1+(x2-x1)*t,pz=z1+(z2-z1)*t;
-   if(placedSlabs.some(s=>Math.hypot(s.x-px,s.z-pz)<0.10))continue;
-   pathCoords.push([px,pz]);
-   let idx=pathIdx++;
-   let dw=(idx%2)*0.004,dd=((idx>>1)%2)*0.004,w=sw-dw,d=sd-dd;
-   let dh=((idx*0.61803398875)%1)*0.014;
-   for(let guard=0;guard<16;guard++){
-    let top=0.18+dh;
-    if(!placedSlabs.some(s=>Math.abs(s.x-px)<(s.w+w)/2&&Math.abs(s.z-pz)<(s.d+d)/2&&Math.abs(s.top-top)<0.0028))break;
-    dh=(guard+1)*0.0028;
-   }
-   placedSlabs.push({x:px,z:pz,w,d,top:0.18+dh});
-   let tone=rand(Math.round(px*17)+Math.round(pz*31)+k)>0.5?C.path:C.path2;
-   box(px,0.14+dh/2,pz,w,0.08+dh,d,tone,1,false,true);
+// Use one grid across the whole garden so bends and junctions share the same paving.
+const pavingPitch=.35,pathTiles=new Map();
+// Keep four columns centered on the front gate, with the last row under its threshold.
+const pavingOriginX=pavingPitch/2,pavingOriginZ=6.18;
+function addPath(points,width){
+ const radius=width/2;
+ for(let i=1;i<points.length;i++){
+  const [x1,z1]=points[i-1],[x2,z2]=points[i];
+  const dx=x2-x1,dz=z2-z1,lengthSquared=dx*dx+dz*dz;
+  const minX=Math.ceil((Math.min(x1,x2)-radius-pavingOriginX)/pavingPitch);
+  const maxX=Math.floor((Math.max(x1,x2)+radius-pavingOriginX)/pavingPitch);
+  const minZ=Math.ceil((Math.min(z1,z2)-radius-pavingOriginZ)/pavingPitch);
+  const maxZ=Math.floor((Math.min(6.25,Math.max(z1,z2)+radius)-pavingOriginZ)/pavingPitch);
+  for(let ix=minX;ix<=maxX;ix++)for(let iz=minZ;iz<=maxZ;iz++){
+   const x=pavingOriginX+ix*pavingPitch,z=pavingOriginZ+iz*pavingPitch;
+   const t=clamp(((x-x1)*dx+(z-z1)*dz)/lengthSquared,0,1);
+   if(Math.hypot(x-x1-t*dx,z-z1-t*dz)<=radius)pathTiles.set(ix+','+iz,[x,z]);
   }
  }
 }
 // 1. Front gate entry straight to south courtyard plaza.
-addPath([[0,6.25],[0,4.65]],0.40,1.42,0.54);
+addPath([[0,6.25],[0,4.65]],1.40);
 // 2. West loop: plaza -> west shore -> zigzag bridge west step -> bamboo-shaded stone table -> main house steps -> moon gate -> rear courtyard.
-addPath([[0,4.65],[-1.30,4.55],[-2.55,4.15],[-3.35,3.45],[-3.45,2.45],[-2.76,2.25]],0.36,0.72,0.68);
-addPath([[-3.45,2.45],[-4.10,1.55],[-4.27,0.65],[-4.55,-0.15],[-4.55,-1.65]],0.36,0.72,0.68);
-addPath([[-4.27,0.65],[-5.22,0.65]],0.36,0.68,0.68);
-addPath([[-4.55,-1.65],[-2.60,-1.88],[-0.40,-1.95],[1.30,-1.95],[1.30,-3.25],[1.30,-3.85]],0.36,0.68,0.64);
-addPath([[-0.65,-3.85],[1.30,-3.85],[3.35,-3.85]],0.36,0.64,0.62);
-addPath([[-0.65,-3.85],[-0.65,-4.65]],0.36,0.62,0.62);
+addPath([[0,4.65],[-1.30,4.55],[-2.55,4.15],[-3.35,3.45],[-3.45,2.45],[-2.76,2.25]],.78);
+addPath([[-3.45,2.45],[-4.10,1.55],[-4.27,.65],[-4.55,-.15],[-4.55,-1.65]],.78);
+addPath([[-4.27,.65],[-5.22,.65]],.74);
+addPath([[-4.55,-1.65],[-2.60,-1.88],[-.40,-1.95],[1.30,-1.95],[1.30,-3.85]],.74);
+addPath([[-.65,-3.85],[3.35,-3.85]],.70);
+addPath([[-.65,-3.85],[-.65,-4.65]],.70);
 // 3. East loop: plaza -> east shore -> zigzag bridge east step -> east lawn -> pavilion steps.
-addPath([[0,4.65],[1.35,4.72],[2.75,4.75],[4.15,4.45],[5.20,3.75],[5.75,2.85],[5.96,2.15]],0.36,0.72,0.68);
-addPath([[5.96,2.15],[5.55,1.15],[5.35,0.00],[5.45,-0.95],[5.85,-1.80]],0.36,0.68,0.66);
+addPath([[0,4.65],[1.35,4.72],[2.75,4.75],[4.15,4.45],[5.20,3.75],[5.75,2.85],[5.96,2.15]],.78);
+addPath([[5.96,2.15],[5.55,1.15],[5.35,0],[5.45,-.95],[5.85,-1.80]],.74);
+const bedding=new THREE.InstancedMesh(geo(pavingPitch,.032,pavingPitch),mat(0xaaa594),pathTiles.size);
+const pavers=new THREE.InstancedMesh(geo(pavingPitch-.018,.048,pavingPitch-.018),mat(0xffffff),pathTiles.size);
+pavers.name='garden-paving';
+const paverMatrix=new THREE.Matrix4(),paverColor=new THREE.Color();
+const paverTones=[0xcdc9b9,0xd6d3c3,0xc5c2b4,0xd1cebe];
+let tileIndex=0;
+for(const [x,z] of pathTiles.values()){
+ bedding.setMatrixAt(tileIndex,paverMatrix.makeTranslation(x,.116,z));
+ pavers.setMatrixAt(tileIndex,paverMatrix.setPosition(x,.156,z));
+ const tone=Math.floor(rand(Math.round((x*43+z*31)/pavingPitch))*paverTones.length);
+ pavers.setColorAt(tileIndex,paverColor.setHex(paverTones[tone]));
+ tileIndex++;
+}
+bedding.receiveShadow=pavers.receiveShadow=true;
+scene.add(bedding,pavers);
 
 // Stone table & 4 grounded drum stools nestled inside the cleared bamboo grove, connected to the west path.
 const stx=-6.20,stz=0.65;
@@ -708,17 +802,32 @@ willow(7.15,4.35,3,1.00);
 pine(-6.40,4.72,29,0.96);
 
 // Grounded stone garden lanterns (石灯笼) beside paths.
+const lanterns=[];
 function lantern(lx,lz){
- box(lx,0.16,lz,0.34,0.12,0.34,C.stone2);
- box(lx,0.36,lz,0.16,0.32,0.16,C.stone);
- box(lx,0.56,lz,0.30,0.08,0.30,C.stone2);
- box(lx,0.70,lz,0.20,0.20,0.20,C.lantern);
- for(const sx of [-0.09,0.09])for(const sz of [-0.09,0.09])box(lx+sx,0.70,lz+sz,0.04,0.22,0.04,C.stone);
- box(lx,0.85,lz,0.36,0.10,0.36,C.tile);
- box(lx,0.94,lz,0.14,0.09,0.14,C.stone2);
+ const stoneLamp=new THREE.Group();
+ stoneLamp.position.set(lx,0,lz);
+ scene.add(stoneLamp);
+ groupBox(stoneLamp,0,.16,0,.34,.12,.34,C.stone2);
+ groupBox(stoneLamp,0,.36,0,.16,.32,.16,C.stone);
+ groupBox(stoneLamp,0,.56,0,.30,.08,.30,C.stone2);
+ const paper=groupBox(stoneLamp,0,.70,0,.20,.20,.20,C.lantern);
+ paper.material=paper.material.clone();
+ paper.material.emissive.setHex(0xffae4d);
+ paper.material.emissiveIntensity=0;
+ for(const sx of [-.09,.09])for(const sz of [-.09,.09])groupBox(stoneLamp,sx,.70,sz,.04,.22,.04,C.stone);
+ groupBox(stoneLamp,0,.85,0,.36,.10,.36,C.tile).castShadow=true;
+ groupBox(stoneLamp,0,.94,0,.14,.09,.14,C.stone2);
+ for(const part of stoneLamp.children)part.receiveShadow=true;
+
+ const light=new THREE.PointLight(0xffb060,0,3.6,2);
+ light.position.y=.73;
+ stoneLamp.add(light);
+ const lamp={light,material:paper.material,on:null,level:0};
+ stoneLamp.userData.activate=()=>{lamp.on=!(lamp.on??(timeOfDay==='night'))};
+ lanterns.push(lamp);
 }
-lantern(-2.60,3.05);
-lantern(4.95,2.95);
+const lanternSites=[[-2.60,3.05],[4.95,2.95],[.99,5.62],[-3.68,-1.05],[6.27,-.70]];
+for(const [x,z] of lanternSites)lantern(x,z);
 
 // Grounded shrubs (bottom anchored cleanly into lawn y=0.10).
 function shrub(x,z,s,seed){
@@ -739,9 +848,10 @@ function plantable(x,z){
  if(x<-5.10&&z>-1.55&&z<2.45)return false; // bamboo grove & stone table clearing
  if(Math.abs(z+2.95)<0.55&&x>-2.0&&x<4.6)return false; // moon gate wall
  if(x>-1.55&&x<4.20&&z<-3.05)return false; // rear courtyard fenced flowerbed & props
- if(Math.hypot(x+2.60,z-3.05)<0.48||Math.hypot(x-4.95,z-2.95)<0.48)return false; // lanterns
+ if(lanternSites.some(([lx,lz])=>Math.hypot(x-lx,z-lz)<.48))return false;
  if(Math.hypot(x-7.15,z-4.35)<0.55||Math.hypot(x+6.40,z-4.72)<0.55)return false; // willow & pine trunks
- for(const [px,pz] of pathCoords)if(Math.hypot(x-px,z-pz)<0.62)return false;
+ const roadClearance=pavingPitch/2+.18;
+ for(const [px,pz] of pathTiles.values())if(Math.abs(x-px)<roadClearance&&Math.abs(z-pz)<roadClearance)return false;
  if(Math.abs(x)<1.05&&z>4.40)return false; // entry path
  return true;
 }
@@ -764,18 +874,205 @@ let pi=0;for(let i=0;i<flowerPositions.length;i++){
  let flowerColor=[0xf3d7a7,0xe7afbd,0xf3eee0,0xcfb7d7][seed%4];
  for(let p=0;p<5;p++){let a=p*Math.PI*2/5;tmp.position.set(x+Math.cos(a)*0.09,0.345,z+Math.sin(a)*0.09);tmp.rotation.set(0,a,0);tmp.updateMatrix();petals.setMatrixAt(pi,tmp.matrix);petals.setColorAt(pi,color.setHex(flowerColor));pi++}
 }stems.instanceMatrix.needsUpdate=true;petals.instanceMatrix.needsUpdate=true;scene.add(stems,petals);
+
+// Keep a small pool so nearby taps can leave independent ripples.
+const ripples=new THREE.Group();
+ripples.name='pond-ripples';
+scene.add(ripples);
+const rippleDuration=1.12;
+const ringGeometry=new THREE.RingGeometry(.93,1,32).rotateX(-Math.PI/2);
+const ripplePool=Array.from({length:6},()=>{
+ const material=new THREE.MeshBasicMaterial({color:0xe4fff9,transparent:true,depthWrite:false});
+ const ring=new THREE.Mesh(ringGeometry,material);
+ ring.visible=false;
+ ripples.add(ring);
+ return {ring,age:rippleDuration};
+});
+let nextRipple=0;
+function showRipple(point){
+ const wave=ripplePool[nextRipple];
+ nextRipple=(nextRipple+1)%ripplePool.length;
+ wave.age=0;
+ wave.ring.position.set(point.x,waterY+.006,point.z);
+ wave.ring.visible=true;
+}
+const koi=new THREE.Group();
+koi.name='pond-koi';
+koi.rotation.order='YXZ';
+const ivory=0xffefcf,orange=0xe45e31;
+groupBox(koi,-.03,0,0,.43,.20,.24,ivory);
+groupBox(koi,.20,.005,0,.17,.15,.19,orange);
+groupBox(koi,.30,-.012,0,.07,.10,.13,ivory);
+groupBox(koi,-.12,.084,0,.16,.045,.247,orange);
+groupBox(koi,-.29,-.007,0,.15,.10,.12,orange);
+const tail=new THREE.Group();
+tail.position.x=-.35;
+koi.add(tail);
+for(const side of [-1,1]){
+ groupBox(koi,.236,.035,side*.096,.032,.032,.024,0x332b28);
+ groupBox(koi,.041,-.058,side*.137,.14,.034,.13,orange).rotation.y=side*.38;
+ groupBox(tail,-.064,0,side*.065,.18,.042,.115,ivory).rotation.y=side*.31;
+}
+koi.visible=false;
+scene.add(koi);
+const jumpStart=new THREE.Vector3(),jumpEnd=new THREE.Vector3();
+const jumpDuration=.85;
+const koiChance=.30;
+let jumpTime=Infinity;
+function touchPond(point){
+ showRipple(point);
+ if(reducedMotion.matches||Math.random()>=koiChance||jumpTime<jumpDuration)return;
+
+ jumpStart.set(point.x,waterY,point.z);
+ jumpEnd.copy(jumpStart);
+ const heading=Math.atan2(point.z-pondZ,point.x-pondX)+Math.PI/2;
+ // Find a short path with open water at takeoff and landing.
+ for(let i=0;i<8;i++){
+  const dx=Math.cos(heading+i*Math.PI/4),dz=Math.sin(heading+i*Math.PI/4);
+  if(![.35,.71,1.05].every(distance=>{
+   const x=point.x+dx*distance,z=point.z+dz*distance;
+   const cell=Math.round((x-pondX)/cellSize)+','+Math.round((z-pondZ)/cellSize);
+   return waterSet.has(cell)&&!usedLotus.has(cell)&&!nearZigzag(x,z,.62);
+  }))continue;
+  jumpEnd.set(point.x+dx*1.05,waterY,point.z+dz*1.05);
+  break;
+ }
+ koi.rotation.y=-Math.atan2(jumpEnd.z-jumpStart.z,jumpEnd.x-jumpStart.x);
+ jumpTime=0;
+}
+function updatePond(delta){
+ const still=reducedMotion.matches;
+ for(const wave of ripplePool){
+  const {ring}=wave;
+  if(!ring.visible)continue;
+  wave.age+=delta;
+  const progress=wave.age/rippleDuration;
+  ring.visible=progress<1;
+  if(!ring.visible)continue;
+  ring.material.opacity=.8*(1-progress);
+  ring.scale.setScalar(still ? .36 : .08+.69*Math.sqrt(progress));
+ }
+ if(jumpTime===Infinity)return;
+ jumpTime+=delta;
+ if(still||jumpTime>=jumpDuration){
+  koi.visible=false;
+  jumpTime=Infinity;
+  return;
+ }
+ const progress=jumpTime/jumpDuration;
+ koi.visible=true;
+ koi.position.lerpVectors(jumpStart,jumpEnd,progress);
+ koi.position.y+=4.1*progress*(1-progress)-.09;
+ koi.rotation.z=Math.atan2(4.1*(1-2*progress),Math.max(.38,jumpStart.distanceTo(jumpEnd)));
+ tail.rotation.y=Math.sin(progress*25)*.38;
+}
+
+// Pick against the complete rendered geometry so roofs, bridge rails and foliage block clicks behind them.
+const pickMeshes=[];
+scene.traverseVisible(object=>{if(object.isMesh&&!object.material.transparent)pickMeshes.push(object)});
+const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2(),hits=[];
+function pick(clientX,clientY){
+ const bounds=host.getBoundingClientRect();
+ if(clientX<bounds.left||clientX>=bounds.left+bounds.width||clientY<bounds.top||clientY>=bounds.top+bounds.height)return null;
+ pointer.set(2*(clientX-bounds.left)/bounds.width-1,1-2*(clientY-bounds.top)/bounds.height);
+ raycaster.setFromCamera(pointer,camera);
+ hits.length=0;
+ raycaster.intersectObjects(pickMeshes,false,hits);
+ const hit=hits[0];
+ for(let object=hit?.object;object;object=object.parent){
+  if(object.userData.activate)return {activate:object.userData.activate,point:hit.point};
+ }
+ return null;
+}
+
 // Camera orbit, panning and zoom.
 const camera=new THREE.OrthographicCamera(-11,11,11,-11,.1,100);
-let yaw=Math.PI/4,desiredYaw=yaw,pitch=1.01,desiredPitch=pitch,zoom=.79,desiredZoom=zoom;
+const defaultPitch=.90;
+let yaw=Math.PI/4,desiredYaw=yaw,pitch=defaultPitch,desiredPitch=pitch,zoom=.79,desiredZoom=zoom;
 const target=new THREE.Vector3(0,.65,0),desiredTarget=target.clone();
 function resize(){let w=host.clientWidth,h=host.clientHeight;renderer.setSize(w,h,false);let aspect=w/h,view=Math.max(16.6,18/aspect);camera.left=-view*aspect/2;camera.right=view*aspect/2;camera.top=view/2;camera.bottom=-view/2;camera.updateProjectionMatrix()}
 new ResizeObserver(resize).observe(host);resize();
-function frame(){requestAnimationFrame(frame);const smooth=matchMedia('(prefers-reduced-motion: reduce)').matches?1:.13;yaw+=(desiredYaw-yaw)*smooth;pitch+=(desiredPitch-pitch)*smooth;zoom+=(desiredZoom-zoom)*smooth;target.lerp(desiredTarget,smooth);let radius=28;camera.position.set(target.x+radius*Math.sin(yaw)*Math.cos(pitch),target.y+radius*Math.sin(pitch),target.z+radius*Math.cos(yaw)*Math.cos(pitch));camera.lookAt(target);camera.zoom=zoom;camera.updateProjectionMatrix();renderer.render(scene,camera)}frame();
+let lastFrame=performance.now();
+function frame(now){
+ requestAnimationFrame(frame);
+ const delta=Math.max(0,(now-lastFrame)/1000);
+ lastFrame=now;
+ const still=reducedMotion.matches;
+ updateLighting(delta);
+ updatePond(delta);
+ for(const {hinge,openAngle} of doorHinges){
+  const angle=doorOpen?openAngle:0;
+  hinge.rotation.y=still?angle:THREE.MathUtils.damp(hinge.rotation.y,angle,12,delta);
+ }
+ for(const lamp of lanterns){
+  const level=lamp.on===null?lanternLevel:Number(lamp.on);
+  const step=still?1:delta*6;
+  lamp.level+=clamp(level-lamp.level,-step,step);
+  lamp.light.intensity=4.5*lamp.level;
+  lamp.material.emissiveIntensity=1.9*lamp.level;
+ }
+ const smooth=still?1:.13;
+ yaw=lerp(yaw,desiredYaw,smooth);
+ pitch=lerp(pitch,desiredPitch,smooth);
+ zoom=lerp(zoom,desiredZoom,smooth);
+ target.lerp(desiredTarget,smooth);
+ const radius=28;
+ camera.position.set(target.x+radius*Math.sin(yaw)*Math.cos(pitch),target.y+radius*Math.sin(pitch),target.z+radius*Math.cos(yaw)*Math.cos(pitch));
+ camera.lookAt(target);
+ camera.zoom=zoom;
+ camera.updateProjectionMatrix();
+ renderer.render(scene,camera);
+}
+frame(lastFrame);
 const deg=Math.PI/180;
-document.querySelectorAll('[data-action]').forEach(btn=>btn.addEventListener('click',()=>{switch(btn.dataset.action){case 'left':desiredYaw-=15*deg;break;case 'right':desiredYaw+=15*deg;break;case 'square':desiredYaw=Math.round(desiredYaw/(Math.PI/2))*Math.PI/2;break;case 'front':desiredYaw=0;desiredTarget.set(0,.65,0);desiredZoom=.79;break;case 'up':desiredPitch=clamp(desiredPitch-10*deg,.19,1.52);break;case 'down':desiredPitch=clamp(desiredPitch+10*deg,.19,1.52);break;case 'pitch':desiredPitch=1.01;break;}}));
-let drag=null;host.addEventListener('contextmenu',e=>e.preventDefault());host.addEventListener('pointerdown',e=>{host.setPointerCapture(e.pointerId);drag={x:e.clientX,y:e.clientY,button:e.button};host.style.cursor=e.button===2?'move':'grabbing';if(typeof hidePanel==='function')hidePanel()});host.addEventListener('pointerup',()=>{drag=null;host.style.cursor='grab'});host.addEventListener('pointercancel',()=>{drag=null;host.style.cursor='grab'});host.style.cursor='grab';
-host.addEventListener('pointermove',e=>{if(!drag)return;let dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.x=e.clientX;drag.y=e.clientY;if(drag.button===2||e.buttons===2){let right=new THREE.Vector3(Math.cos(yaw),0,-Math.sin(yaw)),forward=new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw));desiredTarget.addScaledVector(right,-dx*.021/zoom);desiredTarget.addScaledVector(forward,-dy*.021/zoom)}else{desiredYaw-=dx*.007;desiredPitch=clamp(desiredPitch+dy*.007,.19,1.52)}});
-host.addEventListener('wheel',e=>{e.preventDefault();desiredZoom=clamp(desiredZoom*Math.exp(-e.deltaY*.001),.58,2.9);if(typeof hidePanel==='function')hidePanel()},{passive:false});
+document.querySelectorAll('[data-action]').forEach(btn=>btn.addEventListener('click',()=>{switch(btn.dataset.action){case 'left':desiredYaw-=15*deg;break;case 'right':desiredYaw+=15*deg;break;case 'square':desiredYaw=Math.round(desiredYaw/(Math.PI/2))*Math.PI/2;break;case 'front':desiredYaw=0;desiredTarget.set(0,.65,0);desiredZoom=.79;break;case 'up':desiredPitch=clamp(desiredPitch-10*deg,.19,1.52);break;case 'down':desiredPitch=clamp(desiredPitch+10*deg,.19,1.52);break;case 'pitch':desiredPitch=defaultPitch;break;}}));
+const tapSlop=6;
+const panRight=new THREE.Vector3(),panUp=new THREE.Vector3();
+let drag=null;
+host.style.cursor='grab';
+host.addEventListener('contextmenu',e=>e.preventDefault());
+host.addEventListener('pointerdown',e=>{
+ if(drag||(e.button!==0&&e.button!==2))return;
+ host.setPointerCapture(e.pointerId);
+ drag={id:e.pointerId,x:e.clientX,y:e.clientY,button:e.button,moved:false};
+ hidePanel();
+});
+host.addEventListener('pointermove',e=>{
+ if(!drag){
+  if(e.pointerType==='mouse')host.style.cursor=pick(e.clientX,e.clientY)?'pointer':'grab';
+  return;
+ }
+ if(e.pointerId!==drag.id)return;
+ const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+ if(!drag.moved&&Math.hypot(dx,dy)<tapSlop)return;
+ drag.moved=true;
+ drag.x=e.clientX;
+ drag.y=e.clientY;
+ if(drag.button===2){
+  host.style.cursor='move';
+  // Map CSS pixels to the rendered camera's right and up axes.
+  const unitsPerPixel=(camera.top-camera.bottom)/(camera.zoom*host.clientHeight);
+  panRight.setFromMatrixColumn(camera.matrixWorld,0);
+  panUp.setFromMatrixColumn(camera.matrixWorld,1);
+  target.addScaledVector(panRight,-dx*unitsPerPixel).addScaledVector(panUp,dy*unitsPerPixel);
+  desiredTarget.copy(target);
+ }else{
+  host.style.cursor='grabbing';
+  desiredYaw-=dx*.007;
+  desiredPitch=clamp(desiredPitch+dy*.007,.19,1.52);
+ }
+});
+function finishPointer(e){
+ if(drag?.id!==e.pointerId)return;
+ const isTap=e.type==='pointerup'&&drag.button===0&&!drag.moved&&
+  Math.hypot(e.clientX-drag.x,e.clientY-drag.y)<tapSlop;
+ const hit=isTap?pick(e.clientX,e.clientY):null;
+ drag=null;
+ host.style.cursor=hit?'pointer':'grab';
+ hit?.activate(hit.point);
+}
+for(const event of ['pointerup','pointercancel','lostpointercapture'])host.addEventListener(event,finishPointer);
+host.addEventListener('wheel',e=>{e.preventDefault();desiredZoom=clamp(desiredZoom*Math.exp(-e.deltaY*.001),.58,2.9);hidePanel()},{passive:false});
 
 // Floating panel auto-hide & pill hover/tap reveal.
 const panel=document.querySelector?.('.panel'),panelTab=document.querySelector?.('.panel-tab');
