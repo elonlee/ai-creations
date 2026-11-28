@@ -42,6 +42,17 @@ test('寻路避开沙发和茶桌等静态障碍物并支持可移动家具避�
   assert.ok(fallback.length >= 1);
 });
 
+test('圆桌前移后，寻路可到达腾出的地面', () => {
+  const openFloor = [-.12, 2.02];
+  assert.deepEqual(findRoomPath([.36, 2.02], openFloor).at(-1), openFloor);
+});
+
+test('圆桌前移后，寻路会避开新位置的桌面范围', () => {
+  const underTable = [-.78, 3.6];
+  const last = findRoomPath([-.78, 4.25], underTable).at(-1);
+  assert.ok(Math.hypot(last[0] + .78, last[1] - 2.92) > .95);
+});
+
 test('所有房间互动都会触发真实走动、朝向与专属动作姿势，最后回到待机', () => {
   const expectedProps = {
     cook: { prop: 'ladle', effect: 'cook' },

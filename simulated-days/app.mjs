@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { ROOM_FLOOR_Y, addBox, buildBedFrame, buildBookcase, buildShowerEnclosure } from './room-models.mjs?v=2';
 import {
   ACTIONS,
   CATALOG,
@@ -13,9 +14,10 @@ import {
 import {
   createCharacterController,
   INTERACTION_STAGES,
+  TEA_TABLE,
   computeAnchoredCardPosition,
   clampAndSnapBuildPoint,
-} from './motion.mjs?v=5';
+} from './motion.mjs?v=7';
 
 const $ = selector => document.querySelector(selector);
 const $$ = selector => [...document.querySelectorAll(selector)];
@@ -63,7 +65,8 @@ const sceneRefs = {
   clockHourPivot: null,
   clockMinutePivot: null,
   clockFaceMat: null,
-  showerWallGroup: null,
+  showerEnclosure: null,
+  showerGlassMat: null,
   showerSpray: null,
   showerStreams: [],
   bedBlanketPivot: null,
@@ -75,7 +78,6 @@ const sceneProps = {
   teaSet: null,
   completedPainting: null,
   showerState: null,
-  showerGlass: null,
   bedState: null,
   bookOnSofa: null,
   souvenirNora: null,
@@ -155,14 +157,10 @@ const interactionMeta = {
   bed: { name: '柔软的小床', hint: '累的时候，就安心睡一会儿，或一觉睡到明天清晨。', actions: ['rest', 'sleep'], point: [3.9, 1.6, 1.8] },
   shower: { name: '暖光浴室', hint: '让热水带走一天的疲惫。', actions: ['shower'], point: [-4.65, 2.35, 2.7] },
   bookshelf: { name: '收集的旧书', hint: '每一本都藏着另一种生活。', actions: ['read'], point: [4.8, 2.25, -3.2] },
-  tea: { name: '客厅圆桌', hint: '给生活留一点空白时间，桌面上也会留下日常的痕迹。', actions: ['tea'], point: [-0.78, 1.45, 2.55] },
+  tea: { name: '客厅圆桌', hint: '给生活留一点空白时间，桌面上也会留下日常的痕迹。', actions: ['tea'], point: [TEA_TABLE.x, 1.45, TEA_TABLE.z] },
   meal: { name: '厨房桌上的早午餐', hint: '刚做好的热乎餐盒就放在厨房桌面上，点击即可享用。', actions: ['eat'], point: [-3.12, 1.45, -3.66], noHotspot: true },
 };
 
-function addBox(parent, material, w, h, d, x = 0, y = 0, z = 0, cast = true) {
-  const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), material);
-  mesh.position.set(x, y, z); mesh.castShadow = cast; mesh.receiveShadow = true; parent.add(mesh); return mesh;
-}
 function addCylinder(parent, material, top, bottom, height, x = 0, y = 0, z = 0, segments = 20) {
   const mesh = new THREE.Mesh(new THREE.CylinderGeometry(top, bottom, height, segments), material);
   mesh.position.set(x, y, z); mesh.castShadow = true; mesh.receiveShadow = true; parent.add(mesh); return mesh;
@@ -173,6 +171,10 @@ function addSphere(parent, material, r, x = 0, y = 0, z = 0) {
 }
 function group(parent, x = 0, y = 0, z = 0) {
   const result = new THREE.Group(); result.position.set(x, y, z); parent.add(result); return result;
+}
+function isVisibleInScene(object) {
+  for (let node = object; node; node = node.parent) if (!node.visible) return false;
+  return true;
 }
 function registerModel(id, model) { model.userData.interaction = id; interactiveModels.set(id, model); return model; }
 function addLegs(parent, xHalf, zHalf, topY, height, material = materials.oakDark) {
@@ -278,7 +280,11 @@ function updateParticles(dt, effect, pose) {
         spawnEffectParticle('spark', [pose.x + (Math.random() - 0.5) * 0.45, 1.38, pose.z + (Math.random() - 0.5) * 0.45], [0, 0.42, 0], 1.0, 0.28);
       } else if (effect === 'tea') {
         effectCooldown = 0.26;
-        spawnEffectParticle('steam', [-0.54 + (Math.random() - 0.5) * 0.16, 1.04, 2.41 + (Math.random() - 0.5) * 0.16], [0, 0.52, 0], 1.05, 0.6);
+        spawnEffectParticle('steam', [
+          TEA_TABLE.x + 0.24 + (Math.random() - 0.5) * 0.16,
+          1.04,
+          TEA_TABLE.z - 0.14 + (Math.random() - 0.5) * 0.16,
+        ], [0, 0.52, 0], 1.05, 0.6);
         spawnEffectParticle('steam', [pose.x + 0.15, 1.38, pose.z + 0.25], [0, 0.42, 0], 0.85, 0.42);
       } else if (effect === 'eat') {
         effectCooldown = 0.36;
@@ -302,7 +308,11 @@ function updateParticles(dt, effect, pose) {
         spawnEffectParticle('steam', [-3.12 + (Math.random() - 0.5) * 0.14, 1.12, -3.66 + (Math.random() - 0.5) * 0.14], [0, 0.34, 0], 1.0, 0.42);
       }
       if (sceneProps.teaSet?.visible) {
-        spawnEffectParticle('steam', [-0.8 + (Math.random() - 0.5) * 0.1, 0.94, 2.3 + (Math.random() - 0.5) * 0.1], [0, 0.36, 0], 0.95, 0.38);
+        spawnEffectParticle('steam', [
+          TEA_TABLE.x - 0.02 + (Math.random() - 0.5) * 0.1,
+          0.94,
+          TEA_TABLE.z - 0.25 + (Math.random() - 0.5) * 0.1,
+        ], [0, 0.36, 0], 0.95, 0.38);
       }
       if (showerAfterglowTimer > 0) {
         spawnEffectParticle('mist', [-5.05 + (Math.random() - 0.5) * 0.55, 1.15 + Math.random() * 0.65, 1.95 + (Math.random() - 0.5) * 0.55], [0, 0.5, 0], 1.25, 0.85);
@@ -474,12 +484,9 @@ function syncSceneProps(immediate = false) {
   if (sceneProps.souvenirJun) sceneProps.souvenirJun.visible = Boolean(sc.souvenirs?.jun);
   if (sceneProps.souvenirEllis) sceneProps.souvenirEllis.visible = Boolean(sc.souvenirs?.ellis);
 
-  if (sceneProps.showerGlass) {
-    sceneProps.showerGlass.material.opacity = sc.showered ? 0.54 : 0.35;
-  }
   if (immediate) {
     for (const node of Object.values(sceneProps)) {
-      if (node && node.isObject3D && node !== sceneProps.showerGlass) node.scale.setScalar(1);
+      if (node && node.isObject3D) node.scale.setScalar(1);
     }
   }
 }
@@ -641,7 +648,8 @@ function buildRoom() {
   addBox(roomGroup, materials.oakDark, 12.5, .25, 10.5, 0, -.23, 0);
   addBox(roomGroup, materials.cream, 12.2, .11, 10.2, 0, -.045, 0);
   const boardColors = [materials.oakLight, new THREE.MeshStandardMaterial({ color: 0xdcb58c, roughness: .88 }), new THREE.MeshStandardMaterial({ color: 0xe3bd97, roughness: .88 })];
-  for (let i = 0; i < 19; i++) addBox(roomGroup, boardColors[i % 3], 12.02, .025, .52, 0, .021, -4.75 + i * .52, false);
+  const floorboardThickness = .025;
+  for (let i = 0; i < 19; i++) addBox(roomGroup, boardColors[i % 3], 12.02, floorboardThickness, .52, 0, ROOM_FLOOR_Y - floorboardThickness / 2, -4.75 + i * .52, false);
   floor = addBox(roomGroup, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false }), 12, .02, 10, 0, .06, 0, false);
   floor.userData.ground = true;
   const walkRingMat = new THREE.MeshBasicMaterial({ color: 0x9d83b1, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false });
@@ -659,10 +667,10 @@ function buildRoom() {
   addBox(wallBack, wallMat, 3.5, .48, .17, -.05, 3.26, -5.02);
   wallLeft = group(roomGroup);
   addBox(wallLeft, sideMat, .17, 3.5, 10.25, -6.06, 1.75, 0);
-  addBox(roomGroup, materials.white, 12.14, .13, .21, 0, .12, -4.89);
-  addBox(roomGroup, materials.white, .2, .13, 10, -5.93, .12, 0);
+  addBox(wallBack, materials.white, 12.14, .13, .21, 0, .12, -4.89);
+  addBox(wallLeft, materials.white, .2, .13, 10, -5.93, .12, 0);
 
-  const windowGroup = group(roomGroup, -.05, 0, -4.96);
+  const windowGroup = group(wallBack, -.05, 0, -4.96);
   addBox(windowGroup, materials.white, 3.7, .13, .28, 0, 1.06, 0);
   addBox(windowGroup, materials.white, 3.7, .13, .28, 0, 3.04, 0);
   addBox(windowGroup, materials.white, .13, 2.0, .28, -1.82, 2.06, 0);
@@ -672,15 +680,20 @@ function buildRoom() {
   addBox(windowGroup, glass, 3.54, 1.9, .025, 0, 2.05, -.04, false);
   addBox(windowGroup, materials.oakLight, 3.85, .13, .46, 0, 1.02, .2);
 
-  const outside = group(roomGroup, 0, 0, -6.6);
-  addBox(outside, new THREE.MeshStandardMaterial({ color: 0xbab5ce }), 1.2, 4, 1, -1.25, 1.5, -.4);
-  addBox(outside, new THREE.MeshStandardMaterial({ color: 0xd8bdd0 }), 1.35, 4.6, .8, .9, 1.8, -.8);
+  const outside = group(wallBack, 0, 0, -6.6);
   sceneRefs.outsideWindows = [];
-  for (const x of [-1.5, -.95, .65, 1.2]) {
-    for (const y of [1.6, 2.2, 2.8]) {
-      const winMat = new THREE.MeshStandardMaterial({ color: 0xf8f1e4, roughness: 0.7 });
-      sceneRefs.outsideWindows.push(winMat);
-      addBox(outside, winMat, .18, .28, .02, x, y, -.27, false);
+  for (const [x, y, z, width, height, depth, color] of [
+    [-1.25, 1.5, -.4, 1.2, 4, 1, 0xbab5ce],
+    [.9, 1.8, -.8, 1.35, 4.6, .8, 0xd8bdd0],
+  ]) {
+    const facade = group(outside, x, y, z);
+    addBox(facade, new THREE.MeshStandardMaterial({ color }), width, height, depth);
+    for (const paneX of [-.275, .275]) {
+      for (const paneY of [1.6, 2.2, 2.8]) {
+        const winMat = new THREE.MeshStandardMaterial({ color: 0xf8f1e4, roughness: .7 });
+        sceneRefs.outsideWindows.push(winMat);
+        addBox(facade, winMat, .18, .28, .02, paneX, paneY - y, depth / 2 + .008, false);
+      }
     }
   }
   addCylinder(outside, materials.oakDark, .11, .14, 2.5, -2.7, 1.1, -.1);
@@ -758,7 +771,7 @@ function buildRoom() {
   // Painting corner.
   const desk = registerModel('desk', group(roomGroup, 2.2, 0, -3.4));
   addBox(desk, materials.oak, 2.55, .15, 1.14, 0, 1.25, 0);
-  addLegs(desk, 1.12, .42, 1.2, 1.15);
+  addLegs(desk, 1.12, .42, 1.2, 1.2 - ROOM_FLOOR_Y);
   addBox(desk, materials.cream, .92, .025, .64, -.35, 1.35, -.1);
   sceneRefs.sketchOverlay = addBox(desk, new THREE.MeshStandardMaterial({ color: 0xb28ec5, roughness: 0.9, transparent: true, opacity: 0.14 }), .58, .012, .36, -.35, 1.365, -.12, false);
   addBox(desk, materials.lavenderDeep, .7, .025, .05, -.35, 1.37, .22);
@@ -770,58 +783,47 @@ function buildRoom() {
   sceneRefs.deskLight = new THREE.PointLight(0xffca7a, 0, 6.5, 1.6);
   sceneRefs.deskLight.position.set(0.8, 2.02, 0.12);
   desk.add(sceneRefs.deskLight);
-  addBox(desk, materials.oakDark, .93, .1, .84, -.45, .47, 1.08);
-  addLegs(desk, .34, .31, .45, .43);
-  addBox(desk, materials.sage, .98, .14, .83, -.45, .58, 1.08);
-  addBox(desk, materials.oakDark, .95, .92, .13, -.45, 1.0, 1.46);
+  const chair = group(desk, -.45, 0, 1.08);
+  addBox(chair, materials.oakDark, .93, .1, .84, 0, .47, 0);
+  addLegs(chair, .34, .31, .45, .45 - ROOM_FLOOR_Y);
+  addBox(chair, materials.sage, .98, .14, .83, 0, .58, 0);
+  addBox(chair, materials.oakDark, .95, .92, .13, 0, 1.0, .38);
 
   // Bookshelf.
   const books = registerModel('bookshelf', group(roomGroup, 4.9, 0, -3.55));
-  addBox(books, materials.oak, 1.18, 2.48, .67, 0, 1.24, 0);
-  addBox(books, materials.cream, .95, 2.13, .05, 0, 1.25, .36);
-  for (const y of [.46, 1.04, 1.62, 2.19]) addBox(books, materials.oakDark, 1.04, .09, .75, 0, y, .05);
-  for (let i = 0; i < 11; i++) addBox(books, [materials.lavenderDeep, materials.sage, materials.pink, materials.cream][i % 4], .12 + i % 3 * .03, .34 + i % 4 * .04, .44, -.42 + i * .078, .73 + (i % 2) * .59, .13);
+  buildBookcase(books, materials, {
+    width: 1.18, height: 2.45, depth: .67,
+    rows: [[.30, .34, .32], [.36, .39, .33, .41], [.35, .38, .33, .36, .32], [.33, .41, .37]],
+  });
 
-  // Complete Bathroom: tiled floor & curb, left ceramic tile wall, rain showerhead, caddy, bench & wooden bath mat.
+  // Tiled shower tray, four glass sides, and a sliding entrance door.
   const shower = registerModel('shower', group(roomGroup, -4.83, 0, 2.38));
   addBox(shower, materials.tile, 1.88, .14, 2.15, 0, .05, 0);
-  addBox(shower, materials.white, 1.88, .06, .08, 0, .14, 1.04);
-  addBox(shower, materials.white, .08, .06, 2.15, -.9, .14, 0);
   addCylinder(shower, materials.ink, .09, .09, .012, -.27, .122, -.48, 16);
+  const showerGlassMat = glass.clone();
+  showerGlassMat.forceSinglePass = true;
+  sceneRefs.showerGlassMat = showerGlassMat;
+  sceneRefs.showerEnclosure = buildShowerEnclosure(shower, materials, showerGlassMat);
 
-  // Tiled wall backing (toggled alongside wallLeft when camera orbits behind left wall).
-  const showerWall = group(shower, 0, 0, 0);
-  addBox(showerWall, new THREE.MeshStandardMaterial({ color: 0xf4efea, roughness: .85 }), .09, 2.44, 2.15, -.92, 1.24, 0);
-  addBox(showerWall, new THREE.MeshStandardMaterial({ color: 0xd6e6e8, roughness: .75 }), .105, .2, 2.15, -.92, 1.56, 0, false);
-  addBox(showerWall, materials.white, .12, .07, 2.18, -.92, 2.47, 0);
-  // Brass shower riser, curved arm & wide rain showerhead centered above Miri.
-  addCylinder(showerWall, materials.gold, .03, .03, 1.38, -.82, 1.58, -.48, 14);
-  addBox(showerWall, materials.gold, .58, .045, .045, -.54, 2.26, -.48);
-  addCylinder(showerWall, materials.gold, .075, .075, .035, -.82, 1.18, -.48, 14).rotation.z = Math.PI / 2;
-  addCylinder(showerWall, materials.gold, .17, .21, .045, -.27, 2.21, -.48, 22);
-  addCylinder(showerWall, new THREE.MeshStandardMaterial({ color: 0xb7dbe8, roughness: .4 }), .17, .17, .01, -.27, 2.185, -.48, 20);
+  // Brass fittings mounted to the glass beside the caddy.
+  for (const y of [1.08, 2.05]) addBox(shower, materials.gold, .11, .05, .06, -.856, y, -.48);
+  addCylinder(shower, materials.gold, .03, .03, 1.38, -.82, 1.58, -.48, 14);
+  addBox(shower, materials.gold, .58, .045, .045, -.54, 2.26, -.48);
+  addCylinder(shower, materials.gold, .075, .075, .035, -.82, 1.18, -.48, 14).rotation.z = Math.PI / 2;
+  addCylinder(shower, materials.gold, .17, .21, .045, -.27, 2.21, -.48, 22);
+  addCylinder(shower, new THREE.MeshStandardMaterial({ color: 0xb7dbe8, roughness: .4 }), .17, .17, .01, -.27, 2.185, -.48, 20);
   // Wall caddy shelf with shampoo & body wash bottles.
-  addBox(showerWall, materials.white, .22, .035, .44, -.77, 1.15, .1);
-  addCylinder(showerWall, materials.sage, .045, .045, .16, -.77, 1.25, 0, 12);
-  addCylinder(showerWall, materials.pink, .042, .042, .14, -.77, 1.24, .18, 12);
+  addBox(shower, materials.white, .22, .035, .44, -.77, 1.15, .1);
+  addCylinder(shower, materials.sage, .045, .045, .16, -.77, 1.25, 0, 12);
+  addCylinder(shower, materials.pink, .042, .042, .14, -.77, 1.24, .18, 12);
   // Warm bathroom sconce light.
   const bathLampMat = new THREE.MeshStandardMaterial({ color: 0xffe8bb, roughness: .4 });
   sceneRefs.staticLampMaterials.push(bathLampMat);
-  addBox(showerWall, materials.gold, .06, .08, .08, -.86, 2.08, .48);
-  addSphere(showerWall, bathLampMat, .1, -.78, 2.14, .48);
+  addBox(shower, materials.gold, .06, .08, .08, -.86, 2.08, .48);
+  addSphere(shower, bathLampMat, .1, -.78, 2.14, .48);
   sceneRefs.bathLight = new THREE.PointLight(0xffcf88, 0, 5.5, 1.6);
   sceneRefs.bathLight.position.set(-.68, 2.14, .48);
-  showerWall.add(sceneRefs.bathLight);
-  sceneRefs.showerWallGroup = showerWall;
-
-  // Translucent glass screen with framed rails & handle.
-  const showerGlassMat = glass.clone();
-  sceneProps.showerGlass = addBox(shower, showerGlassMat, .055, 2.38, 2.02, .88, 1.28, .05, false);
-  addBox(shower, materials.white, .07, 2.44, .08, .88, 1.27, -1);
-  addBox(shower, materials.white, .07, 2.44, .08, .88, 1.27, 1);
-  addBox(shower, materials.white, .08, .06, 2.08, .88, 2.46, .05);
-  addBox(shower, materials.white, .08, .06, 2.08, .88, .12, .05);
-  addCylinder(shower, materials.gold, .018, .018, .34, .88, 1.18, -.78, 10);
+  shower.add(sceneRefs.bathLight);
 
   // Slatted oak shower bench with rolled towel & flat wooden bath mat outside entrance.
   const showerBench = group(shower, -.34, 0, .75);
@@ -829,7 +831,7 @@ function buildRoom() {
   addBox(showerBench, materials.oakLight, .68, .06, .48, 0, .56, 0);
   addBox(showerBench, materials.cream, .56, .035, .36, 0, .26, 0);
   addCylinder(showerBench, materials.white, .07, .07, .26, .06, .35, 0, 12).rotation.z = Math.PI / 2;
-  addBox(shower, materials.oakLight, .88, .025, .44, 0, .032, -1.35, false);
+  addBox(shower, materials.oakLight, .88, .025, .44, -.40, ROOM_FLOOR_Y + .0125, -1.35, false);
 
   // Active 3D shower spray cone directly beneath the rain showerhead.
   const sprayGroup = group(shower, -.27, 0, -.48);
@@ -854,15 +856,16 @@ function buildRoom() {
 
   // Sofa and round living room table.
   const sofa = group(roomGroup, -2.05, 0, 1.4);
-  addBox(sofa, materials.oakDark, 2.5, .18, 1.15, 0, .28, 0);
+  addBox(sofa, materials.oakDark, 2.5, .24, 1.15, 0, .31, 0);
+  addLegs(sofa, 1.08, .43, .21, .21 - ROOM_FLOOR_Y);
   addBox(sofa, materials.sage, 2.55, .55, 1.15, 0, .7, 0);
   addBox(sofa, materials.sage, 2.6, 1.08, .25, 0, 1.09, -.52);
   addBox(sofa, materials.sage, .27, .82, 1.2, -1.18, .86, 0);
   addBox(sofa, materials.sage, .27, .82, 1.2, 1.18, .86, 0);
   addBox(sofa, materials.pink, .63, .23, .45, -.69, 1.04, -.18);
 
-  const table = registerModel('tea', group(roomGroup, -.78, 0, 2.55));
-  addCylinder(table, materials.oak, .71, .71, .12, 0, .74, 0, 30);
+  const table = registerModel('tea', group(roomGroup, TEA_TABLE.x, 0, TEA_TABLE.z));
+  addCylinder(table, materials.oak, TEA_TABLE.radius, TEA_TABLE.radius, .12, 0, .74, 0, 30);
   addCylinder(table, materials.oakDark, .09, .12, .62, 0, .39, 0);
   addCylinder(table, materials.oakDark, .48, .48, .07, 0, .07, 0);
   // Ceramic teapot resting on the back-right of the table.
@@ -871,10 +874,11 @@ function buildRoom() {
   addCylinder(table, materials.white, .02, .035, .1, .36, .91, -.14, 10).rotation.z = -.85;
 
   // Framed sketches and hanging lights.
-  addBox(roomGroup, materials.oakDark, .95, 1.15, .08, 4.55, 2.48, -4.82);
-  addBox(roomGroup, materials.cream, .81, 1.01, .09, 4.55, 2.48, -4.76);
-  addBox(roomGroup, materials.pink, .3, .44, .04, 4.55, 2.45, -4.69);
-  addSphere(roomGroup, materials.gold, .27, 4.55, 2.72, -4.66);
+  const wallArt = group(wallBack, 4.55, 2.48, -4.90);
+  addBox(wallArt, materials.oakDark, .95, 1.15, .08);
+  addBox(wallArt, materials.cream, .81, 1.01, .09, 0, 0, .06);
+  addBox(wallArt, materials.pink, .3, .44, .04, 0, -.03, .11);
+  addSphere(wallArt, materials.gold, .27, 0, .24, .11).scale.z = .11;
   sceneRefs.pendantBulbs = [];
   sceneRefs.pendantShades = [];
   sceneRefs.pendantLights = [];
@@ -921,11 +925,17 @@ function makePlaidBlanketTexture() {
     ctx.fillRect(0, pos, 256, 3);
     ctx.fillRect(pos, 0, 3, 256);
   }
-  const tex = new THREE.CanvasTexture(canvas);
+  const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const tex = new THREE.DataTexture(pixels.data, pixels.width, pixels.height);
+  tex.flipY = true;
+  tex.magFilter = THREE.LinearFilter;
+  tex.minFilter = THREE.LinearMipmapLinearFilter;
+  tex.generateMipmaps = true;
   tex.wrapS = THREE.RepeatWrapping;
   tex.wrapT = THREE.RepeatWrapping;
   tex.repeat.set(1.5, 2.2);
   tex.colorSpace = THREE.SRGBColorSpace;
+  tex.needsUpdate = true;
   return tex;
 }
 
@@ -965,22 +975,11 @@ function createQuiltClothGeo(w, h, d, isLeft) {
     const nx = x / (w / 2);
     const nz = z / (d / 2);
 
-    let drape = 0.025 * (1 - 0.35 * nx * nx);
-    if (isLeft && nx < -0.78) {
-      const e = Math.min(1, (-0.78 - nx) / 0.22);
-      drape -= 0.18 * e * e;
-    } else if (!isLeft && nx > 0.78) {
-      const e = Math.min(1, (nx - 0.78) / 0.22);
-      drape -= 0.18 * e * e;
-    }
-    if (nz > 0.80) {
-      const ez = Math.min(1, (nz - 0.80) / 0.20);
-      drape -= 0.14 * ez * ez;
-    } else if (nz < -0.82) {
-      const ez = Math.min(1, (-0.82 - nz) / 0.18);
-      drape -= 0.025 * ez * ez;
-    }
-    y += drape;
+    const outerEdge = isLeft ? -nx : nx;
+    const sideDrop = 0.18 * Math.min(1, Math.max(0, (outerEdge - 0.78) / 0.22)) ** 2;
+    const footDrop = 0.14 * Math.min(1, Math.max(0, (nz - 0.8) / 0.2)) ** 2;
+    const headDrop = 0.025 * Math.min(1, Math.max(0, (-nz - 0.82) / 0.18)) ** 2;
+    y += 0.025 * (1 - 0.35 * nx * nx) - Math.max(sideDrop, footDrop, headDrop);
     pos.setY(i, y);
     baseY[i] = y;
 
@@ -1035,13 +1034,7 @@ function createCuffClothGeo(w, radius, isLeft) {
 }
 
 function buildCozyBedModel(bed) {
-  // Chunky oak frame, corner legs & headboard posts topped with rounded ball finials.
-  addBox(bed, materials.oak, 3.1, 0.34, 3.1, 0, 0.34, 0);
-  for (const x of [-1.42, 1.42]) {
-    for (const z of [-1.42, 1.42]) addBox(bed, materials.oakDark, 0.18, 0.18, 0.18, x, 0.09, z);
-  }
-  addBox(bed, materials.oakDark, 2.94, 0.98, 0.14, 0, 0.88, -1.48);
-  addBox(bed, materials.oak, 2.62, 0.72, 0.05, 0, 0.92, -1.40, false);
+  buildBedFrame(bed, materials);
   for (const x of [-1.49, 1.49]) {
     addCylinder(bed, materials.oak, 0.11, 0.11, 1.24, x, 0.78, -1.48, 16);
     addSphere(bed, materials.oakLight, 0.145, x, 1.45, -1.48);
@@ -1071,33 +1064,38 @@ function buildCozyBedModel(bed) {
   rightPillow.receiveShadow = true;
   bed.add(rightPillow);
 
+  const quiltWidth = 1.45;
+  const quiltDepth = 2.17;
+  const quiltCenterZ = 0.425; // The foot edge hangs past the mattress face.
+  const cuffZ = -0.59;
+
   // Right-side quilt & cuff (stationary neatly-made side).
-  const rightCloth = createQuiltClothGeo(1.45, 0.14, 2.1, false);
+  const rightCloth = createQuiltClothGeo(quiltWidth, 0.14, quiltDepth, false);
   const rightWing = new THREE.Mesh(rightCloth.geo, quiltMat);
-  rightWing.position.set(0.715, 0.88, 0.39);
+  rightWing.position.set(quiltWidth / 2, 0.88, quiltCenterZ);
   rightWing.castShadow = true;
   rightWing.receiveShadow = true;
   bed.add(rightWing);
 
   const rightCuff = createCuffClothGeo(1.44, 0.09, false);
   const rightCuffMesh = new THREE.Mesh(rightCuff.geo, cuffPinkMat);
-  rightCuffMesh.position.set(0.71, 0.91, -0.59);
+  rightCuffMesh.position.set(0.72, 0.91, cuffZ);
   rightCuffMesh.castShadow = true;
   rightCuffMesh.receiveShadow = true;
   bed.add(rightCuffMesh);
 
   // Left-side sleeper quilt & cuff pivoted at center seam so Miri can lift and tuck underneath.
-  const duvetPivot = group(bed, 0.02, 0.9, 0.39);
-  const leftCloth = createQuiltClothGeo(1.45, 0.14, 2.1, true);
+  const duvetPivot = group(bed, 0, 0.9, quiltCenterZ);
+  const leftCloth = createQuiltClothGeo(quiltWidth, 0.14, quiltDepth, true);
   const leftWing = new THREE.Mesh(leftCloth.geo, quiltMat);
-  leftWing.position.set(-0.735, -0.02, 0);
+  leftWing.position.set(-quiltWidth / 2, -0.02, 0);
   leftWing.castShadow = true;
   leftWing.receiveShadow = true;
   duvetPivot.add(leftWing);
 
   const leftCuff = createCuffClothGeo(1.44, 0.09, true);
   const leftCuffMesh = new THREE.Mesh(leftCuff.geo, cuffPinkMat);
-  leftCuffMesh.position.set(-0.73, 0.01, -0.98);
+  leftCuffMesh.position.set(-0.72, 0.01, cuffZ - quiltCenterZ);
   leftCuffMesh.castShadow = true;
   leftCuffMesh.receiveShadow = true;
   duvetPivot.add(leftCuffMesh);
@@ -1507,15 +1505,17 @@ function createFurniture(id, parent) {
     piece.add(lampLight);
     sceneRefs.movableLampLights.push(lampLight);
   } else if (id === 'armchair') {
-    addBox(piece, materials.oakDark, 1.1, .15, 1.1, 0, .27, 0);
+    addBox(piece, materials.oakDark, 1.1, .19, 1.1, 0, .29, 0);
+    addLegs(piece, .43, .43, .22, .22 - ROOM_FLOOR_Y);
     addBox(piece, materials.cream, 1.18, .53, 1.13, 0, .64, 0);
     addBox(piece, materials.cream, 1.16, .9, .21, 0, 1.08, -.48);
     for (const x of [-.5, .5]) addBox(piece, materials.cream, .17, .7, 1.11, x, .85, 0);
     addBox(piece, materials.pink, .54, .2, .45, 0, .95, -.13);
   } else if (id === 'shelf') {
-    addBox(piece, materials.oak, 1.55, 1.12, .58, 0, .59, 0);
-    for (const y of [.13, .56, 1.03]) addBox(piece, materials.oakDark, 1.55, .07, .66, 0, y, 0);
-    for (let i = 0; i < 8; i++) addBox(piece, [materials.cream, materials.sage, materials.pink][i % 3], .13, .24 + (i % 2) * .1, .37, -.57 + i * .16, .35, .06);
+    buildBookcase(piece, materials, {
+      width: 1.55, height: 1.12, depth: .58,
+      rows: [[.24, .31, .29, .34, .27], [.33, .28, .35, .30]],
+    });
   } else if (id === 'stool') {
     addCylinder(piece, materials.oak, .42, .42, .12, 0, .58, 0);
     for (const x of [-.24,.24]) for (const z of [-.24,.24]) addBox(piece, materials.oakDark, .1, .52, .1, x, .27, z);
@@ -1664,6 +1664,7 @@ function initScene() {
     const hits = raycaster.intersectObjects(roomGroup.children, true);
     let hoverKind = '';
     for (const hit of hits) {
+      if (!isVisibleInScene(hit.object)) continue;
       let object = hit.object;
       while (object && object !== roomGroup) {
         if (mode === 'build' && object.userData.furniture) { hoverKind = 'grab'; break; }
@@ -1711,6 +1712,7 @@ function initScene() {
     raycaster.setFromCamera(pointer, camera);
     const hits = raycaster.intersectObjects(roomGroup.children, true);
     for (const hit of hits) {
+      if (!isVisibleInScene(hit.object)) continue;
       let object = hit.object;
       while (object && object !== roomGroup) {
         if (mode === 'build' && object.userData.furniture) { startMovingFurniture(object.userData.furniture, event.clientX, event.clientY); return; }
@@ -1808,13 +1810,19 @@ function initScene() {
     applyMiriPose(pose);
     updateParticles(dt, mode === 'life' ? pose.effect : null, pose);
 
-    // Animate 3D shower water spray streams while bathing.
+    const { door, travel } = sceneRefs.showerEnclosure;
+    const { occupiedInteraction, phase } = miriCtrl.state;
+    const usingDoor = mode === 'life' && occupiedInteraction === 'shower' && (phase === 'enter' || phase === 'exit');
+    const doorTarget = usingDoor ? travel : 0;
+    const doorDelta = doorTarget - door.position.x;
+    door.position.x = isReducedMotion() ? doorTarget
+      : door.position.x + Math.sign(doorDelta) * Math.min(Math.abs(doorDelta), dt * 9);
+
+    // Animate the water streams and steam on all panes.
     if (sceneRefs.showerSpray) {
       const spraying = mode === 'life' && pose.effect === 'shower';
       sceneRefs.showerSpray.visible = spraying;
-      if (sceneProps.showerGlass) {
-        sceneProps.showerGlass.material.opacity = spraying || state.scene?.showered ? 0.54 : 0.35;
-      }
+      sceneRefs.showerGlassMat.opacity = spraying || state.scene?.showered ? 0.54 : 0.35;
       if (spraying && !isReducedMotion()) {
         for (let i = 0; i < sceneRefs.showerStreams.length; i++) {
           const s = sceneRefs.showerStreams[i];
@@ -1873,7 +1881,6 @@ function initScene() {
 
     if (wallBack) wallBack.visible = camera.position.z > -1.5;
     if (wallLeft) wallLeft.visible = camera.position.x > -2.5;
-    if (sceneRefs.showerWallGroup) sceneRefs.showerWallGroup.visible = wallLeft ? wallLeft.visible : true;
     if (mode !== 'community') renderer.render(scene, camera);
     positionHotspots(pose);
     positionMiriStatus(pose);
@@ -2234,11 +2241,13 @@ function cancelMovingFurniture() {
 function applyMove(id, x, z) { const result = moveFurniture(state, id, x, z); applyResult(result); if (result.ok) updateMovableFurniture(); }
 function setMode(next) {
   cancelMovingFurniture();
+  const modeChanged = mode !== next;
   mode = next;
   $$('.mode-tab').forEach(button => { const active = button.dataset.mode === next; button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active)); });
   $('#room-view').hidden = next === 'community'; $('#community-view').hidden = next !== 'community';
   $('#hotspots').hidden = next !== 'life';
   for (const key of ['life','build','community']) $(`#${key}-panel`).hidden = key !== next;
+  if (modeChanged) $('.right-rail').scrollTop = 0;
   $('#interaction-card').hidden = true; $('#placement-card').hidden = true;
   $$('.hotspot').forEach(button => button.classList.remove('active'));
   selectedInteraction = null; selectedFurniture = null;

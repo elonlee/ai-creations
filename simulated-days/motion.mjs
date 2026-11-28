@@ -13,6 +13,8 @@ const ACTION_LABELS = {
   sleep: { label: '正在安睡到明天清晨', walkLabel: '准备回床上安睡' },
 };
 
+export const TEA_TABLE = { x: -0.78, z: 2.92, radius: 0.71 };
+
 export const INTERACTION_STAGES = {
   stove: {
     actionId: 'cook',
@@ -51,7 +53,7 @@ export const INTERACTION_STAGES = {
     actionId: 'shower',
     label: '正在洗热水澡',
     walkLabel: '前往暖光浴室',
-    approach: [-4.7, 0.88],
+    approach: [-5.26, 0.88],
     actPos: [-5.1, 0.12, 1.9],
     faceYaw: 0.55,
     enterDur: 0.45,
@@ -76,7 +78,7 @@ export const INTERACTION_STAGES = {
     walkLabel: '前往客厅茶桌',
     approach: [-2.15, 2.48],
     actPos: [-1.95, 0.3, 1.48],
-    faceTarget: [-0.78, 2.55],
+    faceTarget: [TEA_TABLE.x, TEA_TABLE.z],
     enterDur: 0.42,
     exitDur: 0.38,
     actDur: 2.9,
@@ -119,7 +121,7 @@ const STATIC_BOXES = [
 
 const STATIC_CIRCLES = [
   // Tea table
-  { x: -0.78, z: 2.55, r: 0.96 },
+  { x: TEA_TABLE.x, z: TEA_TABLE.z, r: TEA_TABLE.radius + 0.25 },
 ];
 
 const MOVABLE_RADII = {

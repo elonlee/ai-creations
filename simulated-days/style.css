@@ -91,11 +91,12 @@ small {
   height:32px;
   stroke:none
 }
-.brand strong {
+.brand h1 {
   font-family:Georgia,'Noto Serif SC',serif;
   font-size:21px;
   line-height:1.1;
   display:block;
+  margin:0;
   letter-spacing:.03em
 }
 .brand small {
@@ -184,15 +185,10 @@ small {
 }
 .main-grid {
   display:grid;
-  grid-template-columns:258px minmax(0,1fr) 292px;
+  grid-template-columns:minmax(0,1fr) 292px;
   gap:0;
   flex:1;
   min-height:calc(100vh - 118px)
-}
-.left-rail {
-  padding:35px 20px 24px 27px;
-  border-right:1px solid #e8e2db;
-  background:#faf7f1
 }
 .eyebrow,.panel-eyebrow {
   font-size:10px;
@@ -201,7 +197,7 @@ small {
   color:#9882a9;
   text-transform:uppercase
 }
-.tiny-dot,.live-dot {
+.live-dot {
   display:inline-block;
   width:7px;
   height:7px;
@@ -209,23 +205,6 @@ small {
   background:#a795bd;
   vertical-align:middle;
   margin-right:6px
-}
-.left-rail h1 {
-  font-family:Georgia,'Noto Serif SC',serif;
-  font-size:41px;
-  letter-spacing:-.06em;
-  line-height:1.2;
-  margin:22px 0 12px
-}
-.left-rail h1 em {
-  color:#896da1
-}
-.intro {
-  font-size:12px;
-  color:#89838b;
-  line-height:1.8;
-  max-width:205px;
-  margin-bottom:30px
 }
 .paper-card {
   background:#fffefa;
@@ -246,7 +225,7 @@ small {
 .card-heading small {
   font-size:8px;
   letter-spacing:.15em;
-  color:#baa7a2;
+  color:#796971;
   font-weight:800
 }
 .card-heading h2 {
@@ -300,11 +279,11 @@ small {
 }
 .goal-item.done .goal-text {
   text-decoration:line-through;
-  color:#a09da0
+  color:#746d77
 }
 .goal-reward {
   margin-left:auto;
-  color:#b09672;
+  color:#856849;
   font-weight:700;
   font-size:10px
 }
@@ -314,62 +293,24 @@ small {
   border-top:1px dashed #e7ddd5;
   padding-top:12px;
   margin-top:5px;
-  color:#a9a0a2;
+  color:#756d76;
   font-size:10px
 }
 .goal-footer span:first-child {
   color:#826b92;
   font-weight:700
 }
-.note-card {
-  position:relative;
-  margin-top:22px;
-  padding:22px 18px 19px;
-  border-radius:16px;
-  background:#ebe5f0;
-  overflow:hidden;
-  min-height:124px
-}
-.note-card:after {
-  content:'';
-  position:absolute;
-  width:115px;
-  height:115px;
-  border:1px solid #d3c8dd;
-  border-radius:50%;
-  right:-45px;
-  top:-45px
-}
-.note-sun {
-  position:absolute;
-  color:#c29bb3;
-  font-size:20px;
-  right:18px;
-  top:11px
-}
-.note-card p {
-  font-family:Georgia,'Noto Serif SC',serif;
-  font-size:14px;
-  line-height:1.7;
-  margin:0 0 7px;
-  color:#6d5b76
-}
-.note-card small {
-  font-size:10px;
-  color:#9c8ca8
-}
-.journal {
-  margin-top:28px
-}
 .journal-title {
   display:flex;
   gap:11px;
   align-items:center;
-  color:#827782;
-  font-size:11px;
+  color:#625766;
+  font-size:13px;
+  margin:0;
   font-weight:700
 }
-.journal-rule {
+.journal-title:after {
+  content:'';
   height:1px;
   background:#e4dcd7;
   flex:1
@@ -377,13 +318,13 @@ small {
 .journal ul {
   list-style:none;
   padding:0;
-  margin:10px 0
+  margin:8px 0 0
 }
 .journal li {
   position:relative;
   padding:9px 0 9px 15px;
-  color:#99919a;
-  font-size:11px;
+  color:#706876;
+  font-size:12px;
   line-height:1.5;
   border-bottom:1px solid #eee9e3
 }
@@ -806,7 +747,18 @@ small {
   padding:22px 20px 20px;
   border-left:1px solid #e8e2db;
   background:#fffdf9;
-  min-width:0
+  min-width:0;
+  display:grid;
+  align-content:start;
+  gap:20px;
+  /* Let the scene set the row height while the sidebar scrolls independently. */
+  contain:size;
+  overflow-y:auto;
+  scrollbar-gutter:stable
+}
+.right-rail:focus-visible {
+  outline:2px solid #80679d;
+  outline-offset:-2px
 }
 .mode-panel[hidden] {
   display:none
@@ -1346,17 +1298,10 @@ small {
     padding:0 11px
   }
   .main-grid {
-    grid-template-columns:218px minmax(0,1fr) 255px
-  }
-  .left-rail {
-    padding-left:18px;
-    padding-right:15px
+    grid-template-columns:minmax(0,1fr) 263px
   }
   .right-rail {
     padding:18px 13px
-  }
-  .left-rail h1 {
-    font-size:36px
   }
   .scene-topline {
     left:15px;
@@ -1386,12 +1331,6 @@ small {
     flex:1;
     justify-content:center
   }
-  .main-grid {
-    grid-template-columns:minmax(0,1fr) 263px
-  }
-  .left-rail {
-    display:none
-  }
   .main-stage {
     padding:12px
   }
@@ -1414,7 +1353,7 @@ small {
     width:37px;
     height:37px
   }
-  .brand strong {
+  .brand h1 {
     font-size:18px
   }
   .brand small {
@@ -1443,18 +1382,19 @@ small {
     flex-direction:column
   }
   .main-stage {
-    padding:10px;
-    order:0
+    padding:10px
   }
   .room-view,.community-view {
     min-height:500px;
     height:61vh
   }
   .right-rail {
-    order:1;
     border-left:0;
     border-top:1px solid #e8e2db;
-    padding:15px
+    padding:15px;
+    contain:none;
+    overflow:visible;
+    scrollbar-gutter:auto
   }
   .miri-card {
     display:grid;
